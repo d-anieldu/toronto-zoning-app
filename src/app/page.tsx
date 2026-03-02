@@ -5,34 +5,27 @@ import { redirect } from "next/navigation";
 export default async function Home() {
   const { userId } = await auth();
 
-  // If already signed in, go straight to dashboard
   if (userId) {
     redirect("/dashboard");
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-gray-100">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
-              TZ
-            </div>
-            <span className="text-lg font-semibold text-gray-900">
-              Toronto Zoning
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-stone-50">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-stone-50/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+          <span className="text-[15px] font-semibold tracking-tight text-stone-900">
+            Toronto Zoning
+          </span>
+          <div className="flex items-center gap-6">
             <Link
               href="/sign-in"
-              className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+              className="text-[13px] text-stone-500 hover:text-stone-900"
             >
               Sign in
             </Link>
             <Link
               href="/sign-up"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="rounded-full bg-stone-900 px-4 py-1.5 text-[13px] font-medium text-white hover:bg-stone-800"
             >
               Get started
             </Link>
@@ -40,76 +33,127 @@ export default async function Home() {
         </div>
       </header>
 
-      {/* Hero */}
-      <main className="mx-auto max-w-6xl px-6">
-        <div className="py-24 text-center">
-          <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            Zoning rules for any
-            <br />
-            <span className="text-blue-600">Toronto address</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-500">
-            Instantly look up height limits, setbacks, parking requirements,
-            overlays, and development potential &mdash; powered by the City of
-            Toronto&apos;s Zoning By-law 569-2013.
+      <main className="mx-auto max-w-7xl px-6 pt-32 pb-20">
+        {/* Hero */}
+        <div className="max-w-3xl">
+          <p className="text-[13px] font-medium uppercase tracking-widest text-stone-400">
+            By-law 569-2013
           </p>
-          <div className="mt-10 flex items-center justify-center gap-4">
+          <h1 className="mt-4 text-[clamp(2.5rem,5vw,4rem)] leading-[1.05] font-bold tracking-tight text-stone-900">
+            Zoning intelligence
+            <br />
+            for Toronto
+          </h1>
+          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-stone-500">
+            Enter any address. Get the complete zoning profile — effective
+            standards, overlays, constraints, and development potential — resolved
+            from 19 GIS layers and 6,063 site-specific exceptions.
+          </p>
+          <div className="mt-10 flex items-center gap-5">
             <Link
               href="/sign-up"
-              className="rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700"
+              className="rounded-full bg-stone-900 px-6 py-2.5 text-[14px] font-medium text-white hover:bg-stone-800"
             >
-              Start looking up addresses
+              Start a lookup
             </Link>
+            <span className="text-[13px] text-stone-400">
+              Free during beta
+            </span>
           </div>
         </div>
 
-        {/* Features */}
-        <div className="grid gap-8 pb-24 md:grid-cols-3">
-          <div className="rounded-xl border border-gray-100 p-6">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-              </svg>
+        {/* Data strip */}
+        <div className="mt-24 border-t border-stone-200 pt-10">
+          <div className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
+            <div>
+              <p className="text-[28px] font-semibold tracking-tight text-stone-900">
+                19
+              </p>
+              <p className="mt-1 text-[13px] text-stone-400">GIS layers queried</p>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              19 GIS Layers
-            </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Base zoning, height overlays, setbacks, parking zones, heritage
-              registers, ravine protection, and more.
-            </p>
+            <div>
+              <p className="text-[28px] font-semibold tracking-tight text-stone-900">
+                6,063
+              </p>
+              <p className="mt-1 text-[13px] text-stone-400">
+                Parsed exceptions
+              </p>
+            </div>
+            <div>
+              <p className="text-[28px] font-semibold tracking-tight text-stone-900">
+                25
+              </p>
+              <p className="mt-1 text-[13px] text-stone-400">Zone families</p>
+            </div>
+            <div>
+              <p className="text-[28px] font-semibold tracking-tight text-stone-900">
+                96
+              </p>
+              <p className="mt-1 text-[13px] text-stone-400">
+                By-law chapters parsed
+              </p>
+            </div>
           </div>
-          <div className="rounded-xl border border-gray-100 p-6">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Development Potential
-            </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Estimates max GFA, dwelling units, storeys, required parking, and
-              development charges.
-            </p>
+        </div>
+
+        {/* What you get */}
+        <div className="mt-24 border-t border-stone-200 pt-10">
+          <p className="text-[13px] font-medium uppercase tracking-widest text-stone-400">
+            What&apos;s in a report
+          </p>
+          <div className="mt-8 grid gap-x-12 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["Effective Standards", "Height, FSI, setbacks, and lot coverage — resolved from base zone, overlays, and exception overrides."],
+              ["Development Potential", "Max GFA, buildable envelope, feasible building types, floor plate limits, and estimated storeys."],
+              ["Constraints", "Heritage designation, ravine protection, archaeological potential, and holding provisions flagged by severity."],
+              ["Parking Requirements", "Residential and visitor rates by building type, zone-specific exemptions, and exception overrides."],
+              ["Official Plan Context", "OP designation, secondary plan, MTSA status, and applicable Site & Area Specific Policies."],
+              ["Development Charges", "Estimated DC breakdown by category based on current City of Toronto rates."],
+            ].map(([title, desc]) => (
+              <div key={title}>
+                <h3 className="text-[15px] font-semibold text-stone-900">
+                  {title}
+                </h3>
+                <p className="mt-2 text-[13px] leading-relaxed text-stone-500">
+                  {desc}
+                </p>
+              </div>
+            ))}
           </div>
-          <div className="rounded-xl border border-gray-100 p-6">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              6,063 Exceptions
-            </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Site-specific exceptions from Chapter 900 are automatically
-              applied to override base zone standards.
-            </p>
+        </div>
+
+        {/* Sample zone string */}
+        <div className="mt-24 rounded-2xl border border-stone-200 bg-white p-8">
+          <p className="text-[13px] text-stone-400">
+            Example — what we resolve
+          </p>
+          <p className="mt-3 font-mono text-[15px] text-stone-700">
+            RD (f15.0; a550) (x5)
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="rounded-full bg-stone-100 px-3 py-1 text-[12px] text-stone-600">
+              Zone: Residential Detached
+            </span>
+            <span className="rounded-full bg-stone-100 px-3 py-1 text-[12px] text-stone-600">
+              Min frontage: 15.0m
+            </span>
+            <span className="rounded-full bg-stone-100 px-3 py-1 text-[12px] text-stone-600">
+              Min lot area: 550 m²
+            </span>
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-[12px] text-amber-700">
+              Exception #5 applied
+            </span>
           </div>
         </div>
       </main>
+
+      <footer className="border-t border-stone-200 bg-stone-50">
+        <div className="mx-auto max-w-7xl px-6 py-8">
+          <p className="text-[12px] text-stone-400">
+            Data sourced from the City of Toronto Open Data Portal. Not legal advice.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
