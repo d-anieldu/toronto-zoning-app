@@ -760,9 +760,11 @@ export default function ZoningReport({ data }: Props) {
             {/* Right: zone badges */}
             <div className="flex flex-wrap items-center gap-2">
               {zoneCode && (
-                <span className="rounded-lg bg-stone-900 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
-                  {zoneCode}
-                </span>
+                <RefLink type="zone-info" id={zoneCode} label={zoneCode}>
+                  <span className="rounded-lg bg-stone-900 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
+                    {zoneCode}
+                  </span>
+                </RefLink>
               )}
               {zoneString && (
                 <span className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-1.5 font-mono text-[12px] text-stone-600">
@@ -1843,7 +1845,9 @@ export default function ZoningReport({ data }: Props) {
                   ([key, exemption]: [string, any]) => (
                     <div key={key} className="mb-4 last:mb-0">
                       <p className="text-[13px] font-semibold text-stone-700">
-                        s. {exemption.section}: {exemption.title}
+                        <RefLink type="bylaw-section" id={exemption.section} label={`s. ${exemption.section}`}>
+                          s. {exemption.section}
+                        </RefLink>: {exemption.title}
                       </p>
                       {exemption.description && (
                         <p className="mt-1 text-[12px] leading-relaxed text-stone-500">
@@ -2137,9 +2141,18 @@ export default function ZoningReport({ data }: Props) {
                       <span className="text-[14px] font-semibold text-stone-800">
                         {item.hcd_name}
                       </span>
-                      {item.bylaw && (
+                      {item.bylaw && item.plan_url ? (
+                        <a
+                          href={item.plan_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-violet-500 underline decoration-dotted underline-offset-2 hover:text-violet-700"
+                        >
+                          By-law {item.bylaw} ↗
+                        </a>
+                      ) : item.bylaw ? (
                         <span className="text-[11px] text-stone-400">By-law {item.bylaw}</span>
-                      )}
+                      ) : null}
                     </div>
                     <p className="mb-2 text-[11px] font-medium text-violet-500">
                       {item.status_note}
@@ -2293,7 +2306,13 @@ export default function ZoningReport({ data }: Props) {
                   className="rounded-xl border border-sky-200 bg-white p-5 shadow-sm"
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="info">{rule.chapter || "Ch. 600"}</Badge>
+                    {rule.chapter ? (
+                      <RefLink type="bylaw-section" id={rule.chapter.replace(/^Ch\.?\s*/i, "")} label={rule.chapter}>
+                        <Badge variant="info">{rule.chapter}</Badge>
+                      </RefLink>
+                    ) : (
+                      <Badge variant="info">Ch. 600</Badge>
+                    )}
                     <span className="text-[13px] font-semibold text-stone-800">
                       {rule.name || key.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
                     </span>

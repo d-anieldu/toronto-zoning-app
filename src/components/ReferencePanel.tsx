@@ -228,6 +228,7 @@ function typeLabel(type: string): string {
     exception: "Exception",
     sasp: "Site & Area Specific Policy",
     "op-designation": "Official Plan Designation",
+    "zone-info": "Zone Category",
   };
   return map[type] || type;
 }
@@ -238,6 +239,7 @@ function typePrefix(type: string): string {
     exception: "Exception #",
     sasp: "SASP #",
     "op-designation": "",
+    "zone-info": "",
   };
   return map[type] ?? "";
 }
@@ -310,6 +312,8 @@ function ReferenceBody({
       return <SaspBody result={result} />;
     case "op-designation":
       return <OpDesignationBody result={result} />;
+    case "zone-info":
+      return <ZoneInfoBody result={result} onNavigate={onNavigate} />;
     default:
       return <GenericBody result={result} />;
   }
@@ -578,6 +582,84 @@ function OpDesignationBody({ result }: { result: ReferenceResult }) {
           </ul>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── Zone Info ───────────────────────────────────────────────────────── */
+
+function ZoneInfoBody({
+  result,
+  onNavigate,
+}: {
+  result: ReferenceResult;
+  onNavigate: (target: ReferenceTarget) => void;
+}) {
+  const info = result.data as {
+    zone_code: string;
+    zone_prefix: string;
+    description: string;
+    section_ref: string;
+    sections: { ref: string; label: string; title: string; text: string }[];
+  } | undefined;
+  if (!info) return <GenericBody result={result} />;
+
+  const labelMap: Record<string, string> = {
+    general: "General",
+    permitted_use: "Permitted Uses",
+    building_requirements: "Building Requirements",
+    height: "Height",
+    floor_area: "Floor Area",
+    setbacks: "Setbacks",
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <span className="rounded-lg bg-stone-900 px-3 py-1 text-[13px] font-bold tracking-wide text-white">
+          {info.zone_prefix}
+        </span>
+        <span className="text-[13px] font-medium text-stone-600">
+          {info.description}
+        </span>
+      </div>
+
+      <p className="text-[12px] text-stone-400">
+        By-law 569-2013 · Section {info.section_ref}
+      </p>
+
+      {/* Sections grid */}
+      <div className="space-y-3">
+        {info.sections.map((sec) => (
+          <button
+            type="button"
+            key={sec.ref}
+            onClick={() =>
+              onNavigate({
+                type: "bylaw-section",
+                id: sec.ref,
+                label: `s. ${sec.ref}`,
+              })
+            }
+            className="block w-full rounded-lg border border-stone-200 bg-stone-50 p-3 text-left transition-colors hover:border-stone-300 hover:bg-stone-100"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] font-semibold text-stone-700">
+                {labelMap[sec.label] || sec.title || sec.label}
+              </span>
+              <span className="font-mono text-[11px] text-stone-400">
+                s. {sec.ref}
+              </span>
+            </div>
+            {sec.text && (
+              <p className="mt-1 text-[11px] leading-relaxed text-stone-500 line-clamp-2">
+                {sec.text}
+              </p>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
