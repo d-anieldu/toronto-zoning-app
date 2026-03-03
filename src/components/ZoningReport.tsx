@@ -399,6 +399,8 @@ const NAV_ITEMS = [
   { id: "uses", label: "Uses" },
   { id: "parking", label: "Parking" },
   { id: "overlays", label: "Overlays" },
+  { id: "overlay-rules", label: "District Rules" },
+  { id: "stepback", label: "Stepback" },
   { id: "op-context", label: "Official Plan" },
   { id: "exception", label: "Exception" },
   { id: "charges", label: "Charges" },
@@ -775,6 +777,37 @@ export default function ZoningReport({ data }: Props) {
               </p>
             </div>
           )}
+
+          {/* Holding provision warning */}
+          {eff.holding_warning && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
+              <p className="text-[13px] font-semibold text-red-800">
+                {eff.holding_warning}
+              </p>
+            </div>
+          )}
+
+          {/* Secondary zones (resolved data) */}
+          {eff.secondary_zones?.length > 0 && (
+            <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-stone-400">
+                Secondary Zones on This Lot
+              </p>
+              <div className="space-y-1">
+                {eff.secondary_zones.map((sz: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2 text-[12px]">
+                    <span className="rounded bg-stone-200 px-1.5 py-0.5 font-mono text-[11px] font-medium text-stone-700">
+                      {sz.zone}
+                    </span>
+                    <span className="text-stone-500">{sz.zone_string}</span>
+                    {sz.exception_number && Number(sz.exception_number) > 0 && (
+                      <Badge variant="warning">Exc #{sz.exception_number}</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -999,6 +1032,44 @@ export default function ZoningReport({ data }: Props) {
                   label="Side (exception)"
                   value={`${eff.setbacks.exception_side_m} m`}
                 />
+              )}
+              {eff.setbacks?.overlay_m && (
+                <Row
+                  label="Overlay setback"
+                  value={`${eff.setbacks.overlay_m} m${eff.setbacks.overlay_type ? ` (${eff.setbacks.overlay_type})` : ""}`}
+                  sub="Additional overlay requirement"
+                />
+              )}
+              {eff.setbacks?.standard_set && (
+                <div className="mt-3 border-t border-stone-100 pt-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="info">{eff.setbacks.standard_set}</Badge>
+                    {eff.setbacks.standard_set_name && (
+                      <span className="text-[12px] font-medium text-stone-600">
+                        {eff.setbacks.standard_set_name}
+                      </span>
+                    )}
+                  </div>
+                  {eff.setbacks.ss_rules?.notes?.length > 0 && (
+                    <ul className="space-y-1">
+                      {eff.setbacks.ss_rules.notes.map((note: string, i: number) => (
+                        <li key={i} className="text-[11px] leading-relaxed text-stone-500">
+                          • {note}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {eff.setbacks.effective_front_note && (
+                    <p className="mt-1 text-[11px] text-stone-400">
+                      Front: {eff.setbacks.effective_front_note}
+                    </p>
+                  )}
+                  {eff.setbacks.effective_side_note && (
+                    <p className="mt-1 text-[11px] text-stone-400">
+                      Side: {eff.setbacks.effective_side_note}
+                    </p>
+                  )}
+                </div>
               )}
               {eff.setbacks?.base_side_tiers?.length > 0 && (
                 <div className="mt-3 border-t border-stone-100 pt-3">
@@ -1338,22 +1409,108 @@ export default function ZoningReport({ data }: Props) {
               </div>
             )}
 
-            {/* Permitted Uses */}
-            {eff.permitted_uses?.length > 0 && (
+            {/* Permitted Uses — use expanded_uses if available, fall back to flat list */}
+            {(eff.expanded_uses || eff.permitted_uses?.length > 0) && (
               <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
                 <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">
                   Permitted Uses
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {eff.permitted_uses.map((u: string) => (
-                    <Tag key={u} active>
-                      {u}
-                    </Tag>
-                  ))}
-                </div>
 
-                {/* Conditional uses if available */}
-                {eff.conditional_uses?.length > 0 && (
+                {eff.expanded_uses ? (
+                  <div className="space-y-4">
+                    {eff.expanded_uses.commercial?.length > 0 && (
+                      <div>
+                        <p className="mb-1.5 text-[12px] font-medium text-stone-500">
+                          Commercial ({eff.expanded_uses.commercial.length})
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {eff.expanded_uses.commercial.map((u: string) => (
+                            <Tag key={u} active>{u}</Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {eff.expanded_uses.residential?.length > 0 && (
+                      <div>
+                        <p className="mb-1.5 text-[12px] font-medium text-stone-500">
+                          Residential ({eff.expanded_uses.residential.length})
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {eff.expanded_uses.residential.map((u: string) => (
+                            <Tag key={u} active>{u}</Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {eff.expanded_uses.institutional?.length > 0 && (
+                      <div>
+                        <p className="mb-1.5 text-[12px] font-medium text-stone-500">
+                          Institutional ({eff.expanded_uses.institutional.length})
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {eff.expanded_uses.institutional.map((u: string) => (
+                            <Tag key={u} active>{u}</Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {eff.expanded_uses.open_space?.length > 0 && (
+                      <div>
+                        <p className="mb-1.5 text-[12px] font-medium text-stone-500">
+                          Open Space ({eff.expanded_uses.open_space.length})
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {eff.expanded_uses.open_space.map((u: string) => (
+                            <Tag key={u} active>{u}</Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {eff.expanded_uses.conditional_commercial?.length > 0 && (
+                      <div className="border-t border-stone-100 pt-3">
+                        <p className="mb-1.5 text-[12px] font-medium text-amber-600">
+                          Conditional Commercial ({eff.expanded_uses.conditional_commercial.length})
+                        </p>
+                        <div className="space-y-1.5">
+                          {eff.expanded_uses.conditional_commercial.map((d: any, i: number) => (
+                            <div key={i} className="rounded-lg bg-amber-50 px-3 py-2">
+                              <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
+                              {d.conditions && (
+                                <p className="text-[11px] text-amber-600">{d.conditions}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {eff.expanded_uses.conditional_residential?.length > 0 && (
+                      <div className="border-t border-stone-100 pt-3">
+                        <p className="mb-1.5 text-[12px] font-medium text-amber-600">
+                          Conditional Residential ({eff.expanded_uses.conditional_residential.length})
+                        </p>
+                        <div className="space-y-1.5">
+                          {eff.expanded_uses.conditional_residential.map((d: any, i: number) => (
+                            <div key={i} className="rounded-lg bg-amber-50 px-3 py-2">
+                              <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
+                              {d.conditions && (
+                                <p className="text-[11px] text-amber-600">{d.conditions}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {eff.permitted_uses.map((u: string) => (
+                      <Tag key={u} active>{u}</Tag>
+                    ))}
+                  </div>
+                )}
+
+                {/* Conditional uses (flat list fallback) */}
+                {!eff.expanded_uses && eff.conditional_uses?.length > 0 && (
                   <div className="mt-4 border-t border-stone-100 pt-3">
                     <p className="mb-2 text-[12px] font-medium text-stone-500">
                       Conditional Uses
@@ -1430,6 +1587,13 @@ export default function ZoningReport({ data }: Props) {
               </Card>
             )}
           </div>
+
+          {/* Parking Zone Note (when zone not determined) */}
+          {eff.parking_zone_note && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
+              ⚠ {eff.parking_zone_note}
+            </div>
+          )}
 
           {/* Visitor Parking Formula */}
           {eff.parking?.visitor_parking && (
@@ -1560,6 +1724,172 @@ export default function ZoningReport({ data }: Props) {
           </div>
         )}
       </div>
+
+      {/* ============================================================ */}
+      {/*  OVERLAY DISTRICT RULES (Chapter 600)                         */}
+      {/* ============================================================ */}
+      {eff.overlay_rules && Object.values(eff.overlay_rules).some((r: any) => r?.applies) && (
+        <>
+          <SectionHeading
+            id="overlay-rules"
+            title="Overlay District Rules"
+            icon={Icons.layers}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {Object.entries(eff.overlay_rules).map(([key, rule]: [string, any]) => {
+              if (!rule?.applies) return null;
+              return (
+                <div
+                  key={key}
+                  className="rounded-xl border border-sky-200 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge variant="info">{rule.chapter || "Ch. 600"}</Badge>
+                    <span className="text-[13px] font-semibold text-stone-800">
+                      {rule.name || key.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                    </span>
+                  </div>
+                  {/* Building Setback overlay */}
+                  {key === "building_setback" && (
+                    <div className="space-y-1.5">
+                      {rule.tower_separation_m && (
+                        <Row label="Tower separation" value={`${rule.tower_separation_m} m`} sub={`Above ${rule.tower_height_threshold_m || "?"} m`} />
+                      )}
+                      {rule.min_setback_above_m && (
+                        <Row label="Min setback above podium" value={`${rule.min_setback_above_m} m`} />
+                      )}
+                    </div>
+                  )}
+                  {/* Priority Retail overlay */}
+                  {key === "priority_retail" && (
+                    <div className="space-y-1.5">
+                      {rule.min_retail_frontage_pct && (
+                        <Row label="Min retail frontage" value={`${rule.min_retail_frontage_pct}%`} />
+                      )}
+                      {rule.min_window_pct && (
+                        <Row label="Min ground floor windows" value={`${rule.min_window_pct}%`} />
+                      )}
+                      {rule.min_floor_to_ceiling_m && (
+                        <Row label="Min floor-to-ceiling" value={`${rule.min_floor_to_ceiling_m} m`} />
+                      )}
+                    </div>
+                  )}
+                  {/* Inclusionary Zoning overlay */}
+                  {key === "inclusionary_zoning" && (
+                    <div className="space-y-1.5">
+                      {rule.affordable_pct && (
+                        <Row label="Affordable housing req." value={`${rule.affordable_pct}%`} />
+                      )}
+                      {rule.threshold_units && (
+                        <Row label="Threshold" value={`${rule.threshold_units} units`} />
+                      )}
+                    </div>
+                  )}
+                  {/* Queen St W Community overlay */}
+                  {key === "queen_st_w_community" && (
+                    <div className="space-y-1.5">
+                      {rule.max_eating_establishment_area_sqm && (
+                        <Row label="Max eating establishment" value={`${rule.max_eating_establishment_area_sqm} m²`} />
+                      )}
+                      {rule.entertainment_prohibited && (
+                        <p className="text-[12px] text-red-600 font-medium">Entertainment prohibited</p>
+                      )}
+                    </div>
+                  )}
+                  {/* Generic fallback for unknown overlay rule types */}
+                  {!["building_setback", "priority_retail", "inclusionary_zoning", "queen_st_w_community"].includes(key) && (
+                    <div className="space-y-1.5">
+                      {Object.entries(rule).filter(([k]) => k !== "applies" && k !== "name" && k !== "chapter").map(([k, v]: [string, any]) => (
+                        <Row key={k} label={k.replace(/_/g, " ")} value={String(v)} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  STEPBACK / TOWER PLATE RULES                                 */}
+      {/* ============================================================ */}
+      {eff.stepback_rules && (
+        <>
+          <SectionHeading
+            id="stepback"
+            title="Stepback & Tower Rules"
+            icon={Icons.building}
+          />
+
+          <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-sm">
+            <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-violet-400">
+              From Exception Text
+            </p>
+            <div className="space-y-3">
+              {eff.stepback_rules.stepbacks?.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[12px] font-medium text-stone-600">
+                    Required Stepbacks
+                  </p>
+                  <div className="space-y-2">
+                    {eff.stepback_rules.stepbacks.map((sb: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3 rounded-lg bg-violet-50 px-3 py-2">
+                        <span className="text-[18px] font-bold text-violet-600">
+                          {sb.depth_m}m
+                        </span>
+                        <div>
+                          <p className="text-[12px] font-medium text-stone-700">
+                            Stepback depth
+                          </p>
+                          <p className="text-[11px] text-stone-400">
+                            Above {sb.above_height_m} m height
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {eff.stepback_rules.podium_transition_height_m && (
+                  <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                    <p className="text-[18px] font-bold text-stone-900">
+                      {eff.stepback_rules.podium_transition_height_m} m
+                    </p>
+                    <p className="text-[12px] text-stone-500">Podium Transition Height</p>
+                  </div>
+                )}
+                {eff.stepback_rules.podium_max_height_m && (
+                  <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                    <p className="text-[18px] font-bold text-stone-900">
+                      {eff.stepback_rules.podium_max_height_m} m
+                    </p>
+                    <p className="text-[12px] text-stone-500">Max Podium Height</p>
+                  </div>
+                )}
+                {eff.stepback_rules.tower_floorplate_max_sqm && (
+                  <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                    <p className="text-[18px] font-bold text-stone-900">
+                      {eff.stepback_rules.tower_floorplate_max_sqm} m²
+                    </p>
+                    <p className="text-[12px] text-stone-500">Max Tower Floor Plate</p>
+                  </div>
+                )}
+                {eff.stepback_rules.tower_separation_m && (
+                  <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                    <p className="text-[18px] font-bold text-stone-900">
+                      {eff.stepback_rules.tower_separation_m} m
+                    </p>
+                    <p className="text-[12px] text-stone-500">Min Tower Separation</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ============================================================ */}
       {/*  OFFICIAL PLAN CONTEXT                                        */}
