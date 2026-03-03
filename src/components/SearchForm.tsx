@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import ZoningReport from "./ZoningReport";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,6 +18,108 @@ export default function SearchForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ZoningData | null>(null);
+
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightIdx, setHighlightIdx] = useState(-1);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fetch suggestions from backend
+  const fetchSuggestions = useCallback(async (text: string) => {
+    if (text.trim().length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    setSuggestLoading(true);
+    try {
+      const res = await fetch("/api/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const items: string[] = (data.suggestions || []).map((s: string) => {
+          // Strip ", CAN" suffix for cleaner display
+          return s.replace(/,\s*CAN$/i, "").trim();
+        });
+        setSuggestions(items);
+        setShowSuggestions(items.length > 0);
+        setHighlightIdx(-1);
+      }
+    } catch {
+      // Silently fail — autocomplete is non-critical
+    } finally {
+      setSuggestLoading(false);
+    }
+  }, []);
+
+  // Debounced input handler
+  function handleInputChange(value: string) {
+    setAddress(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchSuggestions(value);
+    }, 200);
+  }
+
+  // Select a suggestion
+  function selectSuggestion(suggestion: string) {
+    // Extract just the street address portion (before first comma) for the input
+    const streetAddress = suggestion.split(",")[0].trim();
+    setAddress(streetAddress);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setHighlightIdx(-1);
+    inputRef.current?.focus();
+  }
+
+  // Keyboard navigation
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightIdx((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightIdx((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === "Enter" && highlightIdx >= 0) {
+      e.preventDefault();
+      selectSuggestion(suggestions[highlightIdx]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setHighlightIdx(-1);
+    }
+  }
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Clean up debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -50,6 +152,8 @@ export default function SearchForm() {
 
   function handleQuickFill(addr: string) {
     setAddress(addr);
+    setSuggestions([]);
+    setShowSuggestions(false);
   }
 
   return (
@@ -72,13 +176,105 @@ export default function SearchForm() {
               />
             </svg>
             <input
+              ref={inputRef}
               type="text"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (suggestions.length > 0) setShowSuggestions(true);
+              }}
               placeholder="Enter a Toronto address — e.g. 226 Viewmount Ave"
               className="w-full rounded-xl border border-stone-300 bg-white py-3 pl-10 pr-4 text-[14px] text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10"
               disabled={loading}
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={showSuggestions}
+              aria-autocomplete="list"
+              aria-controls="address-suggestions"
             />
+
+            {/* Autocomplete dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div
+                ref={dropdownRef}
+                id="address-suggestions"
+                role="listbox"
+                className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-lg"
+              >
+                {suggestions.map((s, i) => {
+                  const parts = s.split(",");
+                  const street = parts[0];
+                  const rest = parts.slice(1).join(",").trim();
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      role="option"
+                      aria-selected={i === highlightIdx}
+                      onClick={() => selectSuggestion(s)}
+                      onMouseEnter={() => setHighlightIdx(i)}
+                      className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
+                        i === highlightIdx
+                          ? "bg-stone-100"
+                          : "hover:bg-stone-50"
+                      } ${i > 0 ? "border-t border-stone-100" : ""}`}
+                    >
+                      <svg
+                        className="h-4 w-4 shrink-0 text-stone-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                        />
+                      </svg>
+                      <span className="min-w-0 flex-1">
+                        <span className="text-[13px] font-medium text-stone-900">
+                          {street}
+                        </span>
+                        {rest && (
+                          <span className="text-[12px] text-stone-400">
+                            {", "}
+                            {rest}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+                {suggestLoading && (
+                  <div className="flex items-center gap-2 border-t border-stone-100 px-3.5 py-2 text-[12px] text-stone-400">
+                    <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
+                    </svg>
+                    Loading…
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <button
             type="submit"
