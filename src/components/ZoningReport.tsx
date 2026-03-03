@@ -705,15 +705,17 @@ export default function ZoningReport({ data }: Props) {
 
   /* -------- constraints -------- */
   const constraints = dev.constraints?.items || [];
-  const severityColor: Record<string, "danger" | "warning" | "default"> = {
+  const severityColor: Record<string, "danger" | "warning" | "default" | "info"> = {
     high: "danger",
     medium: "warning",
     low: "default",
+    info: "info",
   };
   const severityIcon: Record<string, string> = {
     high: "🔴",
     medium: "🟡",
     low: "🔵",
+    info: "🚇",
   };
 
   /* -------- op context -------- */
@@ -803,6 +805,52 @@ export default function ZoningReport({ data }: Props) {
               <p className="text-[13px] font-semibold text-red-800">
                 {eff.holding_warning}
               </p>
+            </div>
+          )}
+
+          {/* PMTSA advisory banner */}
+          {dev.constraints?.pmtsa_advisory && (
+            <div className="mt-4 rounded-xl border-2 border-sky-300 bg-gradient-to-r from-sky-50 to-indigo-50 p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0H21M3.375 14.25V3.375a1.125 1.125 0 011.125-1.125h3.026a1.125 1.125 0 01.95.524l.574.957c.189.316.528.524.95.524H21" />
+                  </svg>
+                </span>
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[14px] font-bold text-sky-900">
+                      Protected Major Transit Station Area
+                    </span>
+                    <Badge variant="info">
+                      {dev.constraints.pmtsa_advisory.station_name} Station
+                    </Badge>
+                  </div>
+                  <p className="text-[12px] leading-relaxed text-sky-800">
+                    {dev.constraints.pmtsa_advisory.summary}
+                  </p>
+                  {dev.constraints.pmtsa_advisory.policy_notes?.length > 0 && (
+                    <div className="mt-3 rounded-lg bg-white/60 p-3">
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-sky-600">
+                        Provincial Policy Requirements
+                      </p>
+                      <ul className="space-y-1">
+                        {dev.constraints.pmtsa_advisory.policy_notes.map((n: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-[11px] leading-relaxed text-sky-700">
+                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-sky-400" />
+                            <span>{n}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {dev.constraints.pmtsa_advisory.sasp_blank && (
+                    <p className="mt-2 text-[11px] font-medium text-amber-600">
+                      ⚠ SASP #{dev.constraints.pmtsa_advisory.sasp_no} is not yet finalized — planning framework pending adoption
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -925,7 +973,9 @@ export default function ZoningReport({ data }: Props) {
                     ? "border-red-200 bg-red-50"
                     : c.severity === "medium"
                       ? "border-amber-200 bg-amber-50"
-                      : "border-stone-200 bg-stone-50"
+                      : c.severity === "info"
+                        ? "border-sky-200 bg-sky-50"
+                        : "border-stone-200 bg-stone-50"
                 }`}
               >
                 <span className="mt-0.5 text-[14px]">
