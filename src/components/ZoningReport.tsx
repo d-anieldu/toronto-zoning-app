@@ -400,11 +400,14 @@ const NAV_ITEMS = [
   { id: "uses", label: "Uses" },
   { id: "parking", label: "Parking" },
   { id: "overlays", label: "Overlays" },
+  { id: "hazards", label: "Hazards" },
+  { id: "heritage", label: "Heritage" },
   { id: "overlay-rules", label: "District Rules" },
   { id: "stepback", label: "Stepback" },
   { id: "op-context", label: "Official Plan" },
   { id: "exception", label: "Exception" },
   { id: "charges", label: "Charges" },
+  { id: "confidence", label: "Confidence" },
   { id: "contact", label: "Contact" },
 ];
 
@@ -515,6 +518,21 @@ const Icons = {
   check: (
     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+  ),
+  tree: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l-7 8h4l-3 5h4l-2.5 5H12m0-18l7 8h-4l3 5h-4l2.5 5H12m0 0V3" />
+    </svg>
+  ),
+  landmark: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+    </svg>
+  ),
+  shield: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
     </svg>
   ),
 };
@@ -1867,6 +1885,332 @@ export default function ZoningReport({ data }: Props) {
       </div>
 
       {/* ============================================================ */}
+      {/*  NATURAL HAZARDS (Tier 3)                                     */}
+      {/* ============================================================ */}
+      {eff.natural_hazards?.has_hazards && (
+        <>
+          <SectionHeading
+            id="hazards"
+            title="Natural Hazard Constraints"
+            icon={Icons.tree}
+            count={eff.natural_hazards.hazard_count}
+          />
+
+          {/* Summary banner */}
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-[13px] font-medium leading-relaxed text-red-700">
+              {eff.natural_hazards.summary}
+            </p>
+            {eff.natural_hazards.combined_setback_m && (
+              <p className="mt-2 text-[12px] text-red-600">
+                Combined maximum setback: <span className="font-bold">{eff.natural_hazards.combined_setback_m}m</span>
+              </p>
+            )}
+          </div>
+
+          {/* Hazard cards */}
+          <div className="grid gap-4 md:grid-cols-1">
+            {eff.natural_hazards.hazards.map((h: any, i: number) => {
+              const sevColor = h.severity === "high"
+                ? "border-red-200 bg-red-50/30"
+                : h.severity === "medium"
+                ? "border-amber-200 bg-amber-50/30"
+                : "border-stone-200 bg-stone-50/30";
+              const sevBadge = h.severity === "high" ? "danger" : h.severity === "medium" ? "warning" : "default";
+              return (
+                <div key={i} className={`rounded-xl border p-5 shadow-sm ${sevColor}`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge variant={sevBadge as any}>{h.severity?.toUpperCase()}</Badge>
+                    <span className="text-[14px] font-semibold text-stone-800">{h.label}</span>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 mb-3">
+                    <div className="rounded-lg border border-stone-200 bg-white p-3">
+                      <p className="text-[22px] font-bold text-stone-900">{h.setback_m}m</p>
+                      <p className="text-[12px] text-stone-500">setback {h.setback_label}</p>
+                    </div>
+                    {h.tree_protection_m && (
+                      <div className="rounded-lg border border-stone-200 bg-white p-3">
+                        <p className="text-[22px] font-bold text-stone-900">{h.tree_protection_m}m</p>
+                        <p className="text-[12px] text-stone-500">tree protection zone</p>
+                      </div>
+                    )}
+                    {h.reduced_setback_m && (
+                      <div className="rounded-lg border border-stone-200 bg-white p-3">
+                        <p className="text-[22px] font-bold text-amber-600">{h.reduced_setback_m}m</p>
+                        <p className="text-[12px] text-stone-500">reduced setback (urban area)</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rules */}
+                  {h.rules?.length > 0 && (
+                    <Card label="Rules & Restrictions" defaultOpen={false}>
+                      <ul className="space-y-1.5">
+                        {h.rules.map((r: string, ri: number) => (
+                          <li key={ri} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-red-400" />
+                            <span>{r}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {h.restrictions?.length > 0 && (
+                        <div className="mt-3 border-t border-stone-100 pt-3">
+                          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-red-500">
+                            Restrictions
+                          </p>
+                          <ul className="space-y-1.5">
+                            {h.restrictions.map((r: string, ri: number) => (
+                              <li key={ri} className="flex items-start gap-2 text-[12px] leading-relaxed text-red-600">
+                                <span className="mt-0.5 text-red-400">✕</span>
+                                <span>{r}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </Card>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Permits & Studies required */}
+          {(eff.natural_hazards.permits_required?.length > 0 ||
+            eff.natural_hazards.studies_required?.length > 0) && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {eff.natural_hazards.permits_required?.length > 0 && (
+                <div className="rounded-xl border border-red-100 bg-white p-5 shadow-sm">
+                  <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-red-500">
+                    Permits Required
+                  </p>
+                  <ul className="space-y-2">
+                    {eff.natural_hazards.permits_required.map((p: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                        <span className="mt-0.5 text-red-500">📋</span>
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {eff.natural_hazards.studies_required?.length > 0 && (
+                <div className="rounded-xl border border-amber-100 bg-white p-5 shadow-sm">
+                  <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-amber-500">
+                    Studies Required
+                  </p>
+                  <ul className="space-y-2">
+                    {eff.natural_hazards.studies_required.map((s: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                        <span className="mt-0.5 text-amber-500">📄</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  HERITAGE IMPACT (Tier 3)                                     */}
+      {/* ============================================================ */}
+      {eff.heritage_impact?.has_heritage && (
+        <>
+          <SectionHeading
+            id="heritage"
+            title="Heritage Constraints"
+            icon={Icons.landmark}
+            count={eff.heritage_impact.item_count}
+          />
+
+          {/* Combined impact banner */}
+          <div className="rounded-xl border border-violet-200 bg-violet-50 p-4">
+            <p className="text-[13px] font-medium leading-relaxed text-violet-700">
+              {eff.heritage_impact.combined_impact}
+            </p>
+          </div>
+
+          {/* Heritage items */}
+          <div className="grid gap-4 md:grid-cols-1">
+            {eff.heritage_impact.items.map((item: any, i: number) => (
+              <div key={i} className="rounded-xl border border-violet-200 bg-white p-5 shadow-sm">
+                {item.type === "heritage_register" && (
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant={item.protection_level === "designated" ? "danger" : "warning"}>
+                        {item.protection_level === "designated" ? "DESIGNATED" : "LISTED"}
+                      </Badge>
+                      <span className="text-[14px] font-semibold text-stone-800">
+                        Heritage Register
+                      </span>
+                    </div>
+                    <p className="text-[13px] leading-relaxed text-stone-600 mb-3">
+                      {item.level_description}
+                    </p>
+                    <p className="text-[12px] leading-relaxed text-stone-500">
+                      {item.impact}
+                    </p>
+                    {item.description && (
+                      <div className="mt-3 rounded-lg bg-stone-50 p-3">
+                        <p className="text-[12px] text-stone-500">{item.description}</p>
+                      </div>
+                    )}
+                    {item.construction_date && (
+                      <p className="mt-2 text-[11px] text-stone-400">
+                        Construction date: {item.construction_date}
+                      </p>
+                    )}
+                  </>
+                )}
+
+                {item.type === "heritage_conservation_district" && (
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant="info">HCD</Badge>
+                      <span className="text-[14px] font-semibold text-stone-800">
+                        {item.hcd_name}
+                      </span>
+                      {item.bylaw && (
+                        <span className="text-[11px] text-stone-400">By-law {item.bylaw}</span>
+                      )}
+                    </div>
+                    <p className="mb-2 text-[11px] font-medium text-violet-500">
+                      {item.status_note}
+                    </p>
+
+                    {item.character_statement && (
+                      <p className="mb-3 text-[12px] italic leading-relaxed text-stone-500">
+                        &ldquo;{item.character_statement}&rdquo;
+                      </p>
+                    )}
+
+                    <p className="text-[12px] leading-relaxed text-stone-500 mb-3">
+                      {item.impact}
+                    </p>
+
+                    {/* Key metrics */}
+                    <div className="grid gap-3 sm:grid-cols-3 mb-3">
+                      {item.max_storeys_guideline && (
+                        <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                          <p className="text-[18px] font-bold text-stone-900">{item.max_storeys_guideline}</p>
+                          <p className="text-[12px] text-stone-500">max storeys (guideline)</p>
+                          {item.max_storeys_note && (
+                            <p className="text-[10px] text-stone-400 mt-0.5">{item.max_storeys_note}</p>
+                          )}
+                        </div>
+                      )}
+                      {item.streetwall_height_m && (
+                        <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                          <p className="text-[18px] font-bold text-stone-900">{item.streetwall_height_m}m</p>
+                          <p className="text-[12px] text-stone-500">street wall height</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Materials */}
+                    {(item.permitted_materials?.length > 0 || item.prohibited_materials?.length > 0) && (
+                      <div className="grid gap-3 sm:grid-cols-2 mb-3">
+                        {item.permitted_materials?.length > 0 && (
+                          <div>
+                            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-500">Permitted Materials</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {item.permitted_materials.map((m: string) => (
+                                <span key={m} className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 border border-emerald-100">
+                                  {m}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {item.prohibited_materials?.length > 0 && (
+                          <div>
+                            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-red-500">Prohibited Materials</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {item.prohibited_materials.map((m: string) => (
+                                <span key={m} className="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600 border border-red-100">
+                                  {m}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Design Guidelines */}
+                    {item.design_guidelines?.length > 0 && (
+                      <Card label="Design Guidelines" defaultOpen={false}>
+                        <ul className="space-y-1.5">
+                          {item.design_guidelines.map((g: string, gi: number) => (
+                            <li key={gi} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-violet-400" />
+                              <span>{g}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </Card>
+                    )}
+
+                    {item.plan_url && (
+                      <a
+                        href={item.plan_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-block text-[11px] text-violet-600 underline hover:text-violet-800"
+                      >
+                        View HCD Plan document ↗
+                      </a>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Heritage Permits & Studies */}
+          {(eff.heritage_impact.permits_required?.length > 0 ||
+            eff.heritage_impact.studies_required?.length > 0) && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {eff.heritage_impact.permits_required?.length > 0 && (
+                <div className="rounded-xl border border-violet-100 bg-white p-5 shadow-sm">
+                  <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-violet-500">
+                    Heritage Permits Required
+                  </p>
+                  <ul className="space-y-2">
+                    {eff.heritage_impact.permits_required.map((p: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                        <span className="mt-0.5 text-violet-500">📋</span>
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {eff.heritage_impact.studies_required?.length > 0 && (
+                <div className="rounded-xl border border-violet-100 bg-white p-5 shadow-sm">
+                  <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-violet-500">
+                    Studies Required
+                  </p>
+                  <ul className="space-y-2">
+                    {eff.heritage_impact.studies_required.map((s: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                        <span className="mt-0.5 text-violet-500">📄</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
       {/*  OVERLAY DISTRICT RULES (Chapter 600)                         */}
       {/* ============================================================ */}
       {eff.overlay_rules && Object.values(eff.overlay_rules).some((r: any) => r?.applies) && (
@@ -2161,6 +2505,106 @@ export default function ZoningReport({ data }: Props) {
           />
 
           <ExceptionDetail exception={eff.exception} exceptionDiff={eff.exception_diff} />
+
+          {/* Prevailing By-law Interpretation (Tier 3) */}
+          {eff.exception.interpreted_prevailing?.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+                Prevailing By-law Interpretation
+              </p>
+              <div className="space-y-4">
+                {eff.exception.interpreted_prevailing.map((entry: any, idx: number) => {
+                  const interp = entry.interpretation || {};
+
+                  if (interp.status === "none_apply") {
+                    return (
+                      <div key={idx} className="rounded-lg border border-stone-200 bg-stone-50 p-4">
+                        <p className="text-[13px] font-medium text-stone-500">
+                          {entry.letter && <span className="mr-1 text-stone-400">({entry.letter})</span>}
+                          No prevailing by-law provisions override 569-2013 for this property.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  const bylawLabel = entry.prevailing_bylaw
+                    ? `By-law ${entry.prevailing_bylaw.number}${entry.prevailing_bylaw.municipality ? ` (${entry.prevailing_bylaw.municipality})` : ""}`
+                    : interp.bylaw_id || "Unknown";
+
+                  return (
+                    <div key={idx} className="rounded-xl border border-sky-200 bg-white p-5 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        {entry.letter && (
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-[11px] font-bold text-sky-700">
+                            {entry.letter}
+                          </span>
+                        )}
+                        <span className="text-[14px] font-semibold text-stone-800">{bylawLabel}</span>
+                        {interp.fully_interpreted ? (
+                          <Badge variant="success">Fully Interpreted</Badge>
+                        ) : interp.interpretations?.some((i: any) => i.interpreted) ? (
+                          <Badge variant="warning">Partially Interpreted</Badge>
+                        ) : (
+                          <Badge variant="default">Not Indexed</Badge>
+                        )}
+                      </div>
+
+                      {interp.summary && (
+                        <p className="mb-3 text-[12px] leading-relaxed text-stone-500">
+                          {interp.summary}
+                        </p>
+                      )}
+
+                      {/* Section interpretations */}
+                      {interp.interpretations?.length > 0 && (
+                        <Card label={`Section Interpretations (${interp.section_count})`} defaultOpen={false}>
+                          <div className="space-y-3">
+                            {interp.interpretations.map((si: any, si_idx: number) => (
+                              <div key={si_idx} className={`rounded-lg p-3 ${si.interpreted ? "bg-sky-50 border border-sky-100" : "bg-stone-50 border border-stone-100"}`}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-[12px] font-medium text-stone-700">
+                                    {si.section_ref || `Section ${si_idx + 1}`}
+                                  </span>
+                                  {si.interpreted && si.category && (
+                                    <Badge variant="info">{si.category}</Badge>
+                                  )}
+                                </div>
+                                {si.interpreted && si.summary && (
+                                  <p className="text-[12px] leading-relaxed text-sky-700">{si.summary}</p>
+                                )}
+                                {si.interpreted && si.typical_provisions && (
+                                  <p className="mt-1 text-[11px] text-stone-400">
+                                    Typical: {si.typical_provisions}
+                                  </p>
+                                )}
+                                {!si.interpreted && si.note && (
+                                  <p className="text-[12px] text-stone-400">{si.note}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      )}
+
+                      {/* Merged standards */}
+                      {interp.merged_standards && Object.keys(interp.merged_standards).length > 0 && (
+                        <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
+                          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-600">
+                            Interpreted Standards
+                          </p>
+                          <div className="space-y-1">
+                            {Object.entries(interp.merged_standards).map(([key, val]: [string, any]) => (
+                              <Row key={key} label={key.replace(/_/g, " ")} value={String(val)} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -2296,6 +2740,117 @@ export default function ZoningReport({ data }: Props) {
             ))}
           </ul>
         </div>
+      )}
+
+      {/* ============================================================ */}
+      {/*  CONFIDENCE SCORING (Tier 3)                                  */}
+      {/* ============================================================ */}
+      {dev.confidence && (
+        <>
+          <SectionHeading
+            id="confidence"
+            title="Report Confidence"
+            icon={Icons.shield}
+          />
+
+          {/* Overall score */}
+          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-4 mb-4">
+              <div className={`flex h-16 w-16 items-center justify-center rounded-full border-4 ${
+                dev.confidence.overall_confidence === "high"
+                  ? "border-emerald-400 text-emerald-600"
+                  : dev.confidence.overall_confidence === "medium"
+                  ? "border-amber-400 text-amber-600"
+                  : dev.confidence.overall_confidence === "low"
+                  ? "border-red-400 text-red-600"
+                  : "border-stone-300 text-stone-500"
+              }`}>
+                <span className="text-[20px] font-bold">
+                  {dev.confidence.overall_score}
+                </span>
+              </div>
+              <div>
+                <p className="text-[16px] font-bold text-stone-900">
+                  {dev.confidence.overall_confidence?.toUpperCase()} Confidence
+                </p>
+                <p className="text-[12px] text-stone-500">
+                  {dev.confidence.high_confidence_count}/{dev.confidence.section_count} sections high-confidence
+                  {dev.confidence.low_confidence_count > 0 && (
+                    <span className="text-red-500">
+                      {" "}· {dev.confidence.low_confidence_count} low-confidence
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <p className="mb-4 text-[12px] leading-relaxed text-stone-500">
+              {dev.confidence.summary}
+            </p>
+
+            {/* Per-section scores */}
+            <div className="space-y-2.5">
+              {dev.confidence.sections?.map((s: any) => {
+                const barColor = s.confidence === "high"
+                  ? "bg-emerald-500"
+                  : s.confidence === "medium"
+                  ? "bg-amber-500"
+                  : s.confidence === "low"
+                  ? "bg-red-500"
+                  : "bg-stone-400";
+                return (
+                  <div key={s.section}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[12px] font-medium text-stone-700">{s.label}</span>
+                      <span className={`text-[11px] font-medium ${
+                        s.confidence === "high" ? "text-emerald-600"
+                          : s.confidence === "medium" ? "text-amber-600"
+                          : s.confidence === "low" ? "text-red-600"
+                          : "text-stone-500"
+                      }`}>
+                        {s.score}/100
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100">
+                      <div
+                        className={`h-full rounded-full transition-all ${barColor}`}
+                        style={{ width: `${s.score}%` }}
+                      />
+                    </div>
+                    {s.gaps?.length > 0 && (
+                      <div className="mt-1 space-y-0.5">
+                        {s.gaps.map((g: string, gi: number) => (
+                          <p key={gi} className="text-[10px] text-amber-500">
+                            ⚠ {g}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Gaps summary */}
+            {dev.confidence.gap_count > 0 && (
+              <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 mb-1.5">
+                  {dev.confidence.gap_count} Data Gap{dev.confidence.gap_count !== 1 ? "s" : ""} Identified
+                </p>
+                <ul className="space-y-1">
+                  {dev.confidence.gaps?.slice(0, 6).map((g: string, i: number) => (
+                    <li key={i} className="text-[11px] text-amber-600">⚠ {g}</li>
+                  ))}
+                  {dev.confidence.gaps?.length > 6 && (
+                    <li className="text-[11px] text-amber-400">
+                      + {dev.confidence.gaps.length - 6} more
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* ============================================================ */}
