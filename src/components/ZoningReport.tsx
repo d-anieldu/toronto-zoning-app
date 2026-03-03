@@ -4,6 +4,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import ExceptionDetail from "./ExceptionDetail";
+import { ReferenceProvider, RefLink } from "./ReferencePanel";
 
 interface Props {
   data: Record<string, any>;
@@ -724,6 +725,7 @@ export default function ZoningReport({ data }: Props) {
   const saspPolicies = opContext?.sasp_policies || [];
 
   return (
+    <ReferenceProvider>
     <div ref={reportRef} className="mt-8 space-y-5">
       {/* ============================================================ */}
       {/*  SECTION NAV                                                  */}
@@ -747,7 +749,10 @@ export default function ZoningReport({ data }: Props) {
               </p>
               {(bylawChapter || bylawSection) && (
                 <p className="mt-1 text-[12px] text-stone-400">
-                  By-law 569-2013 · Chapter {bylawChapter} · s.{bylawSection}
+                  By-law 569-2013 · Chapter {bylawChapter} ·{" "}
+                  <RefLink type="bylaw-section" id={bylawSection || bylawChapter} label={`s. ${bylawSection}`}>
+                    s.{bylawSection}
+                  </RefLink>
                 </p>
               )}
             </div>
@@ -765,7 +770,9 @@ export default function ZoningReport({ data }: Props) {
                 </span>
               )}
               {exceptionNum && (
-                <Badge variant="warning">Exception #{exceptionNum}</Badge>
+                <RefLink type="exception" id={String(exceptionNum)} zone_code={zoneCode} label={`Exception #${exceptionNum}`}>
+                  <Badge variant="warning">Exception #{exceptionNum}</Badge>
+                </RefLink>
               )}
               {holdingProvision && <Badge variant="danger">Holding (H)</Badge>}
             </div>
@@ -784,10 +791,10 @@ export default function ZoningReport({ data }: Props) {
                     <span className="font-mono">{z.ZN_ZONE}</span>{" "}
                     <span className="text-amber-600">({z.ZN_STRING})</span>
                     {z.EXCPTN_NO && z.EXCPTN_NO > 0 && (
-                      <span className="text-amber-500">
+                      <RefLink type="exception" id={String(z.EXCPTN_NO)} zone_code={z.ZN_ZONE} label={`Exception #${z.EXCPTN_NO}`} className="text-amber-500">
                         {" "}
                         · Exception #{z.EXCPTN_NO}
-                      </span>
+                      </RefLink>
                     )}
                   </p>
                 ))}
@@ -846,7 +853,11 @@ export default function ZoningReport({ data }: Props) {
                   )}
                   {dev.constraints.pmtsa_advisory.sasp_blank && (
                     <p className="mt-2 text-[11px] font-medium text-amber-600">
-                      ⚠ SASP #{dev.constraints.pmtsa_advisory.sasp_no} is not yet finalized — planning framework pending adoption
+                      ⚠{" "}
+                      <RefLink type="sasp" id={String(dev.constraints.pmtsa_advisory.sasp_no)} label={`SASP #${dev.constraints.pmtsa_advisory.sasp_no}`}>
+                        SASP #{dev.constraints.pmtsa_advisory.sasp_no}
+                      </RefLink>
+                      {" "}is not yet finalized — planning framework pending adoption
                     </p>
                   )}
                 </div>
@@ -868,7 +879,9 @@ export default function ZoningReport({ data }: Props) {
                     </span>
                     <span className="text-stone-500">{sz.zone_string}</span>
                     {sz.exception_number && Number(sz.exception_number) > 0 && (
-                      <Badge variant="warning">Exc #{sz.exception_number}</Badge>
+                      <RefLink type="exception" id={String(sz.exception_number)} zone_code={sz.zone} label={`Exception #${sz.exception_number}`}>
+                        <Badge variant="warning">Exc #{sz.exception_number}</Badge>
+                      </RefLink>
                     )}
                   </div>
                 ))}
@@ -2441,11 +2454,13 @@ export default function ZoningReport({ data }: Props) {
           {opDesignation && (
             <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
               <div>
-                <Badge variant="info">
-                  {opDesignation.section
-                    ? `OP s.${opDesignation.section}`
-                    : "Official Plan"}
-                </Badge>
+                <RefLink type="op-designation" id={zoneCode || ""} label={opDesignation.designation}>
+                  <Badge variant="info">
+                    {opDesignation.section
+                      ? `OP s.${opDesignation.section}`
+                      : "Official Plan"}
+                  </Badge>
+                </RefLink>
                 <h4 className="mt-2 text-[17px] font-bold text-stone-900">
                   {opDesignation.designation}
                 </h4>
@@ -2523,7 +2538,9 @@ export default function ZoningReport({ data }: Props) {
                     className="rounded-lg border border-amber-100 bg-amber-50/50 p-4"
                   >
                     <p className="text-[13px] font-semibold text-stone-800">
-                      SASP #{sasp.sasp_number}
+                      <RefLink type="sasp" id={String(sasp.sasp_number)} label={`SASP #${sasp.sasp_number}${sasp.title ? ` — ${sasp.title}` : ""}`}>
+                        SASP #{sasp.sasp_number}
+                      </RefLink>
                     </p>
                     {sasp.title && (
                       <p className="mt-0.5 text-[12px] font-medium text-stone-600">
@@ -2930,5 +2947,6 @@ export default function ZoningReport({ data }: Props) {
         </pre>
       </details>
     </div>
+    </ReferenceProvider>
   );
 }
