@@ -32,6 +32,7 @@ interface DiagramRef {
   label: string;
   bylaw?: string;
   url?: string;
+  page?: number;
 }
 
 interface NumericValue {
@@ -59,6 +60,31 @@ interface AnnotatedProvision {
   despite_refs?: string[];
 }
 
+interface PrevailingBylawEntry {
+  text: string;
+  letter?: string | null;
+  none_apply?: boolean;
+  sections?: string[];
+  prevailing_bylaw?: {
+    number: string;
+    municipality: string;
+    year?: string;
+    url?: string;
+  };
+  establishing_bylaw?: {
+    ref: string;
+    number?: string;
+    year?: string;
+    url?: string;
+  };
+  establishing_bylaws?: {
+    ref: string;
+    number?: string;
+    year?: string;
+    url?: string;
+  }[];
+}
+
 interface ExceptionData {
   exception_number: number;
   has_site_specific_provisions?: boolean;
@@ -67,6 +93,7 @@ interface ExceptionData {
   text_extracted_overrides?: Record<string, number>;
   provisions?: string[];
   annotated_provisions?: AnnotatedProvision[];
+  annotated_prevailing?: PrevailingBylawEntry[];
   bylaw_amendments?: string[];
 }
 
@@ -264,12 +291,15 @@ function DiagramLink({ diagram }: { diagram: DiagramRef }) {
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1 rounded bg-violet-50 border border-violet-200 px-2 py-0.5 text-[11px] font-medium text-violet-700 hover:bg-violet-100 transition-colors"
-        title={`View ${diagram.label}${diagram.bylaw ? ` from By-law ${diagram.bylaw}` : ""} (PDF)`}
+        title={`View ${diagram.label}${diagram.bylaw ? ` from By-law ${diagram.bylaw}` : ""}${diagram.page ? ` (page ${diagram.page})` : ""} (PDF)`}
       >
         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
         </svg>
         {diagram.label}
+        {diagram.page && (
+          <span className="text-violet-400 text-[10px]">p.{diagram.page}</span>
+        )}
         <ExternalLinkIcon />
       </a>
     );
@@ -311,6 +341,190 @@ function DefinitionTag({ def: d }: { def: DefinitionRef }) {
 /* ================================================================== */
 /*  EXCEPTION DIFF TABLE                                               */
 /* ================================================================== */
+
+/* ================================================================== */
+/*  PREVAILING BY-LAWS PANEL                                           */
+/* ================================================================== */
+
+function PrevailingBylawEntry({ entry }: { entry: PrevailingBylawEntry }) {
+  if (entry.none_apply) {
+    return (
+      <div className="flex items-center gap-2 py-1.5 text-[12px] text-stone-400 italic">
+        {entry.letter && (
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-stone-100 text-[10px] font-bold text-stone-400">
+            {entry.letter}
+          </span>
+        )}
+        <span>None apply</span>
+        {entry.establishing_bylaw?.url && (
+          <a
+            href={entry.establishing_bylaw.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sky-500 hover:text-sky-700"
+          >
+            (By-law {entry.establishing_bylaw.ref})
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  const pbl = entry.prevailing_bylaw;
+  const ebl = entry.establishing_bylaw;
+  const ebls = entry.establishing_bylaws;
+
+  return (
+    <div className="rounded-lg border border-stone-100 bg-white p-3 hover:border-stone-200 transition-colors">
+      <div className="flex items-start gap-2.5">
+        {entry.letter && (
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-600">
+            {entry.letter}
+          </span>
+        )}
+        <div className="flex-1 min-w-0">
+          {/* Prevailing by-law reference */}
+          {pbl && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+              <span className="text-[12px] font-semibold text-stone-700">
+                By-law {pbl.number}
+              </span>
+              {pbl.municipality && (
+                <span className="text-[11px] text-stone-400">
+                  ({pbl.municipality})
+                </span>
+              )}
+              {pbl.url && (
+                <a
+                  href={pbl.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-500 hover:text-sky-600"
+                >
+                  <ExternalLinkIcon />
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Sections */}
+          {entry.sections && entry.sections.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-1.5">
+              {entry.sections.map((s, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center rounded bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-mono font-medium text-sky-700"
+                >
+                  § {s}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Establishing by-law(s) */}
+          {ebl && (
+            <div className="text-[11px] text-stone-400">
+              Established by{" "}
+              {ebl.url ? (
+                <a
+                  href={ebl.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-stone-500 hover:text-stone-700 underline decoration-dotted"
+                >
+                  By-law {ebl.ref}
+                  <ExternalLinkIcon />
+                </a>
+              ) : (
+                <span className="text-stone-500">By-law {ebl.ref}</span>
+              )}
+            </div>
+          )}
+          {ebls && ebls.length > 0 && (
+            <div className="text-[11px] text-stone-400">
+              Established by{" "}
+              {ebls.map((eb, i) => (
+                <span key={i}>
+                  {i > 0 && ", "}
+                  {eb.url ? (
+                    <a
+                      href={eb.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-stone-500 hover:text-stone-700 underline decoration-dotted"
+                    >
+                      By-law {eb.ref}
+                    </a>
+                  ) : (
+                    <span className="text-stone-500">By-law {eb.ref}</span>
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Fallback: show raw text if no structured data */}
+          {!pbl && !entry.none_apply && (
+            <p className="text-[12px] text-stone-600">{entry.text}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PrevailingBylawsPanel({ entries }: { entries: PrevailingBylawEntry[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const nonEmpty = entries.filter((e) => !e.none_apply);
+  const allNoneApply = nonEmpty.length === 0;
+
+  return (
+    <div className="mb-5 rounded-lg border border-sky-100 bg-gradient-to-br from-sky-50/60 to-white p-4">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <div className="flex items-center gap-2">
+          <svg className="h-4 w-4 text-sky-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+          </svg>
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-sky-600">
+            Prevailing By-laws
+          </p>
+          <span className="rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-600">
+            {entries.length}
+          </span>
+        </div>
+        <svg
+          className={`h-4 w-4 text-sky-300 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-2">
+          {allNoneApply ? (
+            <p className="text-[12px] italic text-stone-400">No prevailing by-laws apply.</p>
+          ) : (
+            entries.map((entry, i) => (
+              <PrevailingBylawEntry key={i} entry={entry} />
+            ))
+          )}
+          <p className="mt-2 text-[10px] text-stone-400 leading-relaxed">
+            Prevailing by-laws are provisions from former municipality zoning by-laws that continue to apply
+            to this property despite the adoption of City-wide By-law 569-2013.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function DiffArrow({ direction }: { direction: DiffEntry["direction"] }) {
   const colors = {
@@ -606,6 +820,14 @@ export default function ExceptionDetail({
           </div>
         </div>
       ) : null}
+
+      {/* Prevailing By-laws */}
+      {exception.annotated_prevailing &&
+        exception.annotated_prevailing.length > 0 && (
+          <div className="mt-5">
+            <PrevailingBylawsPanel entries={exception.annotated_prevailing} />
+          </div>
+        )}
     </div>
   );
 }
