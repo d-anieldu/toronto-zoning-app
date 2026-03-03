@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import ExceptionDetail from "./ExceptionDetail";
 
 interface Props {
   data: Record<string, any>;
@@ -1688,67 +1689,7 @@ export default function ZoningReport({ data }: Props) {
             icon={Icons.doc}
           />
 
-          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <Badge variant="warning">
-                Exception #{eff.exception.exception_number}
-              </Badge>
-              {eff.exception.has_site_specific_provisions && (
-                <Badge variant="active">Site-specific provisions</Badge>
-              )}
-              {eff.exception.has_prevailing_bylaws && (
-                <Badge variant="info">Prevailing by-laws</Badge>
-              )}
-            </div>
-
-            {/* Numeric Overrides */}
-            {eff.exception.numeric_overrides &&
-              Object.keys(eff.exception.numeric_overrides).length > 0 && (
-                <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50 p-4">
-                  <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-amber-600">
-                    Numeric Overrides
-                  </p>
-                  <div className="space-y-1.5">
-                    {Object.entries(eff.exception.numeric_overrides).map(
-                      ([key, val]: [string, any]) => (
-                        <div
-                          key={key}
-                          className="flex items-baseline justify-between"
-                        >
-                          <span className="text-[13px] text-amber-700">
-                            {key.replace(/_/g, " ")}
-                          </span>
-                          <span className="font-mono text-[13px] font-semibold text-amber-900">
-                            {val}
-                          </span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {/* Provisions */}
-            {eff.exception.provisions?.length > 0 && (
-              <div>
-                <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-stone-400">
-                  Provisions ({eff.exception.provisions.length})
-                </p>
-                <div className="space-y-3">
-                  {eff.exception.provisions.map((p: string, i: number) => (
-                    <div key={i} className="flex gap-3">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-stone-100 text-[10px] font-semibold text-stone-500">
-                        {i + 1}
-                      </span>
-                      <p className="text-[13px] leading-relaxed text-stone-600">
-                        {p}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <ExceptionDetail exception={eff.exception} exceptionDiff={eff.exception_diff} />
         </>
       )}
 
