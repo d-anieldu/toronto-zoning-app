@@ -85,6 +85,24 @@ interface PrevailingBylawEntry {
   }[];
 }
 
+interface BylawSupplementSection37 {
+  letter: string;
+  text: string;
+}
+
+interface BylawSupplement {
+  has_section_37?: boolean;
+  has_schedule_a?: boolean;
+  section_37?: BylawSupplementSection37[];
+  schedule_a_text?: string;
+  schedule_a_summary?: string;
+  lands_description?: string;
+  zone_amendment?: string;
+  pdf_provision_count?: number;
+  total_pages?: number;
+  diagrams_found?: string[];
+}
+
 interface ExceptionData {
   exception_number: number;
   has_site_specific_provisions?: boolean;
@@ -95,6 +113,7 @@ interface ExceptionData {
   annotated_provisions?: AnnotatedProvision[];
   annotated_prevailing?: PrevailingBylawEntry[];
   bylaw_amendments?: string[];
+  bylaw_supplement?: BylawSupplement;
 }
 
 interface DiffEntry {
@@ -526,6 +545,142 @@ function PrevailingBylawsPanel({ entries }: { entries: PrevailingBylawEntry[] })
   );
 }
 
+/* ================================================================== */
+/*  BYLAW SUPPLEMENT PANEL (Section 37 / Schedule A)                   */
+/* ================================================================== */
+
+function BylawSupplementPanel({ supplement }: { supplement: BylawSupplement }) {
+  const [expanded, setExpanded] = useState(false);
+  const [scheduleExpanded, setScheduleExpanded] = useState(false);
+
+  const itemCount =
+    (supplement.section_37?.length || 0) +
+    (supplement.has_schedule_a ? 1 : 0);
+
+  return (
+    <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-white p-4">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <div className="flex items-center gap-2">
+          <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-emerald-600">
+            Amending By-law Details
+          </p>
+          <div className="flex gap-1">
+            {supplement.has_section_37 && (
+              <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
+                S.37
+              </span>
+            )}
+            {supplement.has_schedule_a && (
+              <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">
+                Sched A
+              </span>
+            )}
+          </div>
+        </div>
+        <svg
+          className={`h-4 w-4 text-emerald-300 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="mt-3 space-y-3">
+          {/* Lands description */}
+          {supplement.lands_description && (
+            <p className="text-[12px] text-stone-500">
+              <span className="font-medium text-stone-600">Lands:</span>{" "}
+              {supplement.lands_description}
+            </p>
+          )}
+
+          {/* Section 37 Conditions */}
+          {supplement.section_37 && supplement.section_37.length > 0 && (
+            <div>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-emerald-500">
+                Section 37 — Community Benefits
+              </p>
+              <div className="space-y-2">
+                {supplement.section_37.map((cond, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border border-emerald-100 bg-white p-3"
+                  >
+                    <div className="flex items-start gap-2">
+                      {cond.letter && (
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-600">
+                          {cond.letter}
+                        </span>
+                      )}
+                      <p className="text-[12px] leading-relaxed text-stone-600">
+                        {cond.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Schedule A */}
+          {supplement.has_schedule_a && supplement.schedule_a_summary && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setScheduleExpanded(!scheduleExpanded)}
+                className="flex items-center gap-1.5 mb-2"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-500">
+                  Schedule A — Development Conditions
+                </p>
+                <svg
+                  className={`h-3 w-3 text-emerald-300 transition-transform duration-200 ${scheduleExpanded ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              {scheduleExpanded ? (
+                <div className="rounded-lg border border-stone-100 bg-white p-3">
+                  <p className="whitespace-pre-line text-[12px] leading-relaxed text-stone-600">
+                    {supplement.schedule_a_text || supplement.schedule_a_summary}
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-stone-100 bg-stone-50 p-3">
+                  <p className="text-[12px] text-stone-400 line-clamp-3">
+                    {supplement.schedule_a_summary}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <p className="mt-2 text-[10px] text-stone-400 leading-relaxed">
+            Section 37 of the Planning Act allows municipalities to authorize height/density
+            increases beyond zoning limits in exchange for community benefits such as parks,
+            public art, affordable housing, and other facilities.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DiffArrow({ direction }: { direction: DiffEntry["direction"] }) {
   const colors = {
     increased: "text-emerald-500",
@@ -826,6 +981,15 @@ export default function ExceptionDetail({
         exception.annotated_prevailing.length > 0 && (
           <div className="mt-5">
             <PrevailingBylawsPanel entries={exception.annotated_prevailing} />
+          </div>
+        )}
+
+      {/* Amending By-law Supplement (Section 37 / Schedule A) */}
+      {exception.bylaw_supplement &&
+        (exception.bylaw_supplement.has_section_37 ||
+          exception.bylaw_supplement.has_schedule_a) && (
+          <div className="mt-5">
+            <BylawSupplementPanel supplement={exception.bylaw_supplement} />
           </div>
         )}
     </div>
