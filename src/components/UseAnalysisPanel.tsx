@@ -470,17 +470,30 @@ export default function UseAnalysisPanel({
                                     ? "⚠️"
                                     : "ℹ️"}
                                 </span>
-                                <p
-                                  className={`text-[12px] leading-relaxed ${
-                                    imp.severity === "high"
-                                      ? "text-red-700"
-                                      : imp.severity === "medium"
-                                      ? "text-amber-700"
-                                      : "text-sky-700"
-                                  }`}
-                                >
-                                  {imp.text}
-                                </p>
+                                <div className="flex-1">
+                                  <p
+                                    className={`text-[12px] leading-relaxed ${
+                                      imp.severity === "high"
+                                        ? "text-red-700"
+                                        : imp.severity === "medium"
+                                        ? "text-amber-700"
+                                        : "text-sky-700"
+                                    }`}
+                                  >
+                                    {imp.text}
+                                  </p>
+                                  {imp.exception_number && (
+                                    <RefLink
+                                      type="exception"
+                                      id={String(imp.exception_number)}
+                                      label={`Exception ${imp.exception_number}`}
+                                    >
+                                      <span className="mt-1 inline-flex items-center rounded bg-white/60 border border-current/10 px-1.5 py-0.5 text-[10px] font-medium cursor-pointer hover:bg-white transition-colors">
+                                        Exception #{imp.exception_number} →
+                                      </span>
+                                    </RefLink>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           ))}

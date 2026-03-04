@@ -311,7 +311,7 @@ function ReferenceBody({
     case "sasp":
       return <SaspBody result={result} />;
     case "op-designation":
-      return <OpDesignationBody result={result} />;
+      return <OpDesignationBody result={result} onNavigate={onNavigate} />;
     case "zone-info":
       return <ZoneInfoBody result={result} onNavigate={onNavigate} />;
     default:
@@ -477,12 +477,20 @@ function ExceptionBody({
           </h5>
           <div className="flex flex-wrap gap-1.5">
             {exc.bylaw_amendments.map((bl: string, i: number) => (
-              <span
+              <button
+                type="button"
                 key={i}
-                className="rounded border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] font-medium text-stone-500"
+                onClick={() =>
+                  onNavigate({
+                    type: "exception",
+                    id: exc.exception_number?.toString() || bl,
+                    label: bl,
+                  })
+                }
+                className="rounded border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] font-medium text-stone-500 cursor-pointer hover:border-stone-300 hover:bg-stone-100 transition-colors"
               >
                 {bl}
-              </span>
+              </button>
             ))}
           </div>
         </div>
@@ -543,7 +551,13 @@ function SaspBody({ result }: { result: ReferenceResult }) {
 
 /* ── OP Designation ─────────────────────────────────────────────────── */
 
-function OpDesignationBody({ result }: { result: ReferenceResult }) {
+function OpDesignationBody({
+  result,
+  onNavigate,
+}: {
+  result: ReferenceResult;
+  onNavigate: (target: ReferenceTarget) => void;
+}) {
   const des = result.data;
   if (!des) return <GenericBody result={result} />;
 
@@ -553,9 +567,19 @@ function OpDesignationBody({ result }: { result: ReferenceResult }) {
         {des.designation}
       </h4>
       {des.section && (
-        <span className="inline-block rounded-full bg-stone-100 px-2.5 py-0.5 text-[11px] font-medium text-stone-500">
+        <button
+          type="button"
+          onClick={() =>
+            onNavigate({
+              type: "op-designation",
+              id: des.section,
+              label: `OP s. ${des.section}`,
+            })
+          }
+          className="inline-block rounded-full bg-stone-100 px-2.5 py-0.5 text-[11px] font-medium text-stone-500 cursor-pointer hover:bg-stone-200 transition-colors"
+        >
           OP s. {des.section}
-        </span>
+        </button>
       )}
       {des.description && (
         <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">
@@ -626,7 +650,20 @@ function ZoneInfoBody({
       </div>
 
       <p className="text-[12px] text-stone-400">
-        By-law 569-2013 · Section {info.section_ref}
+        By-law 569-2013 ·{" "}
+        <button
+          type="button"
+          onClick={() =>
+            onNavigate({
+              type: "bylaw-section",
+              id: info.section_ref,
+              label: `s. ${info.section_ref}`,
+            })
+          }
+          className="text-stone-500 underline decoration-dotted cursor-pointer hover:text-stone-700 transition-colors"
+        >
+          Section {info.section_ref}
+        </button>
       </p>
 
       {/* Sections grid */}

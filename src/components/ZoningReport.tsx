@@ -2686,9 +2686,17 @@ export default function ZoningReport({ data }: Props) {
                             {interp.interpretations.map((si: any, si_idx: number) => (
                               <div key={si_idx} className={`rounded-lg p-3 ${si.interpreted ? "bg-sky-50 border border-sky-100" : "bg-stone-50 border border-stone-100"}`}>
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-[12px] font-medium text-stone-700">
-                                    {si.section_ref || `Section ${si_idx + 1}`}
-                                  </span>
+                                  {si.section_ref ? (
+                                    <RefLink type="bylaw-section" id={si.section_ref} label={`s. ${si.section_ref}`}>
+                                      <span className="text-[12px] font-medium text-sky-700 underline decoration-dotted cursor-pointer hover:text-sky-900 transition-colors">
+                                        {si.section_ref}
+                                      </span>
+                                    </RefLink>
+                                  ) : (
+                                    <span className="text-[12px] font-medium text-stone-700">
+                                      Section {si_idx + 1}
+                                    </span>
+                                  )}
                                   {si.interpreted && si.category && (
                                     <Badge variant="info">{si.category}</Badge>
                                   )}

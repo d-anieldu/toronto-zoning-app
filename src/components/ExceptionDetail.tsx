@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useRef, useState } from "react";
+import { RefLink } from "./ReferencePanel";
 
 /* ================================================================== */
 /*  TYPES                                                              */
@@ -166,24 +167,6 @@ function ExternalLinkIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-      />
-    </svg>
-  );
-}
-
-function DocIcon() {
-  return (
-    <svg
-      className="h-4 w-4 text-stone-400"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
       />
     </svg>
   );
@@ -430,12 +413,16 @@ function PrevailingBylawEntry({ entry }: { entry: PrevailingBylawEntry }) {
           {entry.sections && entry.sections.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-1.5">
               {entry.sections.map((s, i) => (
-                <span
+                <RefLink
                   key={i}
-                  className="inline-flex items-center rounded bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-mono font-medium text-sky-700"
+                  type="bylaw-section"
+                  id={s}
+                  label={`§ ${s}`}
                 >
-                  § {s}
-                </span>
+                  <span className="inline-flex items-center rounded bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] font-mono font-medium text-sky-700 cursor-pointer hover:bg-sky-100 transition-colors">
+                    § {s}
+                  </span>
+                </RefLink>
               ))}
             </div>
           )}
@@ -552,10 +539,6 @@ function PrevailingBylawsPanel({ entries }: { entries: PrevailingBylawEntry[] })
 function BylawSupplementPanel({ supplement }: { supplement: BylawSupplement }) {
   const [expanded, setExpanded] = useState(false);
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
-
-  const itemCount =
-    (supplement.section_37?.length || 0) +
-    (supplement.has_schedule_a ? 1 : 0);
 
   return (
     <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-white p-4">
@@ -906,7 +889,15 @@ export default function ExceptionDetail({
         )}
         {exception.bylaw_amendments && exception.bylaw_amendments.length > 0 && (
           <span className="text-[11px] text-stone-400">
-            Amended by: {exception.bylaw_amendments.join(", ")}
+            Amended by:{" "}
+            {exception.bylaw_amendments.map((bl: string, i: number) => (
+              <span key={i}>
+                <RefLink type="exception" id={String(exception.exception_number)} label={bl}>
+                  <span className="text-stone-500 underline decoration-dotted cursor-pointer hover:text-stone-700 transition-colors">{bl}</span>
+                </RefLink>
+                {i < exception.bylaw_amendments.length - 1 && ", "}
+              </span>
+            ))}
           </span>
         )}
       </div>
