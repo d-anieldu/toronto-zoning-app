@@ -2839,7 +2839,7 @@ export default function ZoningReport({ data }: Props) {
             icon={Icons.shield}
           />
 
-          {/* Overall score */}
+          {/* Overall score + methodology toggle */}
           <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className={`flex h-16 w-16 items-center justify-center rounded-full border-4 ${
@@ -2874,8 +2874,66 @@ export default function ZoningReport({ data }: Props) {
               {dev.confidence.summary}
             </p>
 
-            {/* Per-section scores */}
-            <div className="space-y-2.5">
+            {/* How This Score Works — collapsible methodology */}
+            {dev.confidence.methodology && (
+              <details className="mb-4 rounded-lg border border-stone-100 bg-stone-50">
+                <summary className="cursor-pointer px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500 hover:text-stone-700">
+                  How This Score Works
+                </summary>
+                <div className="px-4 pb-3 pt-1">
+                  <p className="text-[11px] leading-relaxed text-stone-500 mb-3">
+                    {dev.confidence.methodology.description}
+                  </p>
+                  <div className="space-y-2 mb-3">
+                    {dev.confidence.methodology.dimensions?.map((d: any, i: number) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full bg-stone-400" />
+                        <div>
+                          <span className="text-[11px] font-semibold text-stone-700">
+                            {d.name} ({d.weight})
+                          </span>
+                          <span className="text-[11px] text-stone-500"> — {d.description}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Threshold table */}
+                  <div className="rounded border border-stone-200 overflow-hidden">
+                    <table className="w-full text-[10px]">
+                      <thead>
+                        <tr className="bg-stone-100">
+                          <th className="px-2 py-1 text-left font-semibold text-stone-600">Level</th>
+                          <th className="px-2 py-1 text-left font-semibold text-stone-600">Score</th>
+                          <th className="px-2 py-1 text-left font-semibold text-stone-600">Meaning</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dev.confidence.methodology.thresholds?.map((t: any) => (
+                          <tr key={t.level} className="border-t border-stone-100">
+                            <td className="px-2 py-1">
+                              <span className={`inline-block rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                                t.level === "high" ? "bg-emerald-100 text-emerald-700"
+                                  : t.level === "medium" ? "bg-amber-100 text-amber-700"
+                                  : t.level === "low" ? "bg-red-100 text-red-700"
+                                  : "bg-stone-200 text-stone-600"
+                              }`}>{t.level}</span>
+                            </td>
+                            <td className="px-2 py-1 text-stone-600">{t.min_score}+</td>
+                            <td className="px-2 py-1 text-stone-500">{t.meaning}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 text-[10px] italic text-stone-400">
+                    {dev.confidence.methodology.disclaimer}
+                  </p>
+                </div>
+              </details>
+            )}
+
+            {/* Per-section expandable cards */}
+            <div className="space-y-2">
               {dev.confidence.sections?.map((s: any) => {
                 const barColor = s.confidence === "high"
                   ? "bg-emerald-500"
@@ -2884,54 +2942,181 @@ export default function ZoningReport({ data }: Props) {
                   : s.confidence === "low"
                   ? "bg-red-500"
                   : "bg-stone-400";
+                const badgeColor = s.confidence === "high"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : s.confidence === "medium"
+                  ? "bg-amber-100 text-amber-700"
+                  : s.confidence === "low"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-stone-200 text-stone-600";
                 return (
-                  <div key={s.section}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[12px] font-medium text-stone-700">{s.label}</span>
-                      <span className={`text-[11px] font-medium ${
-                        s.confidence === "high" ? "text-emerald-600"
-                          : s.confidence === "medium" ? "text-amber-600"
-                          : s.confidence === "low" ? "text-red-600"
-                          : "text-stone-500"
-                      }`}>
-                        {s.score}/100
-                      </span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100">
-                      <div
-                        className={`h-full rounded-full transition-all ${barColor}`}
-                        style={{ width: `${s.score}%` }}
-                      />
-                    </div>
-                    {s.gaps?.length > 0 && (
-                      <div className="mt-1 space-y-0.5">
-                        {s.gaps.map((g: string, gi: number) => (
-                          <p key={gi} className="text-[10px] text-amber-500">
-                            ⚠ {g}
-                          </p>
-                        ))}
+                  <details key={s.section} className="group rounded-lg border border-stone-100 bg-white">
+                    {/* Collapsed: section name + bar + badge */}
+                    <summary className="cursor-pointer px-3 py-2.5 flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[12px] font-medium text-stone-700">{s.label}</span>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-bold uppercase rounded px-1.5 py-0.5 ${badgeColor}`}>
+                              {s.confidence}
+                            </span>
+                            <span className="text-[11px] font-medium text-stone-500">
+                              {s.score}/100
+                            </span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-stone-100">
+                          <div
+                            className={`h-full rounded-full transition-all ${barColor}`}
+                            style={{ width: `${s.score}%` }}
+                          />
+                        </div>
                       </div>
-                    )}
-                  </div>
+                      <svg className="h-4 w-4 shrink-0 text-stone-400 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                      </svg>
+                    </summary>
+
+                    {/* Expanded: dimensions, rationale, sources, verification */}
+                    <div className="border-t border-stone-100 px-3 pb-3 pt-2.5 space-y-3">
+                      {/* 3 sub-dimension mini-bars */}
+                      {s.dimensions && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {(["completeness", "authority", "certainty"] as const).map((dim) => {
+                            const d = s.dimensions[dim];
+                            if (!d) return null;
+                            const dimBarColor = d.score >= 85 ? "bg-emerald-400"
+                              : d.score >= 60 ? "bg-amber-400"
+                              : d.score >= 35 ? "bg-red-400"
+                              : "bg-stone-300";
+                            return (
+                              <div key={dim}>
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <span className="text-[10px] text-stone-500">{d.label}</span>
+                                  <span className="text-[10px] font-medium text-stone-600">{d.score}</span>
+                                </div>
+                                <div className="h-1 w-full overflow-hidden rounded-full bg-stone-100">
+                                  <div className={`h-full rounded-full ${dimBarColor}`} style={{ width: `${d.score}%` }} />
+                                </div>
+                                <p className="text-[9px] text-stone-400 mt-0.5">{d.weight}% weight</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Rationale */}
+                      {s.rationale && (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mb-1">Rationale</p>
+                          <p className="text-[11px] leading-relaxed text-stone-600">{s.rationale}</p>
+                        </div>
+                      )}
+
+                      {/* Data sources */}
+                      {s.sources?.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mb-1">Data Sources</p>
+                          <ul className="space-y-0.5">
+                            {s.sources.map((src: any, si: number) => (
+                              <li key={si} className="flex items-start gap-1.5 text-[11px]">
+                                <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                                <span className="text-stone-600">
+                                  {src.url ? (
+                                    <a href={src.url} target="_blank" rel="noopener noreferrer" className="underline decoration-blue-300 hover:text-blue-700">
+                                      {src.name}
+                                    </a>
+                                  ) : src.name}
+                                  <span className="text-stone-400"> · {src.type}</span>
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Verification steps */}
+                      {s.verification_steps?.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mb-1">Verification Steps</p>
+                          <ul className="space-y-1">
+                            {s.verification_steps.map((v: any, vi: number) => {
+                              const urgencyStyle = v.urgency === "must"
+                                ? "bg-red-100 text-red-700 border-red-200"
+                                : v.urgency === "should"
+                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                : "bg-stone-50 text-stone-600 border-stone-200";
+                              const urgencyIcon = v.urgency === "must" ? "🔴"
+                                : v.urgency === "should" ? "🟡" : "🔵";
+                              return (
+                                <li key={vi} className={`rounded border px-2 py-1.5 text-[11px] leading-relaxed ${urgencyStyle}`}>
+                                  <span className="mr-1">{urgencyIcon}</span>
+                                  {v.text}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Gaps for this section */}
+                      {s.gaps?.length > 0 && (
+                        <div className="space-y-0.5">
+                          {s.gaps.map((g: string, gi: number) => (
+                            <p key={gi} className="text-[10px] text-amber-500">⚠ {g}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </details>
                 );
               })}
             </div>
 
-            {/* Gaps summary */}
-            {dev.confidence.gap_count > 0 && (
-              <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50 p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 mb-1.5">
-                  {dev.confidence.gap_count} Data Gap{dev.confidence.gap_count !== 1 ? "s" : ""} Identified
+            {/* ── Due Diligence Checklist ────────────────────────────── */}
+            {dev.confidence.due_diligence?.length > 0 && (
+              <div className="mt-5 rounded-xl border border-stone-200 bg-stone-50 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[12px] font-bold text-stone-800">
+                    Due Diligence Checklist
+                  </p>
+                  <div className="flex items-center gap-2 text-[10px]">
+                    {dev.confidence.must_verify_count > 0 && (
+                      <span className="rounded bg-red-100 px-1.5 py-0.5 font-bold text-red-700">
+                        {dev.confidence.must_verify_count} must verify
+                      </span>
+                    )}
+                    {dev.confidence.should_verify_count > 0 && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 font-bold text-amber-700">
+                        {dev.confidence.should_verify_count} should verify
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-[11px] text-stone-500 mb-3">
+                  Complete these steps to validate the data in this report. Items are sorted by urgency.
                 </p>
-                <ul className="space-y-1">
-                  {dev.confidence.gaps?.slice(0, 6).map((g: string, i: number) => (
-                    <li key={i} className="text-[11px] text-amber-600">⚠ {g}</li>
-                  ))}
-                  {dev.confidence.gaps?.length > 6 && (
-                    <li className="text-[11px] text-amber-400">
-                      + {dev.confidence.gaps.length - 6} more
-                    </li>
-                  )}
+                <ul className="space-y-1.5">
+                  {dev.confidence.due_diligence.map((d: any, di: number) => {
+                    const urgencyBg = d.urgency === "must"
+                      ? "border-red-200 bg-red-50"
+                      : d.urgency === "should"
+                      ? "border-amber-200 bg-amber-50"
+                      : "border-stone-200 bg-white";
+                    const urgencyIcon = d.urgency === "must" ? "🔴"
+                      : d.urgency === "should" ? "🟡" : "🔵";
+                    return (
+                      <li key={di} className={`flex items-start gap-2 rounded border px-3 py-2 ${urgencyBg}`}>
+                        <span className="mt-0.5 shrink-0">{urgencyIcon}</span>
+                        <div className="min-w-0">
+                          <p className="text-[11px] leading-relaxed text-stone-700">{d.text}</p>
+                          <p className="text-[9px] font-medium uppercase tracking-wide text-stone-400 mt-0.5">
+                            {d.section}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
