@@ -5,6 +5,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import ExceptionDetail from "./ExceptionDetail";
 import { ReferenceProvider, RefLink } from "./ReferencePanel";
+import UseAnalysisPanel from "./UseAnalysisPanel";
 
 interface Props {
   data: Record<string, any>;
@@ -203,21 +204,29 @@ function Tag({
   children,
   active,
   icon,
+  onClick,
 }: {
   children: React.ReactNode;
   active?: boolean;
   icon?: string;
+  onClick?: () => void;
 }) {
+  const clickable = !!onClick;
   return (
     <span
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") onClick?.(); } : undefined}
       className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-medium ${
         active
           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
           : "border-stone-200 bg-stone-50 text-stone-600"
-      }`}
+      }${clickable ? " cursor-pointer transition-shadow hover:shadow-md hover:ring-1 hover:ring-indigo-300" : ""}`}
     >
       {icon && <span>{icon}</span>}
       {children}
+      {clickable && <span className="ml-0.5 text-[10px] text-indigo-400">→</span>}
     </span>
   );
 }
@@ -544,6 +553,7 @@ const Icons = {
 
 export default function ZoningReport({ data }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
+  const [analyzeUse, setAnalyzeUse] = useState<string | null>(null);
 
   /* -------- data extraction -------- */
   const eff = data.effective_standards || {};
@@ -1567,7 +1577,7 @@ export default function ZoningReport({ data }: Props) {
               </p>
               <div className="flex flex-wrap gap-2">
                 {(dev.building_types.permitted || []).map((t: string) => (
-                  <Tag key={t} active icon="✓">
+                  <Tag key={t} active icon="✓" onClick={() => setAnalyzeUse(t)}>
                     {t}
                   </Tag>
                 ))}
@@ -1620,13 +1630,21 @@ export default function ZoningReport({ data }: Props) {
                 </p>
                 <div className="space-y-2">
                   {eff.permitted_building_types.map((t: string) => (
-                    <div key={t} className="flex items-center gap-2.5">
+                    <div
+                      key={t}
+                      className="flex items-center gap-2.5 cursor-pointer rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-indigo-50"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setAnalyzeUse(t)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setAnalyzeUse(t); }}
+                    >
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                         {Icons.check}
                       </span>
                       <span className="text-[13px] font-medium text-stone-700">
                         {t}
                       </span>
+                      <span className="ml-auto text-[10px] text-indigo-400">Analyze →</span>
                     </div>
                   ))}
                 </div>
@@ -1697,11 +1715,21 @@ export default function ZoningReport({ data }: Props) {
                         </p>
                         <div className="space-y-1.5">
                           {eff.expanded_uses.conditional_commercial.map((d: any, i: number) => (
-                            <div key={i} className="rounded-lg bg-amber-50 px-3 py-2">
-                              <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
-                              {d.conditions && (
-                                <p className="text-[11px] text-amber-600">{d.conditions}</p>
-                              )}
+                            <div
+                              key={i}
+                              className="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 cursor-pointer transition-colors hover:bg-amber-100 hover:ring-1 hover:ring-indigo-300"
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => setAnalyzeUse(d.use || d)}
+                              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setAnalyzeUse(d.use || d); }}
+                            >
+                              <div>
+                                <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
+                                {d.conditions && (
+                                  <p className="text-[11px] text-amber-600">{d.conditions}</p>
+                                )}
+                              </div>
+                              <span className="shrink-0 ml-2 text-[10px] text-indigo-400">Analyze →</span>
                             </div>
                           ))}
                         </div>
@@ -1714,11 +1742,21 @@ export default function ZoningReport({ data }: Props) {
                         </p>
                         <div className="space-y-1.5">
                           {eff.expanded_uses.conditional_residential.map((d: any, i: number) => (
-                            <div key={i} className="rounded-lg bg-amber-50 px-3 py-2">
-                              <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
-                              {d.conditions && (
-                                <p className="text-[11px] text-amber-600">{d.conditions}</p>
-                              )}
+                            <div
+                              key={i}
+                              className="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 cursor-pointer transition-colors hover:bg-amber-100 hover:ring-1 hover:ring-indigo-300"
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => setAnalyzeUse(d.use || d)}
+                              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setAnalyzeUse(d.use || d); }}
+                            >
+                              <div>
+                                <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
+                                {d.conditions && (
+                                  <p className="text-[11px] text-amber-600">{d.conditions}</p>
+                                )}
+                              </div>
+                              <span className="shrink-0 ml-2 text-[10px] text-indigo-400">Analyze →</span>
                             </div>
                           ))}
                         </div>
@@ -3151,6 +3189,14 @@ export default function ZoningReport({ data }: Props) {
         </pre>
       </details>
     </div>
+
+    {/* Use Eligibility Analysis Panel */}
+    <UseAnalysisPanel
+      useName={analyzeUse}
+      reportData={analyzeUse ? data : null}
+      onClose={() => setAnalyzeUse(null)}
+    />
+
     </ReferenceProvider>
   );
 }
