@@ -895,7 +895,7 @@ export default function ExceptionDetail({
                 <RefLink type="exception" id={String(exception.exception_number)} label={bl}>
                   <span className="text-stone-500 underline decoration-dotted cursor-pointer hover:text-stone-700 transition-colors">{bl}</span>
                 </RefLink>
-                {i < exception.bylaw_amendments.length - 1 && ", "}
+                {i < (exception.bylaw_amendments?.length ?? 0) - 1 && ", "}
               </span>
             ))}
           </span>

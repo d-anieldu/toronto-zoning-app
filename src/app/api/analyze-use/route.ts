@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Remove the _action field before forwarding
-    const { _action, ...payload } = body;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _action: _, ...payload } = body;
 
     const res = await fetch(`${API_URL}${endpoint}`, {
       method: "POST",

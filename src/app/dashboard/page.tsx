@@ -15,6 +15,12 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="flex items-center gap-4">
+            <a
+              href="/intelligence"
+              className="text-[12px] text-stone-500 hover:text-stone-900"
+            >
+              Intelligence
+            </a>
             <span className="hidden text-[12px] text-stone-400 sm:block">
               By-law 569-2013 · 19 GIS layers
             </span>

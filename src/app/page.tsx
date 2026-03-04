@@ -18,6 +18,12 @@ export default async function Home() {
           </span>
           <div className="flex items-center gap-6">
             <Link
+              href="/intelligence"
+              className="text-[13px] text-stone-500 hover:text-stone-900"
+            >
+              Intelligence
+            </Link>
+            <Link
               href="/sign-in"
               className="text-[13px] text-stone-500 hover:text-stone-900"
             >
