@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
       endpoint = "/analyze-use/list";
     } else if (body._action === "all") {
       endpoint = "/analyze-use/all";
+    } else if (body._action === "what-if") {
+      endpoint = "/analyze-use/what-if";
     }
 
     // Remove the _action field before forwarding

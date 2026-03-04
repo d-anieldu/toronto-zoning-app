@@ -42,6 +42,19 @@ interface AnalysisResult {
   unknown_count?: number;
   unmapped?: boolean;
   description?: string;
+  exception_impacts?: ExceptionImpact[];
+  what_if?: {
+    proposed: Record<string, number>;
+    deltas: Record<string, { old: number | null; new: number }>;
+    is_what_if: boolean;
+  };
+}
+
+interface ExceptionImpact {
+  type: string;
+  severity: "high" | "medium" | "info";
+  text: string;
+  exception_number: number;
 }
 
 interface UseAnalysisPanelProps {
@@ -145,6 +158,10 @@ export default function UseAnalysisPanel({
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [whatIfOpen, setWhatIfOpen] = useState(false);
+  const [whatIfValues, setWhatIfValues] = useState<Record<string, string>>({});
+  const [whatIfLoading, setWhatIfLoading] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   /* ── Fetch analysis when useName changes ── */
@@ -158,6 +175,10 @@ export default function UseAnalysisPanel({
     setLoading(true);
     setError(null);
     setResult(null);
+    setCopied(false);
+    setWhatIfOpen(false);
+    setWhatIfValues({});
+    setWhatIfLoading(false);
 
     (async () => {
       try {
@@ -209,6 +230,89 @@ export default function UseAnalysisPanel({
     },
     []
   );
+
+  /* ── Copy to clipboard ── */
+  const handleCopy = useCallback(() => {
+    if (!result) return;
+    const lines: string[] = [
+      `Use Eligibility Report: ${result.display_name}`,
+      `Zone: ${result.zone_code} (${result.zone_family})`,
+      `Permission: ${result.permission}`,
+      `Eligibility: ${result.eligibility}`,
+      "",
+      result.summary,
+      "",
+    ];
+    if (result.checklist.length > 0) {
+      lines.push("CONDITIONS:");
+      for (const item of result.checklist) {
+        const icon =
+          item.status === "pass"
+            ? "✓"
+            : item.status === "fail"
+            ? "✗"
+            : item.status === "info"
+            ? "ℹ"
+            : "?";
+        lines.push(`  ${icon} ${item.text}`);
+        if (item.detail && item.detail !== item.text) {
+          lines.push(`    → ${item.detail}`);
+        }
+      }
+      lines.push("");
+    }
+    if (result.parking_impact?.note) {
+      lines.push(`PARKING: ${result.parking_impact.note}`);
+      lines.push("");
+    }
+    if (result.exception_impacts && result.exception_impacts.length > 0) {
+      lines.push("EXCEPTION IMPACTS:");
+      for (const imp of result.exception_impacts) {
+        lines.push(`  ⚠ ${imp.text}`);
+      }
+      lines.push("");
+    }
+    if (result.bylaw_refs.length > 0) {
+      lines.push(`BYLAW REFS: ${result.bylaw_refs.map((r) => `s.${r}`).join(", ")}`);
+    }
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [result]);
+
+  /* ── What-if submit ── */
+  const handleWhatIf = useCallback(async () => {
+    if (!useName || !reportData) return;
+    const proposed: Record<string, number> = {};
+    for (const [key, val] of Object.entries(whatIfValues)) {
+      const num = parseFloat(val);
+      if (!isNaN(num) && num > 0) proposed[key] = num;
+    }
+    if (Object.keys(proposed).length === 0) return;
+
+    setWhatIfLoading(true);
+    try {
+      const res = await fetch("/api/analyze-use", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          _action: "what-if",
+          use: useName,
+          report: reportData,
+          proposed,
+        }),
+      });
+      if (res.ok) {
+        const data: AnalysisResult = await res.json();
+        setResult(data);
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      setWhatIfLoading(false);
+    }
+  }, [useName, reportData, whatIfValues]);
 
   const isOpen = !!useName;
 
@@ -339,6 +443,51 @@ export default function UseAnalysisPanel({
                     </div>
                   )}
 
+                  {/* ── Exception Impacts ── */}
+                  {result.exception_impacts &&
+                    result.exception_impacts.length > 0 && (
+                      <div>
+                        <h4 className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+                          Site-Specific Exception
+                        </h4>
+                        <div className="space-y-2">
+                          {result.exception_impacts.map((imp, i) => (
+                            <div
+                              key={i}
+                              className={`rounded-lg border p-3 ${
+                                imp.severity === "high"
+                                  ? "border-red-200 bg-red-50"
+                                  : imp.severity === "medium"
+                                  ? "border-amber-200 bg-amber-50"
+                                  : "border-sky-200 bg-sky-50"
+                              }`}
+                            >
+                              <div className="flex items-start gap-2">
+                                <span className="mt-0.5 text-[14px]">
+                                  {imp.severity === "high"
+                                    ? "🚨"
+                                    : imp.severity === "medium"
+                                    ? "⚠️"
+                                    : "ℹ️"}
+                                </span>
+                                <p
+                                  className={`text-[12px] leading-relaxed ${
+                                    imp.severity === "high"
+                                      ? "text-red-700"
+                                      : imp.severity === "medium"
+                                      ? "text-amber-700"
+                                      : "text-sky-700"
+                                  }`}
+                                >
+                                  {imp.text}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                   {/* ── Parking Impact ── */}
                   {result.parking_impact?.note && (
                     <div>
@@ -363,6 +512,82 @@ export default function UseAnalysisPanel({
                       </div>
                     </div>
                   )}
+
+                  {/* ── What-If Mode ── */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setWhatIfOpen(!whatIfOpen)}
+                      className="flex w-full items-center justify-between rounded-lg border border-stone-200 bg-stone-50 px-4 py-2.5 text-[13px] font-medium text-stone-600 transition-colors hover:bg-stone-100"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-[14px]">🔮</span>
+                        What-If Analysis
+                      </span>
+                      <span className="text-[11px] text-stone-400">
+                        {whatIfOpen ? "▲" : "▼"}
+                      </span>
+                    </button>
+                    {whatIfOpen && (
+                      <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4">
+                        <p className="mb-3 text-[11px] text-stone-400">
+                          Enter proposed values to recalculate eligibility:
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { key: "unit_count", label: "Units", placeholder: "e.g. 4" },
+                            { key: "gfa_sqm", label: "GFA (sqm)", placeholder: "e.g. 340" },
+                            { key: "storeys", label: "Storeys", placeholder: "e.g. 3" },
+                            { key: "lot_frontage_m", label: "Frontage (m)", placeholder: "e.g. 15" },
+                          ].map(({ key, label, placeholder }) => (
+                            <div key={key}>
+                              <label className="block text-[10px] font-medium uppercase tracking-wide text-stone-400">
+                                {label}
+                              </label>
+                              <input
+                                type="number"
+                                step="any"
+                                placeholder={placeholder}
+                                value={whatIfValues[key] || ""}
+                                onChange={(e) =>
+                                  setWhatIfValues((v) => ({
+                                    ...v,
+                                    [key]: e.target.value,
+                                  }))
+                                }
+                                className="mt-0.5 w-full rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-[13px] text-stone-700 placeholder:text-stone-300 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-300"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleWhatIf}
+                          disabled={whatIfLoading}
+                          className="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                          {whatIfLoading ? "Recalculating…" : "Recalculate"}
+                        </button>
+                        {result.what_if && (
+                          <div className="mt-2 rounded-md bg-indigo-100 px-3 py-2">
+                            <p className="text-[11px] font-medium text-indigo-700">
+                              What-If result active
+                            </p>
+                            {Object.entries(result.what_if.deltas).map(
+                              ([key, delta]) => (
+                                <p
+                                  key={key}
+                                  className="text-[11px] text-indigo-600"
+                                >
+                                  {key}: {delta.old ?? "—"} → {delta.new}
+                                </p>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   {/* ── Bylaw References ── */}
                   {result.bylaw_refs.length > 0 && (
@@ -397,6 +622,15 @@ export default function UseAnalysisPanel({
                       unknown={result.unknown_count || 0}
                     />
                   )}
+
+                  {/* ── Copy to Clipboard ── */}
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="w-full rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-[13px] font-medium text-stone-600 transition-colors hover:bg-stone-50"
+                  >
+                    {copied ? "✓ Copied to clipboard" : "📋 Copy Report"}
+                  </button>
                 </div>
               )}
             </div>
