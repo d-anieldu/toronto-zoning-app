@@ -3,9 +3,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import ExceptionDetail from "./ExceptionDetail";
 import { ReferenceProvider, RefLink } from "./ReferencePanel";
 import UseAnalysisPanel from "./UseAnalysisPanel";
+
+const MapPanel = dynamic(() => import("./MapPanel"), { ssr: false });
 
 interface Props {
   data: Record<string, any>;
@@ -404,6 +407,7 @@ function SetbackDiagram({
 
 const NAV_ITEMS = [
   { id: "zone", label: "Zone" },
+  { id: "map", label: "Map" },
   { id: "site-plan", label: "Site Plan" },
   { id: "standards", label: "Standards" },
   { id: "build", label: "What Can I Build" },
@@ -1023,6 +1027,16 @@ export default function ZoningReport({ data }: Props) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* ============================================================ */}
+      {/*  GIS LAYER MAP                                                */}
+      {/* ============================================================ */}
+      {coords.latitude && coords.longitude && (
+        <>
+          <SectionHeading id="map" title="GIS Layer Map" icon={Icons.map} />
+          <MapPanel latitude={coords.latitude} longitude={coords.longitude} />
+        </>
       )}
 
       {/* ============================================================ */}

@@ -1,0 +1,30 @@
+import { NextRequest, NextResponse } from "next/server";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export async function GET(request: NextRequest) {
+  if (!API_URL) {
+    return NextResponse.json({ detail: "API URL not configured" }, { status: 500 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const lon = searchParams.get("lon");
+  const lat = searchParams.get("lat");
+
+  if (!lon || !lat) {
+    return NextResponse.json({ detail: "lon and lat are required" }, { status: 400 });
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/map/parcel?lon=${lon}&lat=${lat}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Backend error" }));
+      return NextResponse.json(err, { status: res.status });
+    }
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Map parcel error:", error);
+    return NextResponse.json({ detail: "Backend unreachable" }, { status: 502 });
+  }
+}
