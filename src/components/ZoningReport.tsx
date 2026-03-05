@@ -413,6 +413,13 @@ const NAV_ITEMS = [
   { id: "build", label: "What Can I Build" },
   { id: "uses", label: "Uses" },
   { id: "parking", label: "Parking" },
+  { id: "bicycle-parking", label: "Bicycle Parking" },
+  { id: "loading", label: "Loading" },
+  { id: "amenity", label: "Amenity Space" },
+  { id: "angular-plane", label: "Angular Plane" },
+  { id: "shadow", label: "Shadow" },
+  { id: "inclusionary-zoning", label: "Inclusionary Zoning" },
+  { id: "coa", label: "CoA Precedents" },
   { id: "overlays", label: "Overlays" },
   { id: "hazards", label: "Hazards" },
   { id: "heritage", label: "Heritage" },
@@ -547,6 +554,41 @@ const Icons = {
   shield: (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+    </svg>
+  ),
+  bike: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 18a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zM18.75 18a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zM12 5.25l-3 9h6l-3-9zM5.25 14.25h13.5" />
+    </svg>
+  ),
+  truck: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H18.75M15 12V3.75m0 0H3.375c-.621 0-1.125.504-1.125 1.125V12m12.75-8.25h3.375c.621 0 1.125.504 1.125 1.125V12" />
+    </svg>
+  ),
+  sparkle: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+    </svg>
+  ),
+  angle: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 20.25V3.75m0 16.5h16.5M3.75 20.25l16.5-16.5" />
+    </svg>
+  ),
+  sun: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  ),
+  gavel: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971z" />
+    </svg>
+  ),
+  home: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
     </svg>
   ),
 };
@@ -1942,6 +1984,600 @@ export default function ZoningReport({ data }: Props) {
                   </ul>
                 )}
             </Card>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  BICYCLE PARKING                                              */}
+      {/* ============================================================ */}
+      {dev.bicycle_parking?.applies && (
+        <>
+          <SectionHeading
+            id="bicycle-parking"
+            title="Bicycle Parking"
+            icon={Icons.bike}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card label="Bicycle Parking Requirements" defaultOpen>
+              <Row
+                label="Bicycle zone"
+                value={`Zone ${dev.bicycle_parking.bicycle_zone}`}
+              />
+              <Row
+                label="Est. dwelling units"
+                value={dev.bicycle_parking.estimated_units}
+              />
+              <Row
+                label="Long-term spaces"
+                value={dev.bicycle_parking.long_term}
+                sub={`${dev.bicycle_parking.rate_long_per_unit} per unit`}
+              />
+              <Row
+                label="Short-term spaces"
+                value={dev.bicycle_parking.short_term}
+                sub={`${dev.bicycle_parking.rate_short_per_unit} per unit`}
+              />
+              <Row
+                label="Total bicycle spaces"
+                value={dev.bicycle_parking.total}
+              />
+              {dev.bicycle_parking.shower_change_sets > 0 && (
+                <Row
+                  label="Shower/change facilities"
+                  value={`${dev.bicycle_parking.shower_change_sets} set(s) per gender`}
+                />
+              )}
+              {dev.bicycle_parking.bylaw_ref && (
+                <Row
+                  label="By-law reference"
+                  value={
+                    <RefLink
+                      type="bylaw-section"
+                      id={dev.bicycle_parking.bylaw_ref}
+                      label={`s. ${dev.bicycle_parking.bylaw_ref}`}
+                    >
+                      s. {dev.bicycle_parking.bylaw_ref}
+                    </RefLink>
+                  }
+                />
+              )}
+            </Card>
+          </div>
+
+          {dev.bicycle_parking.exception_override && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
+              ⚠ Exception override: {dev.bicycle_parking.exception_override}
+            </div>
+          )}
+
+          {dev.bicycle_parking.note && (
+            <p className="text-[11px] italic text-stone-400">
+              {dev.bicycle_parking.note}
+            </p>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  LOADING SPACE                                                */}
+      {/* ============================================================ */}
+      {dev.loading_space && (
+        <>
+          <SectionHeading
+            id="loading"
+            title="Loading Space"
+            icon={Icons.truck}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card label="Loading Requirements" defaultOpen>
+              <Row
+                label="Est. dwelling units"
+                value={dev.loading_space.estimated_units}
+              />
+              <Row
+                label="Required"
+                value={dev.loading_space.applies ? "Yes" : "No"}
+              />
+              {dev.loading_space.required_spaces?.length > 0 && (
+                <div className="mt-2 space-y-1.5">
+                  {dev.loading_space.required_spaces.map(
+                    (space: any, i: number) => (
+                      <div
+                        key={i}
+                        className="flex items-baseline justify-between gap-3 rounded-lg bg-stone-50 px-3 py-2"
+                      >
+                        <span className="text-[12px] font-medium text-stone-700">
+                          {space.count}× Type &ldquo;{space.type}&rdquo;
+                        </span>
+                        <span className="text-right text-[12px] text-stone-500">
+                          {space.length_m}m × {space.width_m}m
+                          {space.clearance_m
+                            ? `, ${space.clearance_m}m clearance`
+                            : ""}
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+              {dev.loading_space.bylaw_ref && (
+                <Row
+                  label="By-law reference"
+                  value={
+                    <RefLink
+                      type="bylaw-section"
+                      id={dev.loading_space.bylaw_ref}
+                      label={`s. ${dev.loading_space.bylaw_ref}`}
+                    >
+                      s. {dev.loading_space.bylaw_ref}
+                    </RefLink>
+                  }
+                />
+              )}
+            </Card>
+          </div>
+
+          {dev.loading_space.exception_override && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
+              ⚠ Exception override: {dev.loading_space.exception_override}
+            </div>
+          )}
+
+          {dev.loading_space.note && (
+            <p className="text-[11px] italic text-stone-400">
+              {dev.loading_space.note}
+            </p>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  AMENITY SPACE                                                */}
+      {/* ============================================================ */}
+      {dev.amenity_space?.applies && (
+        <>
+          <SectionHeading
+            id="amenity"
+            title="Amenity Space"
+            icon={Icons.sparkle}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card label="Amenity Space Requirements" defaultOpen>
+              <Row
+                label="Est. dwelling units"
+                value={dev.amenity_space.estimated_units}
+              />
+              <Row
+                label="Threshold"
+                value={`≥ ${dev.amenity_space.threshold_units} units`}
+              />
+              <Row
+                label="Total required"
+                value={`${dev.amenity_space.total_required_sqm} m²`}
+              />
+              <Row
+                label="Indoor required"
+                value={`${dev.amenity_space.indoor_required_sqm} m²`}
+              />
+              <Row
+                label="Outdoor required"
+                value={`${dev.amenity_space.outdoor_required_sqm} m²`}
+                sub={`Min ${dev.amenity_space.outdoor_min_sqm} m²`}
+              />
+              <Row
+                label="Green roof allowance"
+                value={`Up to ${dev.amenity_space.green_roof_max_sqm} m² (${dev.amenity_space.green_roof_max_pct}%)`}
+              />
+              {dev.amenity_space.bylaw_ref && (
+                <Row
+                  label="By-law reference"
+                  value={
+                    <RefLink
+                      type="bylaw-section"
+                      id={dev.amenity_space.bylaw_ref}
+                      label={`s. ${dev.amenity_space.bylaw_ref}`}
+                    >
+                      s. {dev.amenity_space.bylaw_ref}
+                    </RefLink>
+                  }
+                />
+              )}
+            </Card>
+          </div>
+
+          {dev.amenity_space.exception_override && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
+              ⚠ Exception override: {dev.amenity_space.exception_override}
+            </div>
+          )}
+
+          {dev.amenity_space.note && (
+            <p className="text-[11px] italic text-stone-400">
+              {dev.amenity_space.note}
+            </p>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  ANGULAR PLANE                                                */}
+      {/* ============================================================ */}
+      {dev.angular_plane?.applies && (
+        <>
+          <SectionHeading
+            id="angular-plane"
+            title="Angular Plane"
+            icon={Icons.angle}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card label="Angular Plane Analysis" defaultOpen>
+              <Row
+                label="Angle"
+                value={`${dev.angular_plane.angle_degrees}°`}
+              />
+              {dev.angular_plane.zone_section && (
+                <Row
+                  label="By-law section"
+                  value={
+                    <RefLink
+                      type="bylaw-section"
+                      id={dev.angular_plane.zone_section}
+                      label={`s. ${dev.angular_plane.zone_section}`}
+                    >
+                      s. {dev.angular_plane.zone_section}
+                    </RefLink>
+                  }
+                />
+              )}
+              {dev.angular_plane.constrains_envelope != null && (
+                <Row
+                  label="Constrains envelope"
+                  value={dev.angular_plane.constrains_envelope ? "Yes" : "No"}
+                />
+              )}
+              {dev.angular_plane.binding_constraint && (
+                <Row
+                  label="Binding constraint"
+                  value={dev.angular_plane.binding_constraint}
+                />
+              )}
+            </Card>
+
+            {dev.angular_plane.height_limits && (
+              <Card label="Height Limits from Angular Plane" defaultOpen>
+                {Object.entries(dev.angular_plane.height_limits).map(
+                  ([location, limit]: [string, any]) => (
+                    <Row
+                      key={location}
+                      label={location.replace(/_/g, " ")}
+                      value={
+                        typeof limit === "number"
+                          ? `${limit}m`
+                          : limit != null
+                          ? String(limit)
+                          : "N/A"
+                      }
+                    />
+                  )
+                )}
+              </Card>
+            )}
+          </div>
+
+          {dev.angular_plane.rules?.length > 0 && (
+            <Card label="Angular Plane Rules" defaultOpen={false}>
+              {dev.angular_plane.rules.map((rule: any, i: number) => (
+                <div key={i} className="mb-3 last:mb-0">
+                  <p className="text-[12px] font-medium text-stone-700">
+                    {rule.type?.replace(/_/g, " ")}
+                    {rule.lot_class ? ` (${rule.lot_class} lot)` : ""}
+                  </p>
+                  {rule.start_height_m != null && (
+                    <p className="text-[12px] text-stone-500">
+                      Starts at {rule.start_height_m}m
+                      {rule.height_at_rear_setback_m
+                        ? `, max ${rule.height_at_rear_setback_m}m at rear setback`
+                        : ""}
+                      {rule.height_at_front_setback_m
+                        ? `, max ${rule.height_at_front_setback_m}m at front setback`
+                        : ""}
+                    </p>
+                  )}
+                  {rule.note && (
+                    <p className="mt-1 text-[11px] italic text-stone-400">
+                      {rule.note}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </Card>
+          )}
+
+          {dev.angular_plane.rear_assumed && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
+              ⚠ Assumed lot abuts residential/open-space zone (conservative default). Provide adjacency data for a precise analysis.
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  SHADOW ANALYSIS                                              */}
+      {/* ============================================================ */}
+      {dev.shadow_analysis?.nearest_park_name && (
+        <>
+          <SectionHeading
+            id="shadow"
+            title="Shadow Analysis"
+            icon={Icons.sun}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card label="Nearest Park Shadow Impact" defaultOpen>
+              <Row
+                label="Nearest park"
+                value={dev.shadow_analysis.nearest_park_name}
+              />
+              <Row
+                label="Distance"
+                value={
+                  dev.shadow_analysis.nearest_park_distance_m != null
+                    ? `${dev.shadow_analysis.nearest_park_distance_m}m`
+                    : "—"
+                }
+              />
+              {dev.shadow_analysis.nearest_park_class && (
+                <Row
+                  label="Park class"
+                  value={dev.shadow_analysis.nearest_park_class}
+                />
+              )}
+              {dev.shadow_analysis.shadow_equinox_m != null && (
+                <Row
+                  label="Shadow (Sep 21 noon)"
+                  value={`${dev.shadow_analysis.shadow_equinox_m}m`}
+                  sub={
+                    dev.shadow_analysis.shadow_reaches_park_equinox
+                      ? "⚠ Reaches park"
+                      : "Does not reach park"
+                  }
+                />
+              )}
+              {dev.shadow_analysis.shadow_equinox_918am_m != null && (
+                <Row
+                  label="Shadow (Sep 21 9:18AM)"
+                  value={`${dev.shadow_analysis.shadow_equinox_918am_m}m`}
+                />
+              )}
+              {dev.shadow_analysis.shadow_winter_solstice_m != null && (
+                <Row
+                  label="Shadow (winter solstice noon)"
+                  value={`${dev.shadow_analysis.shadow_winter_solstice_m}m`}
+                  sub={
+                    dev.shadow_analysis.shadow_reaches_park_winter
+                      ? "⚠ Reaches park"
+                      : "Does not reach park"
+                  }
+                />
+              )}
+              {dev.shadow_analysis.constraint_severity && (
+                <Row
+                  label="Constraint severity"
+                  value={
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                        dev.shadow_analysis.constraint_severity === "high"
+                          ? "bg-red-100 text-red-700"
+                          : dev.shadow_analysis.constraint_severity === "medium"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {dev.shadow_analysis.constraint_severity}
+                    </span>
+                  }
+                />
+              )}
+            </Card>
+          </div>
+
+          {dev.shadow_analysis.summary_text && (
+            <p className="text-[11px] italic text-stone-400">
+              {dev.shadow_analysis.summary_text}
+            </p>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  INCLUSIONARY ZONING                                          */}
+      {/* ============================================================ */}
+      {dev.inclusionary_zoning?.applies && (
+        <>
+          <SectionHeading
+            id="inclusionary-zoning"
+            title="Inclusionary Zoning"
+            icon={Icons.home}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card label="Inclusionary Zoning Requirements" defaultOpen>
+              <Row label="IZ area" value={dev.inclusionary_zoning.iz_area} />
+              <Row label="Tenure" value={dev.inclusionary_zoning.tenure} />
+              <Row
+                label="Base rate"
+                value={`${dev.inclusionary_zoning.base_rate_pct}%`}
+              />
+              {dev.inclusionary_zoning.phase_increase_pct > 0 && (
+                <Row
+                  label="Phasing increase"
+                  value={`+${dev.inclusionary_zoning.phase_increase_pct}%`}
+                />
+              )}
+              <Row
+                label="Effective rate"
+                value={`${dev.inclusionary_zoning.effective_rate_pct}%`}
+              />
+              {dev.inclusionary_zoning.exempt ? (
+                <Row
+                  label="Status"
+                  value={
+                    <span className="text-green-600 font-medium">Exempt</span>
+                  }
+                  sub={dev.inclusionary_zoning.exempt_reason}
+                />
+              ) : (
+                <>
+                  {dev.inclusionary_zoning.required_affordable_gfa_sqm !=
+                    null && (
+                    <Row
+                      label="Required affordable GFA"
+                      value={`${dev.inclusionary_zoning.required_affordable_gfa_sqm.toLocaleString()} m²`}
+                    />
+                  )}
+                  {dev.inclusionary_zoning.required_affordable_units !=
+                    null && (
+                    <Row
+                      label="Est. affordable units"
+                      value={dev.inclusionary_zoning.required_affordable_units}
+                    />
+                  )}
+                </>
+              )}
+              {dev.inclusionary_zoning.affordability_period_years && (
+                <Row
+                  label="Affordability period"
+                  value={`${dev.inclusionary_zoning.affordability_period_years} years`}
+                />
+              )}
+            </Card>
+          </div>
+
+          {dev.inclusionary_zoning.phasing_note && (
+            <p className="text-[11px] italic text-stone-400">
+              {dev.inclusionary_zoning.phasing_note}
+            </p>
+          )}
+
+          {dev.inclusionary_zoning.parking_note && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-[12px] text-emerald-700">
+              {dev.inclusionary_zoning.parking_note}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  COA PRECEDENTS                                               */}
+      {/* ============================================================ */}
+      {dev.coa_precedents?.total_matches > 0 && (
+        <>
+          <SectionHeading
+            id="coa"
+            title="Committee of Adjustment Precedents"
+            icon={Icons.gavel}
+            count={dev.coa_precedents.total_matches}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card label="Application Statistics" defaultOpen>
+              <Row
+                label="Total applications"
+                value={dev.coa_precedents.total_matches}
+              />
+              <Row
+                label="Approval rate"
+                value={`${dev.coa_precedents.approval_rate}%`}
+              />
+              {dev.coa_precedents.same_zone_count > 0 && (
+                <>
+                  <Row
+                    label="Same zone applications"
+                    value={dev.coa_precedents.same_zone_count}
+                  />
+                  {dev.coa_precedents.same_zone_approval_rate != null && (
+                    <Row
+                      label="Same zone approval rate"
+                      value={`${dev.coa_precedents.same_zone_approval_rate}%`}
+                    />
+                  )}
+                </>
+              )}
+              {dev.coa_precedents.common_sub_types?.length > 0 && (
+                <Row
+                  label="Common sub-types"
+                  value={dev.coa_precedents.common_sub_types
+                    .map((s: [string, number]) => `${s[0]} (${s[1]})`)
+                    .join(", ")}
+                />
+              )}
+              {dev.coa_precedents.common_work_types?.length > 0 && (
+                <Row
+                  label="Common work types"
+                  value={dev.coa_precedents.common_work_types
+                    .map((s: [string, number]) => `${s[0]} (${s[1]})`)
+                    .join(", ")}
+                />
+              )}
+            </Card>
+          </div>
+
+          {dev.coa_precedents.samples?.length > 0 && (
+            <Card label="Recent Applications" defaultOpen={false}>
+              <div className="space-y-3">
+                {dev.coa_precedents.samples.map((s: any, i: number) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border border-stone-100 bg-stone-50 p-3"
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-[12px] font-medium text-stone-700">
+                        {s.address}
+                      </p>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          s.decision?.toLowerCase().startsWith("approv")
+                            ? "bg-green-100 text-green-700"
+                            : s.decision?.toLowerCase().startsWith("refus")
+                            ? "bg-red-100 text-red-700"
+                            : "bg-stone-100 text-stone-600"
+                        }`}
+                      >
+                        {s.decision}
+                      </span>
+                    </div>
+                    {s.reference && (
+                      <p className="text-[11px] text-stone-400">
+                        Ref: {s.reference}
+                        {s.hearing_date ? ` · ${s.hearing_date}` : ""}
+                      </p>
+                    )}
+                    {s.sub_type && (
+                      <p className="text-[11px] text-stone-500">
+                        {s.sub_type}
+                        {s.work_type ? ` — ${s.work_type}` : ""}
+                      </p>
+                    )}
+                    {s.description && (
+                      <p className="mt-1 text-[11px] leading-relaxed text-stone-400">
+                        {s.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {dev.coa_precedents.summary_text && (
+            <p className="text-[11px] italic text-stone-400">
+              {dev.coa_precedents.summary_text}
+            </p>
           )}
         </>
       )}
