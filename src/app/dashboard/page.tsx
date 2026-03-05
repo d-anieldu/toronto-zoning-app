@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import SearchForm from "@/components/SearchForm";
 
@@ -15,12 +16,12 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <a
+            <Link
               href="/intelligence"
               className="text-[12px] text-stone-500 hover:text-stone-900"
             >
               Intelligence
-            </a>
+            </Link>
             <span className="hidden text-[12px] text-stone-400 sm:block">
               By-law 569-2013 · 19 GIS layers
             </span>

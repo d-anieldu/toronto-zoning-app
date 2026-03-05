@@ -350,6 +350,13 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 }
 
 /** Minimal Markdown → HTML for preview (h2, h3, bold, italic, bullets, links) */
+/** Strip dangerous URI schemes from markdown-generated links */
+function sanitizeUrl(url: string): string {
+  const decoded = decodeURIComponent(url).replace(/\s/g, "").toLowerCase();
+  if (/^(javascript|data|vbscript):/i.test(decoded)) return "#";
+  return url;
+}
+
 function simpleMarkdown(md: string): string {
   return md
     .replace(/&/g, "&amp;")
@@ -364,7 +371,7 @@ function simpleMarkdown(md: string): string {
     // Bullet lists
     .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc text-[13px] text-stone-700">$1</li>')
     // Links
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-blue-600 underline" target="_blank">$1</a>')
+    .replace(/\[(.+?)\]\((.+?)\)/g, (_m: string, text: string, url: string) => `<a href="${sanitizeUrl(url)}" class="text-blue-600 underline" target="_blank">${text}</a>`)
     // Paragraphs
     .replace(/\n{2,}/g, '</p><p class="text-[13px] text-stone-700 leading-relaxed mb-3">')
     .replace(/\n/g, "<br>")

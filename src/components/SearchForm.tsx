@@ -69,7 +69,7 @@ export default function SearchForm() {
   }
 
   // Select a suggestion
-  function selectSuggestion(suggestion: string) {
+  const selectSuggestion = useCallback((suggestion: string) => {
     // Extract just the street address portion (before first comma) for the input
     const streetAddress = suggestion.split(",")[0].trim();
     setAddress(streetAddress);
@@ -77,7 +77,7 @@ export default function SearchForm() {
     setShowSuggestions(false);
     setHighlightIdx(-1);
     inputRef.current?.focus();
-  }
+  }, []);
 
   // Keyboard navigation
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -208,7 +208,7 @@ export default function SearchForm() {
                   const rest = parts.slice(1).join(",").trim();
                   return (
                     <button
-                      key={i}
+                      key={s}
                       type="button"
                       role="option"
                       aria-selected={i === highlightIdx}

@@ -218,18 +218,15 @@ export default function UseAnalysisPanel({
   }, [useName, onClose]);
 
   /* ── Group checklist items by category ── */
-  const groupedChecklist = useCallback(
-    (items: ChecklistItem[]) => {
-      const groups: Record<string, ChecklistItem[]> = {};
-      for (const item of items) {
-        const cat = item.category || "other";
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(item);
-      }
-      return groups;
-    },
-    []
-  );
+  const groupedChecklist = (items: ChecklistItem[]) => {
+    const groups: Record<string, ChecklistItem[]> = {};
+    for (const item of items) {
+      const cat = item.category || "other";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(item);
+    }
+    return groups;
+  };
 
   /* ── Copy to clipboard ── */
   const handleCopy = useCallback(() => {

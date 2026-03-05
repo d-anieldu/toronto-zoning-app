@@ -193,6 +193,13 @@ export default function ArticleDetailPage({
 
 /* ── Markdown → HTML ────────────────────────────────────────────────────── */
 
+/** Strip dangerous URI schemes from markdown-generated links */
+function sanitizeUrl(url: string): string {
+  const decoded = decodeURIComponent(url).replace(/\s/g, "").toLowerCase();
+  if (/^(javascript|data|vbscript):/i.test(decoded)) return "#";
+  return url;
+}
+
 function renderMarkdown(md: string): string {
   // Escape HTML
   let html = md
@@ -222,10 +229,10 @@ function renderMarkdown(md: string): string {
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
-  // Links
+  // Links (sanitize URLs to block javascript:/data: schemes)
   html = html.replace(
     /\[(.+?)\]\((.+?)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+    (_m: string, text: string, url: string) => `<a href="${sanitizeUrl(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`
   );
 
   // Bullet lists — group consecutive lines starting with "- "
