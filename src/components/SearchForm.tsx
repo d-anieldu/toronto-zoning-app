@@ -327,19 +327,41 @@ export default function SearchForm() {
         )}
       </form>
 
-      {/* Loading state */}
+      {/* Loading state — educational, shows what's happening */}
       {loading && (
-        <div className="mt-10 flex flex-col items-center justify-center py-16">
-          <div className="relative">
-            <div className="h-12 w-12 rounded-full border-2 border-stone-200" />
-            <div className="absolute inset-0 h-12 w-12 animate-spin rounded-full border-2 border-transparent border-t-stone-900" />
+        <div className="mt-10 rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
+          <div className="flex flex-col items-center justify-center">
+            <div className="relative">
+              <div className="h-14 w-14 rounded-full border-2 border-stone-200" />
+              <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-2 border-transparent border-t-stone-900" />
+            </div>
+            <p className="mt-5 text-[16px] font-semibold text-stone-800">
+              Resolving zoning profile…
+            </p>
+            <p className="mt-1 text-[13px] text-stone-400">
+              This typically takes 3–8 seconds
+            </p>
           </div>
-          <p className="mt-4 text-[14px] font-medium text-stone-700">
-            Querying zoning layers…
-          </p>
-          <p className="mt-1 text-[12px] text-stone-400">
-            Resolving standards from 19 GIS layers
-          </p>
+
+          {/* Step-by-step progress visualization */}
+          <div className="mt-8 space-y-3">
+            {[
+              { label: "Geocoding address & identifying parcel", icon: "📍" },
+              { label: "Querying 19 GIS overlay layers", icon: "🗺️" },
+              { label: "Resolving exception overrides from 6,063 entries", icon: "📋" },
+              { label: "Computing effective standards & development potential", icon: "📐" },
+              { label: "Generating parking, loading, and amenity requirements", icon: "🅿️" },
+            ].map((step, i) => (
+              <div
+                key={step.label}
+                className="flex items-center gap-3 rounded-lg bg-stone-50 px-4 py-2.5 animate-pulse"
+                style={{ animationDelay: `${i * 0.3}s` }}
+              >
+                <span className="text-[16px]">{step.icon}</span>
+                <span className="text-[12px] font-medium text-stone-500">{step.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

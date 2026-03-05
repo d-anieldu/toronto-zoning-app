@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import ExceptionDetail from "./ExceptionDetail";
 import { ReferenceProvider, RefLink } from "./ReferencePanel";
@@ -417,19 +417,28 @@ const NAV_ITEMS = [
   { id: "loading", label: "Loading" },
   { id: "amenity", label: "Amenity Space" },
   { id: "angular-plane", label: "Angular Plane" },
-  { id: "shadow", label: "Shadow" },
-  { id: "inclusionary-zoning", label: "Inclusionary Zoning" },
-  { id: "coa", label: "CoA Precedents" },
-  { id: "overlays", label: "Overlays" },
-  { id: "hazards", label: "Hazards" },
-  { id: "heritage", label: "Heritage" },
-  { id: "overlay-rules", label: "District Rules" },
-  { id: "stepback", label: "Stepback" },
-  { id: "op-context", label: "Official Plan" },
-  { id: "exception", label: "Exception" },
-  { id: "charges", label: "Charges" },
-  { id: "contact", label: "Contact" },
-  { id: "confidence", label: "Confidence" },
+  { id: "shadow", label: "Shadow", group: "Regulations" },
+  { id: "inclusionary-zoning", label: "Inclusionary Zoning", group: "Regulations" },
+  { id: "coa", label: "CoA Precedents", group: "Context" },
+  { id: "overlays", label: "Overlays", group: "Context" },
+  { id: "hazards", label: "Hazards", group: "Context" },
+  { id: "heritage", label: "Heritage", group: "Context" },
+  { id: "overlay-rules", label: "District Rules", group: "Context" },
+  { id: "stepback", label: "Stepback", group: "Regulations" },
+  { id: "op-context", label: "Official Plan", group: "Context" },
+  { id: "exception", label: "Exception", group: "Context" },
+  { id: "charges", label: "Charges", group: "Financial" },
+  { id: "contact", label: "Contact", group: "Info" },
+  { id: "confidence", label: "Confidence", group: "Info" },
+];
+
+/* ── Section Nav groups for visual grouping ── */
+const NAV_GROUPS = [
+  { label: "Overview", items: ["zone", "map", "site-plan"] },
+  { label: "Standards", items: ["standards", "build", "uses"] },
+  { label: "Requirements", items: ["parking", "bicycle-parking", "loading", "amenity", "angular-plane", "shadow", "inclusionary-zoning", "stepback"] },
+  { label: "Context", items: ["coa", "overlays", "hazards", "heritage", "overlay-rules", "op-context", "exception"] },
+  { label: "Other", items: ["charges", "contact", "confidence"] },
 ];
 
 function SectionNav() {
@@ -459,21 +468,35 @@ function SectionNav() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
+  const navItemMap = Object.fromEntries(NAV_ITEMS.map(i => [i.id, i]));
+
   return (
-    <nav className="sticky top-0 z-20 -mx-1 mb-4 overflow-x-auto rounded-xl border border-stone-200 bg-white/90 shadow-sm backdrop-blur-md">
-      <div className="flex min-w-max gap-0.5 px-2 py-2">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => scrollTo(item.id)}
-            className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all ${
-              active === item.id
-                ? "bg-stone-900 text-white shadow-sm"
-                : "text-stone-400 hover:bg-stone-100 hover:text-stone-600"
-            }`}
-          >
-            {item.label}
-          </button>
+    <nav className="sticky top-0 z-20 -mx-1 mb-4 overflow-x-auto rounded-xl border border-stone-200 bg-white/95 shadow-sm backdrop-blur-md">
+      <div className="flex min-w-max items-center gap-1 px-3 py-2">
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={group.label} className="flex items-center gap-0.5">
+            {gi > 0 && <span className="mx-1.5 h-4 w-px bg-stone-200" />}
+            <span className="mr-1 text-[9px] font-bold uppercase tracking-widest text-stone-300">
+              {group.label}
+            </span>
+            {group.items.map((itemId) => {
+              const item = navItemMap[itemId];
+              if (!item) return null;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => scrollTo(item.id)}
+                  className={`whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all ${
+                    active === item.id
+                      ? "bg-stone-900 text-white shadow-sm"
+                      : "text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         ))}
       </div>
     </nav>
@@ -594,18 +617,76 @@ const Icons = {
 };
 
 /* ================================================================== */
+/*  FLOATING QUICK ACTIONS                                             */
+/* ================================================================== */
+
+function FloatingActions({ onCopy, copied }: { onCopy: () => void; copied: boolean }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setVisible(window.scrollY > 600);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={onCopy}
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+        title={copied ? "Copied!" : "Copy summary"}
+      >
+        {copied ? (
+          <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        ) : (
+          <svg className="h-4 w-4 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+          </svg>
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={() => window.print()}
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+        title="Print report"
+      >
+        <svg className="h-4 w-4 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m0 0a48.032 48.032 0 0110.5 0m-10.5 0V5.625c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v3.284" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-stone-900 shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+        title="Back to top"
+      >
+        <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+/* ================================================================== */
 /*  MAIN COMPONENT                                                     */
 /* ================================================================== */
 
 export default function ZoningReport({ data }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
   const [analyzeUse, setAnalyzeUse] = useState<string | null>(null);
+  const [showCopied, setShowCopied] = useState(false);
 
   /* -------- data extraction -------- */
-  const eff = data.effective_standards || {};
-  const dev = data.development_potential || {};
+  const eff = useMemo(() => data.effective_standards || {}, [data.effective_standards]);
+  const dev = useMemo(() => data.development_potential || {}, [data.development_potential]);
   const layers = data.layers || {};
-  const coords = data.coordinates || {};
+  const coords = useMemo(() => data.coordinates || {}, [data.coordinates]);
 
   const hasEffError = eff.error;
   const hasDevError = dev.error;
@@ -625,6 +706,48 @@ export default function ZoningReport({ data }: Props) {
   const bylawChapter = primaryZone?.ZBL_CHAPT;
   const bylawSection = primaryZone?.ZBL_SECTN;
   const holdingProvision = primaryZone?.ZN_HOLDING === "Y";
+
+  /* -------- Quick summary generation -------- */
+  const quickSummary = (() => {
+    const items: { label: string; value: string; icon: string; severity?: "good" | "warn" | "bad" }[] = [];
+    if (eff.height?.effective_m) items.push({ label: "Height", value: `${eff.height.effective_m}m`, icon: "📏" });
+    if (eff.height?.effective_storeys ?? dev.height?.max_storeys) items.push({ label: "Storeys", value: `${eff.height?.effective_storeys ?? dev.height?.max_storeys}`, icon: "🏢" });
+    if (eff.fsi?.effective_total) items.push({ label: "FSI", value: `${eff.fsi.effective_total}`, icon: "📊" });
+    if (eff.lot_coverage?.effective_pct) items.push({ label: "Coverage", value: `${eff.lot_coverage.effective_pct}%`, icon: "📐" });
+    if (dev.max_gfa?.sqm) items.push({ label: "Max GFA", value: `${Number(dev.max_gfa.sqm).toLocaleString()} m²`, icon: "🏗️", severity: "good" });
+    if (dev.constraints?.items?.length > 0) items.push({ label: "Constraints", value: `${dev.constraints.items.length} flagged`, icon: "⚠️", severity: "warn" });
+    if (holdingProvision) items.push({ label: "Holding", value: "Active (H)", icon: "🚫", severity: "bad" });
+    return items;
+  })();
+
+  /* -------- Copy report summary -------- */
+  const handleCopyReport = useCallback(() => {
+    const lines: string[] = [
+      `Zoning Report: ${data.address}`,
+      `Zone: ${zoneCode} — ${zoneString}`,
+      exceptionNum ? `Exception: #${exceptionNum}` : "",
+      "",
+      "KEY METRICS:",
+    ];
+    if (eff.height?.effective_m) lines.push(`  Height: ${eff.height.effective_m}m`);
+    if (eff.fsi?.effective_total) lines.push(`  FSI: ${eff.fsi.effective_total}`);
+    if (eff.lot_coverage?.effective_pct) lines.push(`  Lot Coverage: ${eff.lot_coverage.effective_pct}%`);
+    if (dev.max_gfa?.sqm) lines.push(`  Max GFA: ${Number(dev.max_gfa.sqm).toLocaleString()} m²`);
+    if (eff.setbacks) {
+      lines.push("");
+      lines.push("SETBACKS:");
+      if (eff.setbacks.effective_front_m) lines.push(`  Front: ${eff.setbacks.effective_front_m}m`);
+      if (eff.setbacks.effective_rear_m) lines.push(`  Rear: ${eff.setbacks.effective_rear_m}m`);
+      if (eff.setbacks.effective_side_m) lines.push(`  Side: ${eff.setbacks.effective_side_m}m`);
+    }
+    lines.push("");
+    lines.push(`Coordinates: ${coords.latitude?.toFixed(6)}°N, ${Math.abs(coords.longitude)?.toFixed(6)}°W`);
+    lines.push("Source: Toronto Zoning (By-law 569-2013) — Not legal advice");
+    navigator.clipboard.writeText(lines.filter(Boolean).join("\n")).then(() => {
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    });
+  }, [data, zoneCode, zoneString, exceptionNum, eff, dev, coords]);
 
   /* -------- overlay definitions -------- */
   const overlayDefs = [
@@ -787,6 +910,89 @@ export default function ZoningReport({ data }: Props) {
       {/*  SECTION NAV                                                  */}
       {/* ============================================================ */}
       <SectionNav />
+
+      {/* ============================================================ */}
+      {/*  EXECUTIVE BRIEF — quick snapshot for decision-makers         */}
+      {/* ============================================================ */}
+      {quickSummary.length > 0 && (
+        <div className="rounded-2xl border border-stone-200 bg-gradient-to-br from-white to-stone-50 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-stone-900 text-white">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+              </span>
+              <p className="text-[13px] font-semibold text-stone-800">Quick Summary</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCopyReport}
+                className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow"
+              >
+                {showCopied ? (
+                  <>
+                    <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                    </svg>
+                    Copy Summary
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m0 0a48.032 48.032 0 0110.5 0m-10.5 0V5.625c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v3.284" />
+                </svg>
+                Print
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+            {quickSummary.map((item) => (
+              <div
+                key={item.label}
+                className={`rounded-xl border px-3.5 py-2.5 ${
+                  item.severity === "good"
+                    ? "border-emerald-200 bg-emerald-50"
+                    : item.severity === "warn"
+                      ? "border-amber-200 bg-amber-50"
+                      : item.severity === "bad"
+                        ? "border-red-200 bg-red-50"
+                        : "border-stone-200 bg-white"
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[14px]">{item.icon}</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-stone-400">{item.label}</span>
+                </div>
+                <p className={`mt-1 text-[16px] font-bold tracking-tight ${
+                  item.severity === "good"
+                    ? "text-emerald-900"
+                    : item.severity === "warn"
+                      ? "text-amber-900"
+                      : item.severity === "bad"
+                        ? "text-red-900"
+                        : "text-stone-900"
+                }`}>
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/*  ZONE IDENTITY HEADER                                         */}
@@ -3862,6 +4068,9 @@ export default function ZoningReport({ data }: Props) {
       reportData={analyzeUse ? data : null}
       onClose={() => setAnalyzeUse(null)}
     />
+
+    {/* Floating scroll-to-top + quick actions */}
+    <FloatingActions onCopy={handleCopyReport} copied={showCopied} />
 
     </ReferenceProvider>
   );
