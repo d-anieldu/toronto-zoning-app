@@ -421,8 +421,8 @@ const NAV_ITEMS = [
   { id: "op-context", label: "Official Plan" },
   { id: "exception", label: "Exception" },
   { id: "charges", label: "Charges" },
-  { id: "confidence", label: "Confidence" },
   { id: "contact", label: "Contact" },
+  { id: "confidence", label: "Confidence" },
 ];
 
 function SectionNav() {

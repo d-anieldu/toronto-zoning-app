@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.API_URL;
 
 export async function GET() {
   if (!API_URL) {
@@ -8,6 +8,9 @@ export async function GET() {
   }
   try {
     const res = await fetch(`${API_URL}/map/metadata`);
+    if (!res.ok) {
+      return NextResponse.json({ detail: "Backend error" }, { status: res.status });
+    }
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {

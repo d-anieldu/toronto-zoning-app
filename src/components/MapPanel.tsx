@@ -92,6 +92,8 @@ export default function MapPanel({ latitude, longitude }: MapPanelProps) {
   const [parcelData, setParcelData] = useState<any>(null);
   const [parcelVisible, setParcelVisible] = useState(true);
   const geoJsonRefs = useRef<Record<string, any>>({});
+  const loadedDataRef = useRef(loadedData);
+  loadedDataRef.current = loadedData;
 
   /* ── Fetch layer metadata on mount ───────────────────────────────── */
   useEffect(() => {
@@ -118,8 +120,8 @@ export default function MapPanel({ latitude, longitude }: MapPanelProps) {
           next.delete(key);
         } else {
           next.add(key);
-          // Fetch on first activation
-          if (!loadedData[key]) {
+          // Fetch on first activation (use ref to avoid stale closure)
+          if (!loadedDataRef.current[key]) {
             setLoading((l) => new Set(l).add(key));
             fetch(
               `/api/map/layers/${key}?lon=${longitude}&lat=${latitude}`
@@ -145,7 +147,7 @@ export default function MapPanel({ latitude, longitude }: MapPanelProps) {
         return next;
       });
     },
-    [latitude, longitude, loadedData]
+    [latitude, longitude]
   );
 
   /* ── Group layers ────────────────────────────────────────────────── */
