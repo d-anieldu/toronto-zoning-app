@@ -93,7 +93,9 @@ export default function MapPanel({ latitude, longitude }: MapPanelProps) {
   const [parcelVisible, setParcelVisible] = useState(true);
   const geoJsonRefs = useRef<Record<string, any>>({});
   const loadedDataRef = useRef(loadedData);
-  loadedDataRef.current = loadedData;
+  useEffect(() => {
+    loadedDataRef.current = loadedData;
+  }, [loadedData]);
 
   /* ── Fetch layer metadata on mount ───────────────────────────────── */
   useEffect(() => {
