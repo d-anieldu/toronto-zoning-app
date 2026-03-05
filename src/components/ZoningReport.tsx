@@ -1077,7 +1077,15 @@ export default function ZoningReport({ data }: Props) {
       {coords.latitude && coords.longitude && (
         <>
           <SectionHeading id="map" title="GIS Layer Map" icon={Icons.map} />
-          <MapPanel latitude={coords.latitude} longitude={coords.longitude} />
+          <MapPanel
+            latitude={coords.latitude}
+            longitude={coords.longitude}
+            activeSiteLayers={layers}
+            zoneCode={zoneCode}
+            zoneString={zoneString}
+            lotArea={dev.lot?.area_sqm}
+            frontage={dev.lot?.frontage_m}
+          />
         </>
       )}
 
