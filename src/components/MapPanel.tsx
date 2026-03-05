@@ -148,8 +148,72 @@ function featurePopupHtml(
   props: Record<string, any>,
   layerKey?: string
 ): string {
+  // If the backend provides pre-rendered popup HTML, use it directly
+  if (props._popup_html) {
+    return props._popup_html;
+  }
+
+  // If the backend provides a _display dict (label → formatted value), render it
+  if (props._display && typeof props._display === "object") {
+    const display = props._display as Record<string, string>;
+    const displayEntries = Object.entries(display).filter(
+      ([, v]) => v != null && String(v).trim() !== ""
+    );
+
+    if (displayEntries.length === 0)
+      return "<p style='font-size:11px;color:#78716c'>No details available</p>";
+
+    const layerLabel = layerKey
+      ? FIELD_LABELS[layerKey] ||
+        layerKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : "";
+
+    const rows = displayEntries
+      .map(([label, val]) => {
+        let displayVal = String(val);
+
+        // Status badges for known fields
+        const lowerLabel = label.toLowerCase();
+        if (
+          lowerLabel.includes("status") ||
+          lowerLabel.includes("holding") ||
+          lowerLabel.includes("heritage")
+        ) {
+          const lower = displayVal.toLowerCase();
+          let bg = "#f5f5f4";
+          let fg = "#44403c";
+          if (lower.includes("listed") || lower.includes("approv") || lower === "no") {
+            bg = "#dcfce7";
+            fg = "#166534";
+          } else if (lower.includes("designated") || lower === "yes" || lower.includes("refus")) {
+            bg = "#fee2e2";
+            fg = "#991b1b";
+          } else if (lower.includes("pending") || lower.includes("deferred")) {
+            bg = "#fef3c7";
+            fg = "#92400e";
+          }
+          if (bg !== "#f5f5f4") {
+            displayVal = `<span style="display:inline-block;padding:1px 8px;border-radius:9999px;font-size:10px;font-weight:600;background:${bg};color:${fg}">${displayVal}</span>`;
+          }
+        }
+
+        return `<tr>
+          <td style="font-weight:600;padding:3px 10px 3px 0;color:#57534e;font-size:11px;white-space:nowrap;vertical-align:top">${label}</td>
+          <td style="font-size:11px;color:#1c1917;padding:3px 0">${displayVal}</td>
+        </tr>`;
+      })
+      .join("");
+
+    const title = layerLabel
+      ? `<div style="font-weight:700;font-size:12px;color:#1c1917;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #e7e5e4">${layerLabel}</div>`
+      : "";
+
+    return `<div style="max-width:340px">${title}<table style="border-collapse:collapse;width:100%">${rows}</table></div>`;
+  }
+
+  // Fallback: render raw properties (skip internal _-prefixed keys)
   const entries = Object.entries(props).filter(
-    ([, v]) => v != null && String(v).trim() !== ""
+    ([k, v]) => !k.startsWith("_") && v != null && String(v).trim() !== ""
   );
 
   if (entries.length === 0) return "<p style='font-size:11px;color:#78716c'>No details available</p>";
