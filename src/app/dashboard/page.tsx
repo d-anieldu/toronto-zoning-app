@@ -19,6 +19,18 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-4">
             <Link
+              href="/projects"
+              className="hidden sm:flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50 transition-colors"
+            >
+              📁 Projects
+            </Link>
+            <Link
+              href="/compare"
+              className="hidden sm:flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50 transition-colors"
+            >
+              ⚖️ Compare
+            </Link>
+            <Link
               href="/intelligence"
               className="hidden sm:flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50 transition-colors"
             >

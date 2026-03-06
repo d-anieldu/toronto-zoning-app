@@ -919,6 +919,120 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
       )}
 
       {/* ============================================================ */}
+      {/*  OLT / OMB DECISIONS                                          */}
+      {/* ============================================================ */}
+      {dev.olt_decisions && dev.olt_decisions.total_found > 0 && (() => {
+        const olt = dev.olt_decisions;
+        const outcomeBadge = (outcome: string) => {
+          const map: Record<string, { bg: string; text: string }> = {
+            allowed: { bg: "bg-emerald-100", text: "text-emerald-700" },
+            allowed_in_part: { bg: "bg-lime-100", text: "text-lime-700" },
+            dismissed: { bg: "bg-red-100", text: "text-red-700" },
+            settled: { bg: "bg-blue-100", text: "text-blue-700" },
+            withdrawn: { bg: "bg-stone-100", text: "text-stone-500" },
+          };
+          const s = map[outcome] || { bg: "bg-stone-100", text: "text-stone-500" };
+          return `${s.bg} ${s.text}`;
+        };
+        return (
+          <>
+            <SectionHeading
+              id="olt-decisions"
+              title="OLT / OMB Decisions"
+              icon={Icons.gavel}
+              count={olt.total_found}
+            />
+
+            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm space-y-4">
+              {/* Summary */}
+              <p className="text-[13px] leading-relaxed text-stone-600">{olt.summary_text}</p>
+
+              {/* Stats row */}
+              {(olt.approval_rate !== null && olt.approval_rate !== undefined) && (
+                <div className="flex flex-wrap gap-3">
+                  <div className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">Appeal Success Rate</p>
+                    <p className={`text-[18px] font-bold ${olt.approval_rate >= 50 ? "text-emerald-600" : "text-red-600"}`}>
+                      {olt.approval_rate}%
+                    </p>
+                  </div>
+                  {olt.outcomes && Object.entries(olt.outcomes).map(([k, v]) => (
+                    <div key={k} className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">
+                        {k.replace(/_/g, " ")}
+                      </p>
+                      <p className="text-[18px] font-bold text-stone-800">{v as number}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Recent decisions list */}
+              {olt.recent_decisions?.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[12px] font-semibold uppercase tracking-wide text-stone-400">
+                    Recent Decisions ({olt.recent_decisions.length})
+                  </p>
+                  {olt.recent_decisions.map((d: any, i: number) => (
+                    <div key={i} className="rounded-lg border border-stone-100 bg-stone-50/50 p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-[11px] font-bold text-stone-700">
+                              {d.file_number}
+                            </span>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${outcomeBadge(d.outcome)}`}>
+                              {d.outcome?.replace(/_/g, " ")}
+                            </span>
+                            {d.decision_type && (
+                              <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-500">
+                                {d.decision_type.replace(/_/g, " ")}
+                              </span>
+                            )}
+                          </div>
+                          {d.title && (
+                            <p className="mt-1 text-[12px] leading-snug text-stone-600 line-clamp-2">
+                              {d.title}
+                            </p>
+                          )}
+                          {d.addresses?.length > 0 && (
+                            <p className="mt-0.5 text-[11px] text-stone-400">
+                              📍 {d.addresses.slice(0, 3).join(", ")}
+                              {d.addresses.length > 3 && ` +${d.addresses.length - 3} more`}
+                            </p>
+                          )}
+                        </div>
+                        <div className="shrink-0 text-right">
+                          {d.date && (
+                            <p className="text-[11px] text-stone-400">{d.date}</p>
+                          )}
+                          {d.url && (
+                            <a
+                              href={d.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-0.5 inline-block text-[11px] font-medium text-blue-600 hover:underline"
+                            >
+                              CanLII →
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      {d.summary && (
+                        <p className="mt-2 text-[11px] leading-relaxed text-stone-500 line-clamp-3">
+                          {d.summary}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        );
+      })()}
+
+      {/* ============================================================ */}
       {/*  NOTES & DISCLAIMER                                           */}
       {/* ============================================================ */}
       {dev.notes?.length > 0 && (

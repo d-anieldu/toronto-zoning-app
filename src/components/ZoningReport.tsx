@@ -13,6 +13,8 @@ import { useState, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { ReferenceProvider, RefLink } from "./ReferencePanel";
 import UseAnalysisPanel from "./UseAnalysisPanel";
+import ShareReportButton from "./ShareReportButton";
+import ChatAssistant from "./ChatAssistant";
 
 /* ── Tab components ──────────────────────────────────────────────── */
 import SummaryTab from "./report/SummaryTab";
@@ -234,6 +236,7 @@ export default function ZoningReport({ data }: Props) {
                 </svg>
                 Print
               </button>
+              <ShareReportButton address={data.address} lookupData={data} />
             </div>
           </div>
 
@@ -499,6 +502,9 @@ export default function ZoningReport({ data }: Props) {
 
     {/* Floating scroll-to-top + quick actions */}
     <FloatingActions onCopy={handleCopyReport} copied={showCopied} />
+
+    {/* AI Chat Assistant */}
+    <ChatAssistant address={data.address} />
 
     </ReferenceProvider>
   );

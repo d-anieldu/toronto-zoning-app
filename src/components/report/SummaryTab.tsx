@@ -12,6 +12,7 @@
 
 import { Badge, Icons, severityColor, severityIcon } from "./primitives";
 import { RefLink } from "../ReferencePanel";
+import DevChargesCalculator from "../DevChargesCalculator";
 
 interface SummaryTabProps {
   data: Record<string, any>;
@@ -487,6 +488,9 @@ export default function SummaryTab({ data }: SummaryTabProps) {
       {/* ============================================================ */}
       {/*  PLANNING CONTACT — compact                                   */}
       {/* ============================================================ */}
+      {/* ── Development Charges Calculator ── */}
+      <DevChargesCalculator address={data.address} />
+
       {data.planning_contact && (
         <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
