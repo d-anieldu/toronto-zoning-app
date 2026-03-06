@@ -158,7 +158,7 @@ export default function ChatAssistant({ address }: Props) {
             <span className="text-[32px]">🏗️</span>
             <p className="mt-3 text-[13px] font-medium text-stone-700">Ask me anything about Toronto zoning</p>
             <p className="mt-1 text-[11px] text-stone-400">
-              "Can I build a laneway suite?" • "What are the height limits?" • "Explain exception #287"
+              {"\"Can I build a laneway suite?\" • \"What are the height limits?\" • \"Explain exception #287\""}
             </p>
             {/* Quick prompts */}
             <div className="mt-4 flex flex-wrap justify-center gap-1.5">

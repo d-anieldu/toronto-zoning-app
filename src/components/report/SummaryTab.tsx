@@ -10,7 +10,7 @@
  * in the /lookup response — zero backend changes needed.
  */
 
-import { Badge, Icons, severityColor, severityIcon } from "./primitives";
+import { Badge, severityColor, severityIcon } from "./primitives";
 import { RefLink } from "../ReferencePanel";
 import DevChargesCalculator from "../DevChargesCalculator";
 
