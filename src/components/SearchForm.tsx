@@ -1,16 +1,36 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import ZoningReport from "./ZoningReport";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ZoningData = Record<string, any>;
 
-const EXAMPLE_ADDRESSES = [
+const ALL_EXAMPLE_ADDRESSES = [
   "226 Viewmount Ave",
   "100 Queen St W",
   "671 St Clair Ave W",
   "89 Argyle St",
+  "25 The Esplanade",
+  "250 Davisville Ave",
+  "50 Eglinton Ave E",
+  "2300 Yonge St",
+  "1 Dundas St W",
+  "555 University Ave",
+  "150 Balmoral Ave",
+  "1200 Lawrence Ave W",
+  "33 Harbour Square",
+  "100 Floral Pkwy",
+  "1 Carlaw Ave",
+  "300 Borough Dr",
+  "5150 Dundas St W",
+  "401 Richmond St W",
+  "77 King St W",
+  "10 York St",
+  "30 Roehampton Ave",
+  "2055 Danforth Ave",
+  "446 Roselawn Ave",
+  "1 Austin Terrace",
 ];
 
 export default function SearchForm() {
@@ -18,6 +38,14 @@ export default function SearchForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ZoningData | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Pick 4 random example addresses, reshuffled on each refreshKey change
+  const exampleAddresses = useMemo(() => {
+    const shuffled = [...ALL_EXAMPLE_ADDRESSES].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 4);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -313,7 +341,7 @@ export default function SearchForm() {
             <span className="text-[11px] font-medium uppercase tracking-wide text-stone-400">
               Try:
             </span>
-            {EXAMPLE_ADDRESSES.map((addr) => (
+            {exampleAddresses.map((addr) => (
               <button
                 key={addr}
                 type="button"
@@ -323,6 +351,16 @@ export default function SearchForm() {
                 {addr}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setRefreshKey((k) => k + 1)}
+              className="rounded-lg border border-stone-200 bg-white px-1.5 py-1 text-[12px] text-stone-400 transition-colors hover:border-stone-400 hover:text-stone-600"
+              title="Shuffle addresses"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0 3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M21.016 5.176v4.993" />
+              </svg>
+            </button>
           </div>
         )}
       </form>
