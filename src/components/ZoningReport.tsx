@@ -185,13 +185,17 @@ export default function ZoningReport({ data }: Props) {
 
             {/* Right: zone badges + actions */}
             <div className="flex flex-wrap items-center gap-2">
-              {zoneCode && (
+              {zoneCode ? (
                 <RefLink type="zone-info" id={zoneCode} label={zoneCode}>
                   <span className="rounded-lg bg-stone-900 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
                     {zoneCode}
                   </span>
                 </RefLink>
-              )}
+              ) : dev.former_bylaw_notice?.applies ? (
+                <span className="rounded-lg bg-orange-600 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
+                  {dev.former_bylaw_notice.bylaw || "Former By-law"}
+                </span>
+              ) : null}
               {zoneString && (
                 <span className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-1.5 font-mono text-[12px] text-stone-600">
                   {zoneString}
@@ -335,14 +339,61 @@ export default function ZoningReport({ data }: Props) {
       </div>
 
       {/* ============================================================ */}
+      {/*  FORMER BY-LAW NOTICE                                         */}
+      {/* ============================================================ */}
+      {dev.former_bylaw_notice?.applies && (
+        <div className="rounded-xl border-2 border-orange-300 bg-gradient-to-r from-orange-50 to-amber-50 p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 text-xl">
+              📜
+            </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[15px] font-bold text-orange-900">Former Municipal By-law Property</span>
+                <Badge variant="warning">{dev.former_bylaw_notice.bylaw || "Former By-law"}</Badge>
+              </div>
+              <p className="text-[13px] leading-relaxed text-orange-800">
+                {dev.former_bylaw_notice.description || (
+                  <>This property is governed by <strong>{dev.former_bylaw_notice.bylaw}</strong>
+                  {dev.former_bylaw_notice.municipality && <> ({dev.former_bylaw_notice.municipality})</>},
+                  not City-wide Zoning By-law 569-2013.</>
+                )}
+              </p>
+              <div className="mt-3 rounded-lg bg-white/70 p-3 border border-orange-200/50">
+                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-orange-600">What This Means</p>
+                <ul className="space-y-1 text-[12px] text-orange-700">
+                  <li className="flex items-start gap-2"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-orange-400" /><span>Height limits and overlay data shown below are from 569-2013 mapping layers and still apply.</span></li>
+                  <li className="flex items-start gap-2"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-orange-400" /><span>Zone-specific standards (FSI, setbacks, permitted uses) are not available — consult the former by-law directly.</span></li>
+                  <li className="flex items-start gap-2"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-orange-400" /><span>Heritage, transit, and environmental constraints are detected and shown normally.</span></li>
+                </ul>
+              </div>
+              {dev.former_bylaw_notice.lookup_url && (
+                <a
+                  href={dev.former_bylaw_notice.lookup_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-[12px] font-medium text-white shadow-sm hover:bg-orange-700 transition-colors"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                  City of Toronto Zoning Map
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
       {/*  ERROR BANNERS                                                */}
       {/* ============================================================ */}
-      {hasEffError && (
+      {hasEffError && !dev.former_bylaw_notice?.applies && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[13px] text-amber-700">
           <span className="font-semibold">Standards Error:</span> {eff.error}
         </div>
       )}
-      {hasDevError && (
+      {hasDevError && !dev.former_bylaw_notice?.applies && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[13px] text-amber-700">
           <span className="font-semibold">Development Potential Error:</span> {dev.error}
         </div>

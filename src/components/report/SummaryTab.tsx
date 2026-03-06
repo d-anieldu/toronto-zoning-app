@@ -85,6 +85,10 @@ export default function SummaryTab({ data }: SummaryTabProps) {
   const confScore = confidence?.overall_score;
   const confLevel = confidence?.overall_confidence;
 
+  /* ── former by-law detection ── */
+  const isFormerBylaw = !!dev.former_bylaw_notice?.applies;
+  const confGrade = confidence?.grade;
+
   return (
     <div className="space-y-5">
       {/* ============================================================ */}
@@ -102,13 +106,17 @@ export default function SummaryTab({ data }: SummaryTabProps) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {zoneCode && (
+            {zoneCode ? (
               <RefLink type="zone-info" id={zoneCode} label={zoneCode}>
                 <span className="rounded-lg bg-stone-900 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
                   {zoneCode}
                 </span>
               </RefLink>
-            )}
+            ) : isFormerBylaw ? (
+              <span className="rounded-lg bg-orange-600 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
+                {dev.former_bylaw_notice?.bylaw || "Former By-law"}
+              </span>
+            ) : null}
             {zoneString && (
               <span className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-1.5 font-mono text-[12px] text-stone-600">
                 {zoneString}
@@ -140,15 +148,20 @@ export default function SummaryTab({ data }: SummaryTabProps) {
           value={
             eff.height?.effective_m != null
               ? `${eff.height.effective_m}m`
-              : "—"
+              : dev.height?.max_m != null
+                ? `${dev.height.max_m}m`
+                : "—"
           }
           sub={
             eff.height?.effective_storeys != null
               ? `${eff.height.effective_storeys} storeys`
               : dev.height?.max_storeys != null
                 ? `${dev.height.max_storeys} storeys`
-                : eff.height?.effective_source
+                : dev.height?.estimated_storeys != null
+                  ? `~${dev.height.estimated_storeys} storeys (est.)`
+                  : eff.height?.effective_source || dev.height?.source
           }
+          accent={isFormerBylaw ? "amber" : undefined}
         />
 
         {/* FSI */}
@@ -175,13 +188,18 @@ export default function SummaryTab({ data }: SummaryTabProps) {
           value={
             eff.lot_coverage?.effective_pct != null
               ? `${eff.lot_coverage.effective_pct}%`
-              : "—"
+              : dev.lot_coverage?.max_pct != null
+                ? `${dev.lot_coverage.max_pct}%`
+                : "—"
           }
           sub={
             dev.coverage?.max_footprint_sqm
               ? `${fmt(dev.coverage.max_footprint_sqm)} m² max footprint`
-              : undefined
+              : isFormerBylaw && dev.lot_coverage?.max_pct != null
+                ? "from coverage overlay"
+                : undefined
           }
+          accent={isFormerBylaw && dev.lot_coverage?.max_pct != null ? "amber" : undefined}
         />
 
         {/* Lot Area */}
@@ -436,25 +454,32 @@ export default function SummaryTab({ data }: SummaryTabProps) {
           <div className="flex items-center gap-4">
             <div
               className={`flex h-14 w-14 items-center justify-center rounded-full border-4 ${
-                confLevel === "high"
-                  ? "border-emerald-400 text-emerald-600"
-                  : confLevel === "medium"
-                    ? "border-amber-400 text-amber-600"
-                    : confLevel === "low"
-                      ? "border-red-400 text-red-600"
+                confGrade === "D" || confLevel === "low"
+                  ? "border-red-400 text-red-600"
+                  : confLevel === "high"
+                    ? "border-emerald-400 text-emerald-600"
+                    : confLevel === "medium"
+                      ? "border-amber-400 text-amber-600"
                       : "border-stone-300 text-stone-500"
               }`}
             >
-              <span className="text-[18px] font-bold">{confScore}</span>
+              <span className="text-[18px] font-bold">{confGrade || confScore}</span>
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-[14px] font-bold text-stone-900">
-                  {confLevel?.toUpperCase()} Confidence
+                  {confidence.label || `${confLevel?.toUpperCase()} Confidence`}
                 </p>
-                <span className="text-[11px] text-stone-400">
-                  {confidence.high_confidence_count}/{confidence.section_count} sections high
-                </span>
+                {confidence.section_count != null && (
+                  <span className="text-[11px] text-stone-400">
+                    {confidence.high_confidence_count}/{confidence.section_count} sections high
+                  </span>
+                )}
+                {confScore != null && confGrade && (
+                  <span className="text-[11px] text-stone-400">
+                    Score: {confScore}/100
+                  </span>
+                )}
               </div>
               <p className="mt-0.5 text-[12px] text-stone-500 line-clamp-2">
                 {confidence.summary}
