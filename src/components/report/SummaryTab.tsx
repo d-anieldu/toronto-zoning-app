@@ -13,6 +13,7 @@
 import { Badge, severityColor, severityIcon } from "./primitives";
 import { RefLink } from "../ReferencePanel";
 import DevChargesCalculator from "../DevChargesCalculator";
+import ZoningStatisticsTable from "./ZoningStatisticsTable";
 
 interface SummaryTabProps {
   data: Record<string, any>;
@@ -251,6 +252,11 @@ export default function SummaryTab({ data }: SummaryTabProps) {
           </div>
         </div>
       )}
+
+      {/* ============================================================ */}
+      {/*  ZONING STATISTICS TABLE                                      */}
+      {/* ============================================================ */}
+      <ZoningStatisticsTable data={data.zoning_statistics_table} />
 
       {/* ============================================================ */}
       {/*  QUICK FLAGS — constraint / overlay / heritage / confidence    */}

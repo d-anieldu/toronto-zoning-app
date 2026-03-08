@@ -10,8 +10,9 @@
  * "Angular Plane" + "Shadow" sections, consolidated into one tab.
  */
 
-import { Card, Row, Badge, Icons, SetbackDiagram, Tag } from "./primitives";
+import { Card, Row, Badge, SetbackDiagram, Tag } from "./primitives";
 import { RefLink } from "../ReferencePanel";
+import LandscapingCard from "./LandscapingCard";
 
 interface BuildingEnvelopeTabProps {
   data: Record<string, any>;
@@ -278,6 +279,9 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
               <Row label="Uses overlay map" value={eff.lot_coverage?.uses_overlay_map ? "Yes" : null} />
               <Row label="No limit if no overlay" value={eff.lot_coverage?.no_limit_if_no_overlay ? "Yes" : null} />
             </Card>
+
+            {/* Landscaping */}
+            <LandscapingCard landscaping={eff.landscaping} />
           </div>
         </>
       )}
