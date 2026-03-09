@@ -87,6 +87,28 @@ interface NearbyData {
     net_dwelling_units: number;
     summary_text: string;
   };
+  dev_applications?: {
+    total: number;
+    applications: {
+      app_number: string;
+      app_type_code: string;
+      app_type: string;
+      address: string;
+      postal: string;
+      date_submitted: string;
+      status: string;
+      description: string;
+      ward_number: string;
+      ward_name: string;
+      app_url: string | null;
+      reference_file: string | null;
+      community_meeting_date: string;
+      community_meeting_location: string;
+    }[];
+    by_status: Record<string, number>;
+    by_type: { type: string; count: number }[];
+    summary_text: string;
+  };
   radius_m?: number;
 }
 
@@ -641,6 +663,202 @@ function BuildingPermitsSection({
   );
 }
 
+/* ── Dev Applications Section ──────────────────────────────────────── */
+
+const APP_STATUS_COLOR: Record<string, string> = {
+  "Under Review": "bg-blue-100 text-blue-700",
+  "Closed": "bg-stone-100 text-stone-500",
+  "Approved": "bg-emerald-100 text-emerald-700",
+  "OMB Approved": "bg-emerald-100 text-emerald-700",
+  "Refused": "bg-red-100 text-red-600",
+  "Complete": "bg-emerald-100 text-emerald-700",
+};
+
+const APP_TYPE_COLOR: Record<string, string> = {
+  Rezoning: "bg-violet-100 text-violet-700",
+  "Site Plan Approval": "bg-sky-100 text-sky-700",
+  "Official Plan Amendment": "bg-amber-100 text-amber-700",
+  "Plan of Subdivision": "bg-teal-100 text-teal-700",
+  "Plan of Condominium": "bg-indigo-100 text-indigo-700",
+};
+
+function DevApplicationsSection({
+  devApps,
+  appList,
+}: {
+  devApps: NonNullable<NearbyData["dev_applications"]>;
+  appList: NonNullable<NearbyData["dev_applications"]>["applications"];
+}) {
+  const [showCount, setShowCount] = useState(5);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    if (!typeFilter) return appList;
+    return appList.filter((a) => a.app_type === typeFilter);
+  }, [appList, typeFilter]);
+
+  const visible = filtered.slice(0, showCount);
+
+  return (
+    <Card label="Development Applications">
+      <div className="space-y-4">
+        {/* Hero stats */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <p className="text-[20px] font-bold text-stone-900">{devApps.total}</p>
+            <p className="text-[11px] text-stone-400">applications</p>
+          </div>
+          <div>
+            <p className="text-[20px] font-bold text-stone-900">
+              {devApps.by_type.length}
+            </p>
+            <p className="text-[11px] text-stone-400">application types</p>
+          </div>
+          <div>
+            <p className="text-[20px] font-bold text-stone-900">
+              {Object.keys(devApps.by_status).length}
+            </p>
+            <p className="text-[11px] text-stone-400">status categories</p>
+          </div>
+          <div>
+            <p className="text-[20px] font-bold text-stone-900">
+              {devApps.by_status["Under Review"] || 0}
+            </p>
+            <p className="text-[11px] text-stone-400">under review</p>
+          </div>
+        </div>
+
+        {/* Type breakdown */}
+        {devApps.by_type.length > 0 && (
+          <div>
+            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Application Types</p>
+            <div className="flex flex-wrap gap-1.5">
+              <Tag active={!typeFilter} onClick={() => setTypeFilter(null)}>
+                All ({devApps.total})
+              </Tag>
+              {devApps.by_type.map((t) => (
+                <Tag
+                  key={t.type}
+                  active={typeFilter === t.type}
+                  onClick={() => setTypeFilter(t.type)}
+                >
+                  {t.type} ({t.count})
+                </Tag>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Status breakdown */}
+        {Object.keys(devApps.by_status).length > 0 && (
+          <div>
+            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Status</p>
+            <div className="flex flex-wrap gap-1.5">
+              {Object.entries(devApps.by_status)
+                .sort(([, a], [, b]) => b - a)
+                .map(([status, count]) => (
+                  <span
+                    key={status}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                      APP_STATUS_COLOR[status] || "bg-stone-100 text-stone-500"
+                    }`}
+                  >
+                    {status} ({count})
+                  </span>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Application list */}
+        <div className="divide-y divide-stone-100">
+          {visible.map((a) => (
+            <div key={a.app_number} className="py-2.5 first:pt-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        APP_TYPE_COLOR[a.app_type] || "bg-stone-100 text-stone-500"
+                      }`}
+                    >
+                      {a.app_type}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        APP_STATUS_COLOR[a.status] || "bg-stone-100 text-stone-500"
+                      }`}
+                    >
+                      {a.status}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[12px] font-medium text-stone-700 truncate">
+                    {a.address || "Unknown location"}
+                  </p>
+                  {a.description && (
+                    <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-2">
+                      {a.description}
+                    </p>
+                  )}
+                  <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+                    {a.app_number && (
+                      <span className="text-[10px] text-stone-400">
+                        App: {a.app_number}
+                      </span>
+                    )}
+                    {a.ward_name && (
+                      <span className="text-[10px] text-stone-400">
+                        · Ward {a.ward_number}: {a.ward_name}
+                      </span>
+                    )}
+                  </div>
+                  {a.community_meeting_date && (
+                    <p className="mt-0.5 text-[10px] text-amber-600">
+                      Community meeting: {formatDate(a.community_meeting_date)}
+                      {a.community_meeting_location && ` at ${a.community_meeting_location}`}
+                    </p>
+                  )}
+                  {a.app_url && (
+                    <a
+                      href={a.app_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-0.5 inline-block text-[10px] text-indigo-500 hover:underline"
+                    >
+                      View on Application Info Centre →
+                    </a>
+                  )}
+                </div>
+                <div className="shrink-0 text-right">
+                  <span className="text-[11px] text-stone-400">
+                    {formatDate(a.date_submitted)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filtered.length > showCount && (
+          <button
+            type="button"
+            onClick={() => setShowCount((c) => c + 10)}
+            className="w-full rounded-lg border border-stone-200 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-50 transition-colors"
+          >
+            Show more ({filtered.length - showCount} remaining)
+          </button>
+        )}
+
+        {visible.length === 0 && (
+          <p className="text-[12px] text-stone-400 italic py-4 text-center">
+            No applications found matching this filter.
+          </p>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 /* ================================================================== */
 /*  MAIN COMPONENT                                                     */
 /* ================================================================== */
@@ -697,6 +915,8 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
   const events = liveData.events || [];
   const permits = liveData.building_permits;
   const permitList = permits?.permits || [];
+  const devApps = liveData.dev_applications;
+  const devAppList = devApps?.applications || [];
 
   // OLT decisions from dev potential
   const oltDecisions = dev.olt_decisions || {};
@@ -704,9 +924,10 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
 
   const hasData = (overview?.total ?? 0) > 0;
   const hasPermits = (permits?.total ?? 0) > 0;
+  const hasDevApps = (devApps?.total ?? 0) > 0;
 
   /* ── Empty state ─────────────────────────────────────────────────── */
-  if (!hasData && events.length === 0 && !hasPermits) {
+  if (!hasData && events.length === 0 && !hasPermits && !hasDevApps) {
     return (
       <div className="space-y-6 py-6">
         <SectionHeading title="Nearby Activity" icon="📍" />
@@ -976,7 +1197,12 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
         <BuildingPermitsSection permits={permits!} permitList={permitList} />
       )}
 
-      {/* ─── Section H: Trend Chart ────────────────────────────────── */}
+      {/* ─── Section H: Dev Applications ───────────────────────── */}
+      {hasDevApps && (
+        <DevApplicationsSection devApps={devApps!} appList={devAppList} />
+      )}
+
+      {/* ─── Section I: Trend Chart ────────────────────────────────── */}
       {trend && trend.length > 0 && (
         <Card label="Approval Trend (Year over Year)">
           <TrendChart data={trend} />
@@ -1009,6 +1235,15 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
             className="text-indigo-500 hover:underline"
           >
             Building Permits ↗
+          </a>
+          {" · "}
+          <a
+            href="https://open.toronto.ca/dataset/development-applications/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-500 hover:underline"
+          >
+            Development Applications ↗
           </a>
         </p>
       </div>
