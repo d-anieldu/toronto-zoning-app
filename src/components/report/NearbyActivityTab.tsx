@@ -364,6 +364,11 @@ function ActivityFeed({ events }: { events: any[] }) {
                     {e.raw_data.DESCRIPTION}
                   </p>
                 )}
+                {(e.source_id || e.raw_data?.REFERENCE_FILE) && (
+                  <p className="mt-0.5 text-[11px] text-stone-400">
+                    Ref: {e.source_id || e.raw_data.REFERENCE_FILE}
+                  </p>
+                )}
               </div>
               <span className="shrink-0 text-[11px] text-stone-400">
                 {formatDate(e.event_date)}
@@ -472,7 +477,7 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
         setLoading(false);
       }
     },
-    [coords, zoneCode, data.parcel],
+    [coords, zoneCode, data.parcel, data.address],
   );
 
   const overview = liveData.overview;
@@ -636,6 +641,7 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
                       <p className="mt-0.5 text-[11px] text-stone-400">
                         {formatDate(d.event_date)}
                         {d.distance_m != null && ` · ${d.distance_m}m away`}
+                        {(d.source_id || d.raw_data?.REFERENCE_FILE) && ` · Ref: ${d.source_id || d.raw_data.REFERENCE_FILE}`}
                       </p>
                     </div>
                   ))}
@@ -766,6 +772,17 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
           Adjustment decisions and other publicly available data from Toronto Open Data. Approval
           rates and trends are statistical summaries, not predictions. Always consult a planning
           professional before making decisions based on this data.
+        </p>
+        <p className="mt-1.5 text-[10px] text-stone-400">
+          Data source:{" "}
+          <a
+            href="https://open.toronto.ca/dataset/committee-of-adjustment-decisions/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-500 hover:underline"
+          >
+            Toronto Open Data — Committee of Adjustment Decisions ↗
+          </a>
         </p>
       </div>
     </div>
