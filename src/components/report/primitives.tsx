@@ -27,7 +27,7 @@ export function SectionHeading({
   return (
     <div id={id} className="scroll-mt-28 pt-2">
       <div className="flex items-center gap-2.5 pb-3">
-        {icon && <span className="text-stone-400">{icon}</span>}
+        {icon && <span className="text-stone-400" aria-hidden="true">{icon}</span>}
         <h3 className="text-[15px] font-semibold tracking-tight text-stone-900">
           {title}
         </h3>
@@ -222,7 +222,7 @@ export function Tag({
           : "border-stone-200 bg-stone-50 text-stone-600"
       }${clickable ? " cursor-pointer transition-shadow hover:shadow-md hover:ring-1 hover:ring-indigo-300" : ""}`}
     >
-      {icon && <span>{icon}</span>}
+      {icon && <span aria-hidden="true">{icon}</span>}
       {children}
       {clickable && <span className="ml-0.5 text-[10px] text-indigo-400">→</span>}
     </span>

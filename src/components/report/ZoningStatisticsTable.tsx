@@ -99,7 +99,7 @@ export default function ZoningStatisticsTable({
         className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-stone-50/60 transition-colors"
       >
         <div className="flex items-center gap-2.5">
-          <span className="text-[15px]">📋</span>
+          <span className="text-[15px]" aria-hidden="true">📋</span>
           <div>
             <h4 className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">
               Zoning Statistics
@@ -179,7 +179,7 @@ export default function ZoningStatisticsTable({
                   >
                     {/* Label */}
                     <div className="flex items-center gap-2 min-w-0 pr-3">
-                      <span className="text-[12px] leading-none shrink-0">
+                      <span className="text-[12px] leading-none shrink-0" aria-hidden="true">
                         {CATEGORY_ICON[cat] ?? ""}
                       </span>
                       <span className="text-[12px] font-medium text-stone-700 break-words">
@@ -230,7 +230,7 @@ export default function ZoningStatisticsTable({
             <div className="border-t border-stone-100 bg-stone-50/50 px-5 py-3 space-y-1.5">
               {metadata?.has_front_yard_averaging && (
                 <div className="flex items-start gap-2">
-                  <span className="text-[11px] leading-none shrink-0">📐</span>
+                  <span className="text-[11px] leading-none shrink-0" aria-hidden="true">📐</span>
                   <p className="text-[10px] text-stone-400 leading-snug">
                     Front yard setback estimated from neighbour building
                     footprints (3D Massing)
@@ -239,7 +239,7 @@ export default function ZoningStatisticsTable({
               )}
               {metadata?.has_3d_massing_data && (
                 <div className="flex items-start gap-2">
-                  <span className="text-[11px] leading-none shrink-0">✅</span>
+                  <span className="text-[11px] leading-none shrink-0" aria-hidden="true">✅</span>
                   <p className="text-[10px] text-emerald-600 leading-snug">
                     Existing building data from City of Toronto 3D Massing Open
                     Data

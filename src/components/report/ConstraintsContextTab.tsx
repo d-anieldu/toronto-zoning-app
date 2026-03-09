@@ -86,7 +86,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
             <div className="grid gap-2 sm:grid-cols-2">
               {activeOverlays.map((o) => (
                 <div key={o.key} className="flex items-start gap-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
-                  <span className="mt-0.5 text-[16px]">{o.icon}</span>
+                  <span className="mt-0.5 text-[16px]" aria-hidden="true">{o.icon}</span>
                   <div className="min-w-0">
                     <p className="text-[13px] font-medium text-stone-700">{o.label}</p>
                     {o.detail && <p className="font-mono text-[12px] text-emerald-600">{o.detail}</p>}
@@ -194,7 +194,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                   <ul className="space-y-2">
                     {eff.natural_hazards.permits_required.map((p: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
-                        <span className="mt-0.5 text-red-500">📋</span>
+                        <span className="mt-0.5 text-red-500" aria-hidden="true">📋</span>
                         <span>{p}</span>
                       </li>
                     ))}
@@ -207,7 +207,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                   <ul className="space-y-2">
                     {eff.natural_hazards.studies_required.map((s: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
-                        <span className="mt-0.5 text-amber-500">📄</span>
+                        <span className="mt-0.5 text-amber-500" aria-hidden="true">📄</span>
                         <span>{s}</span>
                       </li>
                     ))}
@@ -341,7 +341,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                   <ul className="space-y-2">
                     {eff.heritage_impact.permits_required.map((p: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
-                        <span className="mt-0.5 text-violet-500">📋</span><span>{p}</span>
+                        <span className="mt-0.5 text-violet-500" aria-hidden="true">📋</span><span>{p}</span>
                       </li>
                     ))}
                   </ul>
@@ -353,7 +353,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                   <ul className="space-y-2">
                     {eff.heritage_impact.studies_required.map((s: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
-                        <span className="mt-0.5 text-violet-500">📄</span><span>{s}</span>
+                        <span className="mt-0.5 text-violet-500" aria-hidden="true">📄</span><span>{s}</span>
                       </li>
                     ))}
                   </ul>
@@ -863,7 +863,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                               const urgencyIcon = v.urgency === "must" ? "🔴" : v.urgency === "should" ? "🟡" : "🔵";
                               return (
                                 <li key={vi} className={`rounded border px-2 py-1.5 text-[11px] leading-relaxed ${urgencyStyle}`}>
-                                  <span className="mr-1">{urgencyIcon}</span>{v.text}
+                                  <span className="mr-1" aria-hidden="true">{urgencyIcon}</span>{v.text}
                                 </li>
                               );
                             })}
@@ -873,7 +873,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                       {s.gaps?.length > 0 && (
                         <div className="space-y-0.5">
                           {s.gaps.map((g: string, gi: number) => (
-                            <p key={gi} className="text-[10px] text-amber-500">⚠ {g}</p>
+                            <p key={gi} className="text-[10px] text-amber-500"><span aria-hidden="true">⚠</span> {g}</p>
                           ))}
                         </div>
                       )}
@@ -903,7 +903,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                     const urgencyIcon = d.urgency === "must" ? "🔴" : d.urgency === "should" ? "🟡" : "🔵";
                     return (
                       <li key={di} className={`flex items-start gap-2 rounded border px-3 py-2 ${urgencyBg}`}>
-                        <span className="mt-0.5 shrink-0">{urgencyIcon}</span>
+                        <span className="mt-0.5 shrink-0" aria-hidden="true">{urgencyIcon}</span>
                         <div className="min-w-0">
                           <p className="text-[11px] leading-relaxed text-stone-700">{d.text}</p>
                           <p className="text-[9px] font-medium uppercase tracking-wide text-stone-400 mt-0.5">{d.section}</p>
@@ -997,7 +997,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                           )}
                           {d.addresses?.length > 0 && (
                             <p className="mt-0.5 text-[11px] text-stone-400">
-                              📍 {d.addresses.slice(0, 3).join(", ")}
+                              <span aria-hidden="true">📍</span> {d.addresses.slice(0, 3).join(", ")}
                               {d.addresses.length > 3 && ` +${d.addresses.length - 3} more`}
                             </p>
                           )}
@@ -1041,7 +1041,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
           <ul className="space-y-2">
             {dev.notes.map((note: string, i: number) => (
               <li key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-stone-600">
-                <span className="mt-0.5 text-amber-500">⚠</span>
+                <span className="mt-0.5 text-amber-500" aria-hidden="true">⚠</span>
                 <span>{note}</span>
               </li>
             ))}

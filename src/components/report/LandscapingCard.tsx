@@ -61,7 +61,7 @@ function YardRow({
     <div className="py-2.5 first:pt-0 last:pb-0">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[14px] leading-none shrink-0">{icon}</span>
+          <span className="text-[14px] leading-none shrink-0" aria-hidden="true">{icon}</span>
           <span className="text-[13px] font-medium text-stone-700">
             {label}
           </span>

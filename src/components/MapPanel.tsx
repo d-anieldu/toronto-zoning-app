@@ -414,15 +414,15 @@ export default function MapPanel({
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-      <div className="flex flex-col lg:flex-row" style={{ minHeight: 520 }}>
+      <div className="flex flex-col lg:flex-row min-h-[360px] lg:min-h-[520px]">
         {/* ── Map ────────────────────────────────────────────────── */}
-        <div className="relative flex-1" style={{ minHeight: 400 }}>
+        <div className="relative flex-1 min-h-[280px] lg:min-h-[400px]">
           <MapContainer
             center={[latitude, longitude]}
             zoom={17}
             scrollWheelZoom={true}
             className="h-full w-full"
-            style={{ minHeight: 400, height: "100%" }}
+            style={{ height: "100%" }}
           >
             <TileLayer
               key={basemap}

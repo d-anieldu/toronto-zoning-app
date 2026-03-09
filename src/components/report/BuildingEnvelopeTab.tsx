@@ -258,15 +258,15 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
 
             {/* Lot Dimensions */}
             <Card label="Lot Dimensions">
-              <Row label="Min frontage" value={eff.lot_dimensions?.min_frontage_m ? `${eff.lot_dimensions.min_frontage_m} m` : null} sub={eff.lot_dimensions?.frontage_source} />
-              <Row label="Min lot area" value={eff.lot_dimensions?.min_area_sqm ? `${eff.lot_dimensions.min_area_sqm} m²` : null} sub={eff.lot_dimensions?.area_source} />
+              <Row label="Min frontage" value={eff.lot_dimensions?.min_frontage_m ? `${fmt(eff.lot_dimensions.min_frontage_m, 1)} m` : null} sub={eff.lot_dimensions?.frontage_source} />
+              <Row label="Min lot area" value={eff.lot_dimensions?.min_area_sqm ? `${fmt(eff.lot_dimensions.min_area_sqm)} m²` : null} sub={eff.lot_dimensions?.area_source} />
               <Row label="Max units" value={eff.zone_label?.max_units || data.layers?.zoning_area?.[0]?.UNITS || (Array.isArray(data.layers?.zoning_area) ? undefined : data.layers?.zoning_area?.UNITS)} />
               {dev.lot && (
                 <>
                   <div className="my-2 border-t border-stone-100" />
-                  <Row label="Est. lot area" value={dev.lot.area_sqm ? `${dev.lot.area_sqm} m²` : null} sub={dev.lot.area_source} />
-                  <Row label="Est. frontage" value={dev.lot.frontage_m ? `${dev.lot.frontage_m} m` : null} sub={dev.lot.frontage_source} />
-                  <Row label="Est. depth" value={dev.lot.depth_m ? `${dev.lot.depth_m} m` : null} sub={dev.lot.depth_source} />
+                  <Row label="Est. lot area" value={dev.lot.area_sqm ? `${fmt(dev.lot.area_sqm)} m²` : null} sub={dev.lot.area_source} />
+                  <Row label="Est. frontage" value={dev.lot.frontage_m ? `${fmt(dev.lot.frontage_m, 1)} m` : null} sub={dev.lot.frontage_source} />
+                  <Row label="Est. depth" value={dev.lot.depth_m ? `${fmt(dev.lot.depth_m, 1)} m` : null} sub={dev.lot.depth_source} />
                 </>
               )}
             </Card>
@@ -354,7 +354,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
 
           {dev.angular_plane.rear_assumed && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
-              ⚠ Assumed lot abuts residential/open-space zone (conservative default).
+              <span aria-hidden="true">⚠</span> Assumed lot abuts residential/open-space zone (conservative default).
             </div>
           )}
         </>
@@ -461,7 +461,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
                 )}
                 {eff.stepback_rules.tower_floorplate_max_sqm && (
                   <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                    <p className="text-[18px] font-bold text-stone-900">{eff.stepback_rules.tower_floorplate_max_sqm} m²</p>
+                    <p className="text-[18px] font-bold text-stone-900">{fmt(eff.stepback_rules.tower_floorplate_max_sqm)} m²</p>
                     <p className="text-[12px] text-stone-500">Max Tower Floor Plate</p>
                   </div>
                 )}

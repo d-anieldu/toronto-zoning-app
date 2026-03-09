@@ -250,7 +250,7 @@ export default function ZoningReport({ data }: Props) {
           {/* Multi-zone warning */}
           {isMultiZone && (
             <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <p className="text-[13px] font-semibold text-amber-800">⚠ Multi-Zone Lot Detected</p>
+              <p className="text-[13px] font-semibold text-amber-800"><span aria-hidden="true">⚠</span> Multi-Zone Lot Detected</p>
               <div className="mt-2 space-y-1">
                 {zoningArea.map((z: any, i: number) => (
                   <p key={i} className="text-[12px] text-amber-700">
@@ -307,7 +307,7 @@ export default function ZoningReport({ data }: Props) {
                   )}
                   {dev.constraints.pmtsa_advisory.sasp_blank && (
                     <p className="mt-2 text-[11px] font-medium text-amber-600">
-                      ⚠{" "}
+                      <span aria-hidden="true">⚠</span>{" "}
                       <RefLink type="sasp" id={String(dev.constraints.pmtsa_advisory.sasp_no)} label={`SASP #${dev.constraints.pmtsa_advisory.sasp_no}`}>
                         SASP #{dev.constraints.pmtsa_advisory.sasp_no}
                       </RefLink>
@@ -435,7 +435,7 @@ export default function ZoningReport({ data }: Props) {
           }`}
         >
           <div className="flex items-center gap-2.5 pb-3">
-            <span className="text-[18px]">{dev.site_plan_control.required ? "📋" : "✅"}</span>
+            <span className="text-[18px]" aria-hidden="true">{dev.site_plan_control.required ? "📋" : "✅"}</span>
             <h3 className="text-[15px] font-semibold tracking-tight text-stone-900">Site Plan Control</h3>
             <Badge variant={dev.site_plan_control.required ? (dev.site_plan_control.confidence === "high" ? "danger" : "warning") : "success"}>
               {dev.site_plan_control.required ? "Required" : "Likely Exempt"}
@@ -454,7 +454,7 @@ export default function ZoningReport({ data }: Props) {
               <div className="space-y-2">
                 {dev.site_plan_control.triggers.map((t: any, i: number) => (
                   <div key={i} className="flex items-start gap-2.5 rounded-lg border border-red-100 bg-white/80 px-3 py-2.5">
-                    <span className="mt-0.5 text-[12px]">{t.severity === "definite" ? "🔴" : "🟡"}</span>
+                    <span className="mt-0.5 text-[12px]" aria-hidden="true">{t.severity === "definite" ? "🔴" : "🟡"}</span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-[12px] font-semibold text-stone-700">
@@ -479,7 +479,7 @@ export default function ZoningReport({ data }: Props) {
                 {dev.site_plan_control.exemptions.map((e: any, i: number) => (
                   <div key={i} className={`rounded-lg border px-3 py-2.5 ${e.overridden ? "border-stone-200 bg-stone-100 opacity-60" : "border-emerald-100 bg-white/80"}`}>
                     <div className="flex items-center gap-2">
-                      <span className="text-[12px]">{e.overridden ? "❌" : "✅"}</span>
+                      <span className="text-[12px]" aria-hidden="true">{e.overridden ? "❌" : "✅"}</span>
                       <span className="text-[12px] font-semibold text-stone-700">
                         {e.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
                       </span>
@@ -525,7 +525,7 @@ export default function ZoningReport({ data }: Props) {
                   : "text-stone-500 hover:text-stone-700 hover:bg-stone-50"
               }`}
             >
-              <span className="text-[14px]">{tab.icon}</span>
+              <span className="text-[14px]" aria-hidden="true">{tab.icon}</span>
               {tab.label}
             </button>
           ))}

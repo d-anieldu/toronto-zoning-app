@@ -347,7 +347,7 @@ export default function SummaryTab({ data }: SummaryTabProps) {
                           : "border-stone-200 bg-stone-50/50"
                   }`}
                 >
-                  <span className="mt-0.5 shrink-0 text-[14px]">
+                  <span className="mt-0.5 shrink-0 text-[14px]" aria-hidden="true">
                     {severityIcon[c.severity] || "🔵"}
                   </span>
                   <div className="min-w-0">
@@ -529,7 +529,7 @@ function MetricCard({
   return (
     <div className={`rounded-xl border px-4 py-3.5 ${borderBg}`}>
       <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="text-[14px]">{icon}</span>
+        <span className="text-[14px]" aria-hidden="true">{icon}</span>
         <span className="text-[10px] font-medium uppercase tracking-wide text-stone-400">
           {label}
         </span>
@@ -579,7 +579,7 @@ function FlagItem({
   const cfg = statusConfig[status];
   return (
     <div className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${cfg.bg}`}>
-      <span className="text-[14px] shrink-0">{cfg.icon}</span>
+      <span className="text-[14px] shrink-0" aria-hidden="true">{cfg.icon}</span>
       <span className="text-[13px] text-stone-700">{label}</span>
     </div>
   );
