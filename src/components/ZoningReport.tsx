@@ -21,6 +21,7 @@ import SummaryTab from "./report/SummaryTab";
 import BuildingEnvelopeTab from "./report/BuildingEnvelopeTab";
 import UsesParkingTab from "./report/UsesParkingTab";
 import ConstraintsContextTab from "./report/ConstraintsContextTab";
+import NearbyActivityTab from "./report/NearbyActivityTab";
 
 /* ── Primitives (shared across shell + tabs) ─────────────────────── */
 import { Badge, Icons, SectionHeading } from "./report/primitives";
@@ -40,6 +41,7 @@ const TABS = [
   { id: "envelope", label: "Building Envelope", icon: "🏗️" },
   { id: "uses", label: "Uses & Parking", icon: "🏠" },
   { id: "context", label: "Constraints & Context", icon: "📋" },
+  { id: "nearby", label: "Nearby Activity", icon: "📍" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -544,6 +546,7 @@ export default function ZoningReport({ data }: Props) {
           <UsesParkingTab data={data} onAnalyzeUse={setAnalyzeUse} />
         )}
         {activeTab === "context" && <ConstraintsContextTab data={data} />}
+        {activeTab === "nearby" && <NearbyActivityTab data={data} />}
       </div>
     </div>
 
