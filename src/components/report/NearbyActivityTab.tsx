@@ -459,6 +459,7 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
         if (zoneCode) params.set("zone_code", zoneCode);
         if (data.parcel?.frontage_m) params.set("lot_frontage_m", String(data.parcel.frontage_m));
         if (data.parcel?.area_sqm) params.set("lot_area_sqm", String(data.parcel.area_sqm));
+        if (data.address) params.set("address", data.address);
 
         const res = await fetch(`/api/nearby-activity/stats?${params}`);
         if (res.ok) {
