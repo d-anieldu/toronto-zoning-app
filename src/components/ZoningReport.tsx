@@ -135,19 +135,21 @@ export default function ZoningReport({ data }: Props) {
       "",
       "KEY METRICS:",
     ];
-    if (eff.height?.effective_m) lines.push(`  Height: ${eff.height.effective_m}m`);
-    if (eff.fsi?.effective_total) lines.push(`  FSI: ${eff.fsi.effective_total}`);
-    if (eff.lot_coverage?.effective_pct) lines.push(`  Lot Coverage: ${eff.lot_coverage.effective_pct}%`);
-    if (dev.max_gfa?.sqm) lines.push(`  Max GFA: ${Number(dev.max_gfa.sqm).toLocaleString()} m²`);
+    if (eff.height?.effective_m != null) lines.push(`  Height: ${eff.height.effective_m}m`);
+    if (eff.fsi?.effective_total != null) lines.push(`  FSI: ${eff.fsi.effective_total}`);
+    if (eff.lot_coverage?.effective_pct != null) lines.push(`  Lot Coverage: ${eff.lot_coverage.effective_pct}%`);
+    if (dev.max_gfa?.sqm != null) lines.push(`  Max GFA: ${Number(dev.max_gfa.sqm).toLocaleString()} m²`);
     if (eff.setbacks) {
       lines.push("");
       lines.push("SETBACKS:");
-      if (eff.setbacks.effective_front_m) lines.push(`  Front: ${eff.setbacks.effective_front_m}m`);
-      if (eff.setbacks.effective_rear_m) lines.push(`  Rear: ${eff.setbacks.effective_rear_m}m`);
-      if (eff.setbacks.effective_side_m) lines.push(`  Side: ${eff.setbacks.effective_side_m}m`);
+      if (eff.setbacks.effective_front_m != null) lines.push(`  Front: ${eff.setbacks.effective_front_m}m`);
+      if (eff.setbacks.effective_rear_m != null) lines.push(`  Rear: ${eff.setbacks.effective_rear_m}m`);
+      if (eff.setbacks.effective_side_m != null) lines.push(`  Side: ${eff.setbacks.effective_side_m}m`);
     }
     lines.push("");
-    lines.push(`Coordinates: ${coords.latitude?.toFixed(6)}°N, ${Math.abs(coords.longitude)?.toFixed(6)}°W`);
+    if (coords.latitude != null && coords.longitude != null) {
+      lines.push(`Coordinates: ${coords.latitude.toFixed(6)}°N, ${Math.abs(coords.longitude).toFixed(6)}°W`);
+    }
     lines.push("Source: Toronto Zoning (By-law 569-2013) — Not legal advice");
     navigator.clipboard.writeText(lines.filter(Boolean).join("\n")).then(() => {
       setShowCopied(true);
@@ -170,8 +172,9 @@ export default function ZoningReport({ data }: Props) {
                 {data.address}
               </h2>
               <p className="mt-1.5 font-mono text-[12px] text-stone-400">
-                {coords.latitude?.toFixed(6)}°N,{" "}
-                {Math.abs(coords.longitude)?.toFixed(6)}°W
+                {coords.latitude != null && coords.longitude != null
+                  ? `${coords.latitude.toFixed(6)}°N, ${Math.abs(coords.longitude).toFixed(6)}°W`
+                  : "—"}
               </p>
               {(bylawChapter || bylawSection) && (
                 <p className="mt-1 text-[12px] text-stone-400">

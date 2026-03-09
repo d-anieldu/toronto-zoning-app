@@ -567,7 +567,7 @@ export default function MapPanel({
                 </p>
               )}
               <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-                {lotArea != null && (
+                {lotArea != null && lotArea !== -1 && (
                   <span className="text-[11px] text-stone-500">
                     <span className="font-medium text-stone-600">
                       {lotArea.toLocaleString(undefined, {
@@ -578,7 +578,7 @@ export default function MapPanel({
                     lot
                   </span>
                 )}
-                {frontage != null && (
+                {frontage != null && frontage !== -1 && (
                   <span className="text-[11px] text-stone-500">
                     <span className="font-medium text-stone-600">
                       {frontage.toFixed(1)} m

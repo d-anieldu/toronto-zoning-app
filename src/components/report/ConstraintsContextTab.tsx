@@ -129,7 +129,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
           </div>
 
           <div className="grid gap-4 md:grid-cols-1">
-            {eff.natural_hazards.hazards.map((h: any, i: number) => {
+            {(eff.natural_hazards.hazards ?? []).map((h: any, i: number) => {
               const sevColor = h.severity === "high" ? "border-red-200 bg-red-50/30" : h.severity === "medium" ? "border-amber-200 bg-amber-50/30" : "border-stone-200 bg-stone-50/30";
               const sevBadge = h.severity === "high" ? "danger" : h.severity === "medium" ? "warning" : "default";
               return (
@@ -231,7 +231,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
           </div>
 
           <div className="grid gap-4 md:grid-cols-1">
-            {eff.heritage_impact.items.map((item: any, i: number) => (
+            {(eff.heritage_impact.items ?? []).map((item: any, i: number) => (
               <div key={i} className="rounded-xl border border-violet-200 bg-white p-5 shadow-sm">
                 {item.type === "heritage_register" && (
                   <>

@@ -73,7 +73,15 @@ export default function ZoningStatisticsTable({
 }) {
   const [expanded, setExpanded] = useState(true);
 
-  if (!data || !data.rows || data.rows.length === 0) return null;
+  if (!data) return null;
+  if (data.error) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[13px] text-amber-700">
+        <span className="font-semibold">Zoning Statistics:</span> {data.error}
+      </div>
+    );
+  }
+  if (!data.rows || data.rows.length === 0) return null;
 
   const { zone_label, rows, metadata } = data;
 

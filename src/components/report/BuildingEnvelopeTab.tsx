@@ -273,7 +273,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
 
             {/* Lot Coverage */}
             <Card label="Lot Coverage">
-              <Row label="Effective coverage" value={eff.lot_coverage?.effective_pct ? `${eff.lot_coverage.effective_pct}%` : "Not determined"} />
+              <Row label="Effective coverage" value={eff.lot_coverage?.effective_pct != null ? `${eff.lot_coverage.effective_pct}%` : "Not determined"} />
               <Row label="Source" value={eff.lot_coverage?.effective_source} />
               <Row label="Overlay %" value={eff.lot_coverage?.overlay_pct ? `${eff.lot_coverage.overlay_pct}%` : null} />
               <Row label="Uses overlay map" value={eff.lot_coverage?.uses_overlay_map ? "Yes" : null} />

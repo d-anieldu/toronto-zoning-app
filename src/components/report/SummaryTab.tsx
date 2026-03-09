@@ -102,8 +102,9 @@ export default function SummaryTab({ data }: SummaryTabProps) {
               {data.address}
             </h2>
             <p className="mt-1 font-mono text-[12px] text-stone-400">
-              {coords.latitude?.toFixed(6)}°N,{" "}
-              {Math.abs(coords.longitude)?.toFixed(6)}°W
+              {coords.latitude != null && coords.longitude != null
+                ? `${coords.latitude.toFixed(6)}°N, ${Math.abs(coords.longitude).toFixed(6)}°W`
+                : "—"}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -305,16 +306,16 @@ export default function SummaryTab({ data }: SummaryTabProps) {
           {/* Site Plan Control */}
           <FlagItem
             status={
-              dev.site_plan_control?.is_required
+              dev.site_plan_control?.required
                 ? "warn"
-                : dev.site_plan_control?.is_required === false
+                : dev.site_plan_control?.required === false
                   ? "good"
                   : "neutral"
             }
             label={
-              dev.site_plan_control?.is_required
+              dev.site_plan_control?.required
                 ? "Site Plan Control required"
-                : dev.site_plan_control?.is_required === false
+                : dev.site_plan_control?.required === false
                   ? "Site Plan Control not required"
                   : "Site Plan Control — check with City"
             }
@@ -474,7 +475,7 @@ export default function SummaryTab({ data }: SummaryTabProps) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-[14px] font-bold text-stone-900">
-                  {confidence.label || `${confLevel?.toUpperCase()} Confidence`}
+                  {confidence.label || (confLevel ? `${confLevel.toUpperCase()} Confidence` : "Confidence")}
                 </p>
                 {confidence.section_count != null && (
                   <span className="text-[11px] text-stone-400">
