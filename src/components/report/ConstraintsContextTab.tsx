@@ -16,7 +16,10 @@ import ExceptionDetail from "../ExceptionDetail";
 
 /* ── Overlay definition helper ────────────────────────────────────── */
 
-function buildOverlayDefs(layers: Record<string, any>) {
+function buildOverlayDefs(layers: Record<string, any>, eff?: Record<string, any>) {
+  const hasFloodplain = (eff?.natural_hazards?.hazards ?? []).some((h: any) =>
+    h.type === "floodplain" || h.type === "trca_regulation" || h.type === "floodplain_sasp"
+  );
   const defs = [
     { key: "height_overlay", label: "Height Overlay", icon: "📏",
       detail: layers.height_overlay ? `HT ${layers.height_overlay.HT_LABEL}m${layers.height_overlay.HT_STORIES ? `, ${layers.height_overlay.HT_STORIES} st` : ""}` : undefined },
@@ -49,8 +52,12 @@ function buildOverlayDefs(layers: Record<string, any>) {
     { key: "site_area_specific_policy", label: "Site & Area Specific Policy", icon: "📌",
       detail: (() => { const s = layers.site_area_specific_policy; if (!s) return undefined; if (Array.isArray(s) && s.length > 0) return `${s.length} ${s.length === 1 ? "policy" : "policies"}`; return undefined; })() },
     { key: "archaeological_potential", label: "Archaeological Potential", icon: "🏺" },
+    { key: "floodplain", label: "Floodplain / Special Policy Area", icon: "🌊" },
   ];
-  const isActive = (key: string) => { const v = layers[key]; if (v === null || v === undefined) return false; if (Array.isArray(v) && v.length === 0) return false; return true; };
+  const isActive = (key: string) => {
+    if (key === "floodplain") return hasFloodplain;
+    const v = layers[key]; if (v === null || v === undefined) return false; if (Array.isArray(v) && v.length === 0) return false; return true;
+  };
   return { active: defs.filter((o) => isActive(o.key)), inactive: defs.filter((o) => !isActive(o.key)) };
 }
 
@@ -63,7 +70,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
   const dev = data.development_potential || {};
   const layers = data.layers || {};
 
-  const { active: activeOverlays, inactive: inactiveOverlays } = buildOverlayDefs(layers);
+  const { active: activeOverlays, inactive: inactiveOverlays } = buildOverlayDefs(layers, eff);
 
   const opContext = eff.op_context;
   const opDesignation = opContext?.op_designation;
@@ -492,10 +499,36 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
           {opDesignation && (
             <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
               <div>
-                <RefLink type="op-designation" id={zoneCode || ""} label={opDesignation.designation}>
-                  <Badge variant="info">{opDesignation.section ? `OP s.${opDesignation.section}` : "Official Plan"}</Badge>
-                </RefLink>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <RefLink type="op-designation" id={zoneCode || ""} label={opDesignation.designation}>
+                    <Badge variant="info">{opDesignation.section ? `OP s.${opDesignation.section}` : "Official Plan"}</Badge>
+                  </RefLink>
+                  {opDesignation.confidence && (
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                      opDesignation.confidence === "high" ? "bg-emerald-100 text-emerald-700"
+                        : opDesignation.confidence === "medium" ? "bg-amber-100 text-amber-700"
+                        : "bg-red-100 text-red-700"
+                    }`}>
+                      {opDesignation.confidence} confidence
+                    </span>
+                  )}
+                </div>
                 <h4 className="mt-2 text-[17px] font-bold text-stone-900">{opDesignation.designation}</h4>
+                {opDesignation.caveat && (
+                  <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-[12px] leading-relaxed text-amber-700">
+                      <span className="mr-1" aria-hidden="true">⚠</span>{opDesignation.caveat}
+                    </p>
+                  </div>
+                )}
+                {opDesignation.alternate_designations?.length > 0 && (
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-medium text-stone-400">Possible alternates:</span>
+                    {opDesignation.alternate_designations.map((alt: string) => (
+                      <span key={alt} className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-600 border border-stone-200">{alt}</span>
+                    ))}
+                  </div>
+                )}
                 {opDesignation.description && (
                   <p className="mt-2 text-[13px] leading-relaxed text-stone-500">{opDesignation.description}</p>
                 )}
@@ -553,6 +586,65 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                 ))}
               </div>
             </div>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  NOISE & VIBRATION                                            */}
+      {/* ============================================================ */}
+      {dev.noise_vibration?.applies && (
+        <>
+          <SectionHeading id="noise" title="Noise & Vibration" icon={Icons.doc} count={dev.noise_vibration.source_count} />
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-[13px] font-medium leading-relaxed text-amber-700">{dev.noise_vibration.note}</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {(dev.noise_vibration.triggered_sources ?? []).map((src: any, i: number) => (
+              <div key={i} className="rounded-xl border border-amber-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="warning">{src.type?.toUpperCase()}</Badge>
+                  <span className="text-[14px] font-semibold text-stone-800">{src.source}</span>
+                </div>
+                {src.npc_class && <Row label="NPC-300 class" value={src.npc_class} />}
+                {src.buffer_m && <Row label="Buffer distance" value={`${src.buffer_m}m`} />}
+              </div>
+            ))}
+          </div>
+
+          {(dev.noise_vibration.studies_required?.length > 0 || dev.noise_vibration.typical_mitigation?.length > 0) && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {dev.noise_vibration.studies_required?.length > 0 && (
+                <div className="rounded-xl border border-amber-100 bg-white p-5 shadow-sm">
+                  <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-amber-500">Studies Required</p>
+                  <ul className="space-y-2">
+                    {dev.noise_vibration.studies_required.map((s: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                        <span className="mt-0.5 text-amber-500" aria-hidden="true">📄</span><span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {dev.noise_vibration.typical_mitigation?.length > 0 && (
+                <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+                  <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-stone-400">Typical Mitigation</p>
+                  <ul className="space-y-2">
+                    {dev.noise_vibration.typical_mitigation.map((m: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                        <span className="mt-0.5 text-stone-400" aria-hidden="true">🔇</span><span>{m}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {dev.noise_vibration.guideline_ref && (
+            <p className="text-[11px] italic text-stone-400">{dev.noise_vibration.guideline_ref}</p>
           )}
         </>
       )}
@@ -638,6 +730,76 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  HOLDING PROVISION DETAIL                                     */}
+      {/* ============================================================ */}
+      {dev.holding_detail?.detected && (
+        <>
+          <SectionHeading id="holding" title="Holding (H) Provision" icon={Icons.shield} />
+
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-[13px] font-medium leading-relaxed text-red-700">{dev.holding_detail.note}</p>
+          </div>
+
+          {dev.holding_detail.conditions?.length > 0 && (
+            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+              <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-red-500">
+                Likely Removal Conditions ({dev.holding_detail.condition_count || dev.holding_detail.conditions.length})
+              </p>
+              <ul className="space-y-2">
+                {dev.holding_detail.conditions.map((c: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                    <span className="mt-0.5 text-red-500" aria-hidden="true">📋</span><span>{c}</span>
+                  </li>
+                ))}
+              </ul>
+              {dev.holding_detail.process && (
+                <p className="mt-3 text-[11px] leading-relaxed text-stone-400">{dev.holding_detail.process}</p>
+              )}
+              {dev.holding_detail.reference && (
+                <p className="mt-1 text-[10px] text-stone-400">{dev.holding_detail.reference}</p>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  RENTAL REPLACEMENT                                           */}
+      {/* ============================================================ */}
+      {dev.rental_replacement?.potentially_applies && (
+        <>
+          <SectionHeading id="rental" title="Rental Replacement" icon={Icons.building} />
+
+          <div className="rounded-xl border border-violet-200 bg-violet-50 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant={dev.rental_replacement.confidence === "high" ? "danger" : "warning"}>
+                {dev.rental_replacement.confidence === "high" ? "LIKELY APPLIES" : "MAY APPLY"}
+              </Badge>
+              <span className="text-[12px] text-violet-600">{dev.rental_replacement.triggered_by}</span>
+            </div>
+            <p className="text-[13px] font-medium leading-relaxed text-violet-700">{dev.rental_replacement.note}</p>
+          </div>
+
+          {dev.rental_replacement.requirements?.length > 0 && (
+            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+              <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-violet-500">Requirements</p>
+              <ul className="space-y-2">
+                {dev.rental_replacement.requirements.map((r: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                    <span className="mt-0.5 text-violet-500" aria-hidden="true">•</span><span>{r}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex items-center gap-4 text-[11px] text-stone-400">
+                {dev.rental_replacement.threshold && <span>Threshold: {dev.rental_replacement.threshold}</span>}
+                {dev.rental_replacement.bylaw_ref && <span>Ref: {dev.rental_replacement.bylaw_ref}</span>}
               </div>
             </div>
           )}

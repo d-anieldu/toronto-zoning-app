@@ -361,6 +361,73 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
       )}
 
       {/* ============================================================ */}
+      {/*  SEPARATION DISTANCES                                         */}
+      {/* ============================================================ */}
+      {dev.separation_distances?.applies && (
+        <>
+          <p className="text-[15px] font-semibold tracking-tight text-stone-900 pt-2">
+            Separation Distances
+          </p>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card label="Building Separation Rules" defaultOpen>
+              {dev.separation_distances.bylaw_section && (
+                <Row label="By-law section" value={
+                  <RefLink type="bylaw-section" id={dev.separation_distances.bylaw_section} label={`s. ${dev.separation_distances.bylaw_section}`}>
+                    s. {dev.separation_distances.bylaw_section}
+                  </RefLink>
+                } />
+              )}
+              <Row label="Zone" value={dev.separation_distances.zone_code} />
+              {dev.separation_distances.base_rules?.length > 0 && (
+                <div className="mt-2 space-y-1.5">
+                  {dev.separation_distances.base_rules.map((rule: any, i: number) => (
+                    <div key={i} className="rounded-lg bg-stone-50 px-3 py-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-[12px] text-stone-500">
+                          {rule.max_height_m ? `Up to ${rule.max_height_m}m height` : "All heights"}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex gap-4">
+                        <div>
+                          <span className="text-[11px] text-stone-400">With openings: </span>
+                          <span className="text-[12px] font-medium text-stone-700">{typeof rule.with_openings_m === "number" ? `${rule.with_openings_m}m` : rule.with_openings_m}</span>
+                        </div>
+                        <div>
+                          <span className="text-[11px] text-stone-400">Without: </span>
+                          <span className="text-[12px] font-medium text-stone-700">{typeof rule.without_openings_m === "number" ? `${rule.without_openings_m}m` : rule.without_openings_m}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {dev.separation_distances.note && (
+                <p className="mt-2 text-[11px] italic text-stone-400">{dev.separation_distances.note}</p>
+              )}
+            </Card>
+
+            {dev.separation_distances.tower_separation?.applies && (
+              <Card label="Tower Separation" defaultOpen>
+                <Row label="Min distance" value={`${dev.separation_distances.tower_separation.min_distance_m}m`} />
+                <Row label="Height threshold" value={`${dev.separation_distances.tower_separation.threshold_height_m}m`} />
+                <Row label="Source" value={dev.separation_distances.tower_separation.source} />
+                {dev.separation_distances.tower_separation.note && (
+                  <p className="mt-2 text-[11px] italic text-stone-400">{dev.separation_distances.tower_separation.note}</p>
+                )}
+              </Card>
+            )}
+          </div>
+
+          {dev.separation_distances.exception_override && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
+              ⚠ Exception override: {dev.separation_distances.exception_override.separation_m}m separation ({dev.separation_distances.exception_override.source})
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============================================================ */}
       {/*  SHADOW ANALYSIS                                              */}
       {/* ============================================================ */}
       {dev.shadow_analysis?.nearest_park_name && (
@@ -407,7 +474,61 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
                   }
                 />
               )}
+              {dev.shadow_analysis.nearby_park_count > 0 && (
+                <Row label="Parks within range" value={dev.shadow_analysis.nearby_park_count} />
+              )}
+              {dev.shadow_analysis.worst_case_shadow_m != null && (
+                <Row label="Worst-case shadow" value={`${dev.shadow_analysis.worst_case_shadow_m}m`} sub={dev.shadow_analysis.worst_case_time ? `at ${dev.shadow_analysis.worst_case_time}` : undefined} />
+              )}
+              {dev.shadow_analysis.hours_impacting_park > 0 && (
+                <Row label="Hours impacting park" value={`${dev.shadow_analysis.hours_impacting_park} hrs`} />
+              )}
+              {dev.shadow_analysis.impacted_parks?.length > 0 && (
+                <Row label="Impacted parks" value={dev.shadow_analysis.impacted_parks.join(", ")} />
+              )}
             </Card>
+
+            {/* Hourly sweep table */}
+            {dev.shadow_analysis.hourly_sweep?.length > 0 && (
+              <Card label="Hourly Shadow Sweep (Sep 21)" defaultOpen={false}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[11px]">
+                    <thead>
+                      <tr className="border-b border-stone-200 text-left">
+                        <th className="px-2 py-1.5 font-semibold text-stone-500">Time</th>
+                        <th className="px-2 py-1.5 font-semibold text-stone-500">Shadow</th>
+                        <th className="px-2 py-1.5 font-semibold text-stone-500">Direction</th>
+                        <th className="px-2 py-1.5 font-semibold text-stone-500">Park Impact</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dev.shadow_analysis.hourly_sweep.map((h: any, i: number) => (
+                        <tr key={i} className="border-b border-stone-100">
+                          <td className="px-2 py-1.5 font-medium text-stone-700">{h.time_edt}</td>
+                          {h.sun_below_horizon ? (
+                            <>
+                              <td colSpan={3} className="px-2 py-1.5 text-stone-400 italic">Sun below horizon</td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="px-2 py-1.5 text-stone-600">{h.shadow_length_m != null ? `${Math.round(h.shadow_length_m)}m` : "—"}</td>
+                              <td className="px-2 py-1.5 text-stone-600">{h.shadow_direction_deg != null ? `${Math.round(h.shadow_direction_deg)}°` : "—"}</td>
+                              <td className="px-2 py-1.5">
+                                {h.reaches_park ? (
+                                  <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700">⚠ Yes</span>
+                                ) : (
+                                  <span className="text-stone-400">No</span>
+                                )}
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            )}
           </div>
 
           {dev.shadow_analysis.summary_text && (

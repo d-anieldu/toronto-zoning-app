@@ -563,9 +563,20 @@ function OpDesignationBody({
 
   return (
     <div className="space-y-4">
-      <h4 className="text-[14px] font-semibold text-stone-900">
-        {des.designation}
-      </h4>
+      <div className="flex items-center gap-2 flex-wrap">
+        <h4 className="text-[14px] font-semibold text-stone-900">
+          {des.designation}
+        </h4>
+        {des.confidence && (
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+            des.confidence === "high" ? "bg-emerald-100 text-emerald-700"
+              : des.confidence === "medium" ? "bg-amber-100 text-amber-700"
+              : "bg-red-100 text-red-700"
+          }`}>
+            {des.confidence}
+          </span>
+        )}
+      </div>
       {des.section && (
         <button
           type="button"
@@ -580,6 +591,21 @@ function OpDesignationBody({
         >
           OP s. {des.section}
         </button>
+      )}
+      {des.caveat && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-[12px] leading-relaxed text-amber-700">
+            <span className="mr-1" aria-hidden="true">⚠</span>{des.caveat}
+          </p>
+        </div>
+      )}
+      {des.alternate_designations?.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-medium text-stone-400">Possible alternates:</span>
+          {des.alternate_designations.map((alt: string) => (
+            <span key={alt} className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-600 border border-stone-200">{alt}</span>
+          ))}
+        </div>
       )}
       {des.description && (
         <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">

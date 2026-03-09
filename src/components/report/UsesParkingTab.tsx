@@ -213,6 +213,48 @@ export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabPro
               )}
             </Card>
           )}
+
+          {/* Parking Maximum */}
+          {dev.parking_maximum?.applies && (
+            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+              <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">Parking Maximum</p>
+              <div className="grid gap-3 sm:grid-cols-2 mb-3">
+                <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                  <p className="text-[22px] font-bold text-stone-900">{dev.parking_maximum.max_spaces_permitted}</p>
+                  <p className="text-[12px] text-stone-500">Max spaces permitted</p>
+                </div>
+                <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                  <p className="text-[22px] font-bold text-stone-900">{dev.parking_maximum.max_rate_per_unit}</p>
+                  <p className="text-[12px] text-stone-500">Avg rate per unit</p>
+                </div>
+              </div>
+              {dev.parking_maximum.rates_by_bedroom && (
+                <div className="space-y-1.5">
+                  {Object.entries(dev.parking_maximum.rates_by_bedroom).map(([bed, rate]: [string, any]) => (
+                    <div key={bed} className="flex items-baseline justify-between gap-3 rounded-lg bg-stone-50 px-3 py-2">
+                      <span className="text-[12px] font-medium text-stone-700">{bed.replace(/_/g, " ")}</span>
+                      <span className="text-right text-[12px] text-stone-500">{rate} spaces/unit</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-3 flex items-center gap-4 text-[11px] text-stone-400">
+                <span>Parking Zone: {dev.parking_maximum.parking_zone}</span>
+                {dev.parking_maximum.near_transit && <Badge variant="info">Near Transit</Badge>}
+                {dev.parking_maximum.visitor_max_spaces != null && (
+                  <span>Visitor max: {dev.parking_maximum.visitor_max_spaces}</span>
+                )}
+              </div>
+              {dev.parking_maximum.exceeds_maximum && (
+                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
+                  ⚠ {dev.parking_maximum.note}
+                </div>
+              )}
+              {dev.parking_maximum.bylaw_ref && (
+                <p className="mt-2 text-[10px] text-stone-400">{dev.parking_maximum.bylaw_ref}</p>
+              )}
+            </div>
+          )}
         </>
       )}
 

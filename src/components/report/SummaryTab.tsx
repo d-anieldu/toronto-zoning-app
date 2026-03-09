@@ -70,6 +70,7 @@ export default function SummaryTab({ data }: SummaryTabProps) {
     "natural_heritage_system",
     "site_area_specific_policy",
     "archaeological_potential",
+    "floodplain",
   ];
   const activeOverlayCount = overlayKeys.filter((k) => {
     const v = layers[k];
@@ -296,6 +297,66 @@ export default function SummaryTab({ data }: SummaryTabProps) {
             <FlagItem
               status="warn"
               label={`Inclusionary Zoning: ${dev.inclusionary_zoning.effective_rate_pct}% affordable`}
+            />
+          )}
+
+          {/* OP Confidence */}
+          {eff.op_context?.op_designation?.confidence && (
+            <FlagItem
+              status={
+                eff.op_context.op_designation.confidence === "low" ? "warn"
+                  : eff.op_context.op_designation.confidence === "medium" ? "neutral"
+                  : "good"
+              }
+              label={`OP Designation: ${eff.op_context.op_designation.confidence} confidence${eff.op_context.op_designation.caveat ? " ⚠" : ""}`}
+            />
+          )}
+
+          {/* Noise & Vibration */}
+          {dev.noise_vibration?.applies && (
+            <FlagItem
+              status="warn"
+              label={`${dev.noise_vibration.source_count} Noise/Vibration source${dev.noise_vibration.source_count !== 1 ? "s" : ""} nearby`}
+            />
+          )}
+
+          {/* Holding Detail */}
+          {dev.holding_detail?.detected && dev.holding_detail.conditions?.length > 0 && (
+            <FlagItem
+              status="bad"
+              label={`Holding (H): ${dev.holding_detail.condition_count || dev.holding_detail.conditions.length} removal condition${(dev.holding_detail.condition_count || dev.holding_detail.conditions.length) !== 1 ? "s" : ""}`}
+            />
+          )}
+
+          {/* Rental Replacement */}
+          {dev.rental_replacement?.potentially_applies && (
+            <FlagItem
+              status="warn"
+              label={`Rental Replacement: ${dev.rental_replacement.confidence === "high" ? "likely applies" : "may apply"}`}
+            />
+          )}
+
+          {/* Parking Maximum */}
+          {dev.parking_maximum?.applies && dev.parking_maximum.exceeds_maximum && (
+            <FlagItem
+              status="warn"
+              label={`Parking exceeds maximum: ${dev.parking_maximum.max_spaces_permitted} max permitted`}
+            />
+          )}
+
+          {/* Shadow Impact */}
+          {dev.shadow_analysis?.hours_impacting_park > 0 && (
+            <FlagItem
+              status="warn"
+              label={`Shadow impacts ${dev.shadow_analysis.impacted_parks?.length || 1} park${(dev.shadow_analysis.impacted_parks?.length || 1) !== 1 ? "s" : ""} (${dev.shadow_analysis.hours_impacting_park} hrs)`}
+            />
+          )}
+
+          {/* Separation Distances */}
+          {dev.separation_distances?.applies && (
+            <FlagItem
+              status="neutral"
+              label="Separation distance rules apply"
             />
           )}
         </div>
