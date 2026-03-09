@@ -24,6 +24,7 @@ interface ZoningStatsMetadata {
   has_user_input?: boolean;
   has_parcel_area?: boolean;
   has_parcel_frontage?: boolean;
+  has_front_yard_averaging?: boolean;
 }
 
 export interface ZoningStatisticsData {
@@ -217,15 +218,26 @@ export default function ZoningStatisticsTable({
           </div>
 
           {/* Footer metadata notes */}
-          {metadata?.has_3d_massing_data && (
-            <div className="border-t border-stone-100 bg-stone-50/50 px-5 py-3">
-              <div className="flex items-start gap-2">
-                <span className="text-[11px] leading-none shrink-0">✅</span>
-                <p className="text-[10px] text-emerald-600 leading-snug">
-                  Existing building data from City of Toronto 3D Massing Open
-                  Data
-                </p>
-              </div>
+          {(metadata?.has_3d_massing_data || metadata?.has_front_yard_averaging) && (
+            <div className="border-t border-stone-100 bg-stone-50/50 px-5 py-3 space-y-1.5">
+              {metadata?.has_front_yard_averaging && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[11px] leading-none shrink-0">📐</span>
+                  <p className="text-[10px] text-stone-400 leading-snug">
+                    Front yard setback estimated from neighbour building
+                    footprints (3D Massing)
+                  </p>
+                </div>
+              )}
+              {metadata?.has_3d_massing_data && (
+                <div className="flex items-start gap-2">
+                  <span className="text-[11px] leading-none shrink-0">✅</span>
+                  <p className="text-[10px] text-emerald-600 leading-snug">
+                    Existing building data from City of Toronto 3D Massing Open
+                    Data
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
