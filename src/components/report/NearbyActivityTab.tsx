@@ -431,7 +431,7 @@ function RadiusSelector({
 /* ================================================================== */
 
 export default function NearbyActivityTab({ data }: { data: Record<string, any> }) {
-  const coords = data.coordinates || {};
+  const coords = useMemo(() => data.coordinates || {}, [data.coordinates]);
   const nearby: NearbyData = data.nearby_activity || {};
   const dev = data.development_potential || {};
 
