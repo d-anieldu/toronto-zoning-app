@@ -269,6 +269,16 @@ function MiniMap({
                     {e.distance_m != null && (
                       <p className="text-stone-400">{e.distance_m}m away</p>
                     )}
+                    {e.url && (
+                      <a
+                        href={e.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-500 hover:text-indigo-700 font-medium"
+                      >
+                        View on AIC &nearr;
+                      </a>
+                    )}
                   </div>
                 </Popup>
               </Marker>
@@ -413,11 +423,23 @@ function ActivityFeed({ events }: { events: any[] }) {
                     {e.raw_data.DESCRIPTION}
                   </p>
                 )}
-                {(e.source_id || e.raw_data?.REFERENCE_FILE) && (
-                  <p className="mt-0.5 text-[11px] text-stone-400">
-                    Ref: {e.source_id || e.raw_data.REFERENCE_FILE}
-                  </p>
-                )}
+                <div className="mt-0.5 flex items-center gap-2">
+                  {(e.source_id || e.raw_data?.REFERENCE_FILE) && (
+                    <span className="text-[11px] text-stone-400">
+                      Ref: {e.source_id || e.raw_data.REFERENCE_FILE}
+                    </span>
+                  )}
+                  {e.url && (
+                    <a
+                      href={e.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-0.5 text-[11px] font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+                    >
+                      View on AIC <span aria-hidden="true">&nearr;</span>
+                    </a>
+                  )}
+                </div>
               </div>
               <span className="shrink-0 text-[11px] text-stone-400">
                 {formatDate(e.event_date)}
@@ -1076,6 +1098,19 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
                         {formatDate(d.event_date)}
                         {d.distance_m != null && ` · ${d.distance_m}m away`}
                         {(d.source_id || d.raw_data?.REFERENCE_FILE) && ` · Ref: ${d.source_id || d.raw_data.REFERENCE_FILE}`}
+                        {d.url && (
+                          <>
+                            {" · "}
+                            <a
+                              href={d.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+                            >
+                              View on AIC &nearr;
+                            </a>
+                          </>
+                        )}
                       </p>
                     </div>
                   ))}
@@ -1127,6 +1162,19 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
                       {formatDate(m.event_date)}
                       {m.distance_m != null && ` · ${m.distance_m}m away`}
                       {m.raw_data?.ZONING_DESIGNATION && ` · Zone: ${m.raw_data.ZONING_DESIGNATION}`}
+                      {m.url && (
+                        <>
+                          {" · "}
+                          <a
+                            href={m.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+                          >
+                            View on AIC &nearr;
+                          </a>
+                        </>
+                      )}
                     </p>
                   </div>
                 ))}
