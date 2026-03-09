@@ -60,6 +60,33 @@ interface NearbyData {
     rate: number | null;
   }[];
   events?: any[];
+  building_permits?: {
+    total: number;
+    permits: {
+      permit_num: string;
+      permit_type: string;
+      structure_type: string;
+      work: string;
+      address: string;
+      postal: string;
+      application_date: string;
+      issued_date: string;
+      completed_date: string;
+      status: string;
+      description: string;
+      current_use: string;
+      proposed_use: string;
+      est_cost: number | null;
+      dwelling_units_created: number;
+      dwelling_units_lost: number;
+    }[];
+    by_status: Record<string, number>;
+    by_work_type: { type: string; count: number }[];
+    by_permit_type: { type: string; count: number }[];
+    total_est_cost: number | null;
+    net_dwelling_units: number;
+    summary_text: string;
+  };
   radius_m?: number;
 }
 
@@ -431,6 +458,189 @@ function RadiusSelector({
   );
 }
 
+/* ── Building Permits Section ──────────────────────────────────────── */
+
+const STATUS_COLOR: Record<string, string> = {
+  "Permit Issued": "bg-emerald-100 text-emerald-700",
+  "Inspection": "bg-blue-100 text-blue-700",
+  "Closed": "bg-stone-100 text-stone-500",
+  "Cancelled": "bg-red-100 text-red-600",
+  "Revision Issued": "bg-amber-100 text-amber-700",
+};
+
+function formatCost(v: number | null): string {
+  if (v == null) return "—";
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
+  return `$${v.toFixed(0)}`;
+}
+
+function BuildingPermitsSection({
+  permits,
+  permitList,
+}: {
+  permits: NonNullable<NearbyData["building_permits"]>;
+  permitList: NonNullable<NearbyData["building_permits"]>["permits"];
+}) {
+  const [showCount, setShowCount] = useState(5);
+  const [workFilter, setWorkFilter] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    if (!workFilter) return permitList;
+    return permitList.filter((p) => p.work === workFilter);
+  }, [permitList, workFilter]);
+
+  const visible = filtered.slice(0, showCount);
+
+  return (
+    <Card label="Building Permits">
+      <div className="space-y-4">
+        {/* Hero stats */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <p className="text-[20px] font-bold text-stone-900">{permits.total}</p>
+            <p className="text-[11px] text-stone-400">permits found</p>
+          </div>
+          <div>
+            <p className="text-[20px] font-bold text-violet-600">
+              {formatCost(permits.total_est_cost)}
+            </p>
+            <p className="text-[11px] text-stone-400">est. construction</p>
+          </div>
+          <div>
+            <p className="text-[20px] font-bold text-stone-900">
+              {permits.net_dwelling_units > 0 ? "+" : ""}
+              {permits.net_dwelling_units}
+            </p>
+            <p className="text-[11px] text-stone-400">net dwelling units</p>
+          </div>
+          <div>
+            <p className="text-[20px] font-bold text-stone-900">
+              {Object.keys(permits.by_status).length}
+            </p>
+            <p className="text-[11px] text-stone-400">status categories</p>
+          </div>
+        </div>
+
+        {/* Status breakdown */}
+        {Object.keys(permits.by_status).length > 0 && (
+          <div>
+            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Permit Status</p>
+            <div className="flex flex-wrap gap-1.5">
+              {Object.entries(permits.by_status)
+                .sort(([, a], [, b]) => b - a)
+                .map(([status, count]) => (
+                  <span
+                    key={status}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                      STATUS_COLOR[status] || "bg-stone-100 text-stone-500"
+                    }`}
+                  >
+                    {status} ({count})
+                  </span>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Work type filters */}
+        {permits.by_work_type.length > 0 && (
+          <div>
+            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Work Types</p>
+            <div className="flex flex-wrap gap-1.5">
+              <Tag active={!workFilter} onClick={() => setWorkFilter(null)}>
+                All ({permits.total})
+              </Tag>
+              {permits.by_work_type.slice(0, 6).map((wt) => (
+                <Tag
+                  key={wt.type}
+                  active={workFilter === wt.type}
+                  onClick={() => setWorkFilter(wt.type)}
+                >
+                  {wt.type} ({wt.count})
+                </Tag>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Permit list */}
+        <div className="divide-y divide-stone-100">
+          {visible.map((p) => (
+            <div key={p.permit_num} className="py-2.5 first:pt-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        STATUS_COLOR[p.status] || "bg-stone-100 text-stone-500"
+                      }`}
+                    >
+                      {p.status || "Unknown"}
+                    </span>
+                    {p.est_cost != null && (
+                      <span className="text-[11px] font-medium text-violet-600">
+                        {formatCost(p.est_cost)}
+                      </span>
+                    )}
+                    {(p.dwelling_units_created > 0 || p.dwelling_units_lost > 0) && (
+                      <span className="text-[10px] text-stone-400">
+                        {p.dwelling_units_created > 0 && `+${p.dwelling_units_created}`}
+                        {p.dwelling_units_lost > 0 && ` -${p.dwelling_units_lost}`} units
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[12px] font-medium text-stone-700 truncate">
+                    {p.address || "Unknown location"}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-stone-500">
+                    {p.work || p.permit_type}
+                    {p.structure_type && ` · ${p.structure_type}`}
+                  </p>
+                  {p.description && (
+                    <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-2">
+                      {p.description}
+                    </p>
+                  )}
+                  {p.current_use && p.proposed_use && p.current_use !== p.proposed_use && (
+                    <p className="mt-0.5 text-[10px] text-stone-400">
+                      {p.current_use} → {p.proposed_use}
+                    </p>
+                  )}
+                  <p className="mt-0.5 text-[10px] text-stone-400">
+                    Permit: {p.permit_num}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <span className="text-[11px] text-stone-400">
+                    {p.issued_date ? formatDate(p.issued_date) : formatDate(p.application_date)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filtered.length > showCount && (
+          <button
+            type="button"
+            onClick={() => setShowCount((c) => c + 10)}
+            className="w-full rounded-lg border border-stone-200 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-50 transition-colors"
+          >
+            Show more ({filtered.length - showCount} remaining)
+          </button>
+        )}
+
+        {visible.length === 0 && (
+          <p className="text-[12px] text-stone-400 italic py-4 text-center">
+            No permits found matching this filter.
+          </p>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 /* ================================================================== */
 /*  MAIN COMPONENT                                                     */
 /* ================================================================== */
@@ -485,15 +695,18 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
   const similarLots = liveData.similar_lots;
   const trend = liveData.trend;
   const events = liveData.events || [];
+  const permits = liveData.building_permits;
+  const permitList = permits?.permits || [];
 
   // OLT decisions from dev potential
   const oltDecisions = dev.olt_decisions || {};
   const oltSamples = oltDecisions.samples || oltDecisions.recent_decisions || [];
 
   const hasData = (overview?.total ?? 0) > 0;
+  const hasPermits = (permits?.total ?? 0) > 0;
 
   /* ── Empty state ─────────────────────────────────────────────────── */
-  if (!hasData && events.length === 0) {
+  if (!hasData && events.length === 0 && !hasPermits) {
     return (
       <div className="space-y-6 py-6">
         <SectionHeading title="Nearby Activity" icon="📍" />
@@ -758,7 +971,12 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
         </Card>
       )}
 
-      {/* ─── Section G: Trend Chart ────────────────────────────────── */}
+      {/* ─── Section G: Building Permits ────────────────────────── */}
+      {hasPermits && (
+        <BuildingPermitsSection permits={permits!} permitList={permitList} />
+      )}
+
+      {/* ─── Section H: Trend Chart ────────────────────────────────── */}
       {trend && trend.length > 0 && (
         <Card label="Approval Trend (Year over Year)">
           <TrendChart data={trend} />
@@ -774,14 +992,23 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
           professional before making decisions based on this data.
         </p>
         <p className="mt-1.5 text-[10px] text-stone-400">
-          Data source:{" "}
+          Data sources:{" "}
           <a
             href="https://open.toronto.ca/dataset/committee-of-adjustment-decisions/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-indigo-500 hover:underline"
           >
-            Toronto Open Data — Committee of Adjustment Decisions ↗
+            CoA Decisions ↗
+          </a>
+          {" · "}
+          <a
+            href="https://open.toronto.ca/dataset/building-permits-active-permits/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-500 hover:underline"
+          >
+            Building Permits ↗
           </a>
         </p>
       </div>
