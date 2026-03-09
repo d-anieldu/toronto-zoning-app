@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const zone_code = searchParams.get("zone_code");
     const lot_frontage_m = searchParams.get("lot_frontage_m");
     const lot_area_sqm = searchParams.get("lot_area_sqm");
+    const address = searchParams.get("address");
 
     if (!lon || !lat) {
       return NextResponse.json({ error: "lon and lat are required" }, { status: 400 });
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest) {
     if (zone_code) params.set("zone_code", zone_code);
     if (lot_frontage_m) params.set("lot_frontage_m", lot_frontage_m);
     if (lot_area_sqm) params.set("lot_area_sqm", lot_area_sqm);
+    if (address) params.set("address", address);
 
     const res = await fetch(
       `${API_URL}/nearby-activity/stats?${params}`,
