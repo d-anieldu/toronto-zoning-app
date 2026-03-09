@@ -373,12 +373,26 @@ export default function MapPanel({
     return () => cancelAnimationFrame(id);
   }, [pendingAutoLoad, fetchLayer]);
 
-  /* ── Fetch parcel on mount ───────────────────────────────────────── */
+  /* ── Fetch parcel on mount (with retry for cold-start) ──────────── */
   useEffect(() => {
-    fetch(`/api/map/parcel?lon=${longitude}&lat=${latitude}`)
-      .then((r) => r.json())
-      .then((d) => setParcelData(d))
-      .catch((e) => console.error("Failed to load parcel:", e));
+    let cancelled = false;
+    const fetchParcel = async (attempt = 1) => {
+      try {
+        const r = await fetch(`/api/map/parcel?lon=${longitude}&lat=${latitude}`);
+        if (!r.ok) throw new Error(`Parcel fetch ${r.status}`);
+        const d = await r.json();
+        if (!cancelled) setParcelData(d);
+      } catch (e) {
+        if (attempt < 2 && !cancelled) {
+          // Retry once after 3s (backend may be loading the GeoDataFrame)
+          setTimeout(() => fetchParcel(attempt + 1), 3000);
+        } else {
+          console.error("Failed to load parcel:", e);
+        }
+      }
+    };
+    fetchParcel();
+    return () => { cancelled = true; };
   }, [latitude, longitude]);
 
   /* ── Toggle a layer on/off ───────────────────────────────────────── */

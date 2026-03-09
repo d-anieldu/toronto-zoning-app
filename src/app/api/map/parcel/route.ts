@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 const API_URL = process.env.API_URL;
 
 export async function GET(request: NextRequest) {
