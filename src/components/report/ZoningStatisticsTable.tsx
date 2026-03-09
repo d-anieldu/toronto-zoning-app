@@ -21,11 +21,9 @@ interface ZoningStatsRow {
 
 interface ZoningStatsMetadata {
   has_3d_massing_data?: boolean;
-  has_user_landscaping_input?: boolean;
+  has_user_input?: boolean;
   has_parcel_area?: boolean;
   has_parcel_frontage?: boolean;
-  landscaping_note?: string;
-  massing_note?: string;
 }
 
 export interface ZoningStatisticsData {
@@ -40,19 +38,23 @@ export interface ZoningStatisticsData {
 
 function getCategory(label: string): string {
   const l = label.toUpperCase();
+  if (l === "USE") return "use";
   if (l.includes("LOT FRONTAGE") || l.includes("LOT AREA")) return "lot";
   if (l.includes("HEIGHT") || l.includes("STOREYS")) return "height";
-  if (l.includes("FSI") || l.includes("GROSS FLOOR")) return "density";
+  if (l.includes("BUILDING LENGTH") || l.includes("BUILDING DEPTH")) return "building";
+  if (l.includes("FSI") || l.includes("GFA")) return "density";
   if (l.includes("COVERAGE")) return "coverage";
-  if (l.includes("SETBACK")) return "setback";
+  if (l.includes("YARD SB") || l.includes("SETBACK")) return "setback";
   if (l.includes("LANDSCAPING") || l.includes("LANDSCAPE")) return "landscaping";
   if (l.includes("PARKING")) return "parking";
   return "other";
 }
 
 const CATEGORY_ICON: Record<string, string> = {
+  use: "🏘️",
   lot: "📐",
   height: "📏",
+  building: "🏗️",
   density: "📊",
   coverage: "🏠",
   setback: "↔️",
@@ -215,33 +217,15 @@ export default function ZoningStatisticsTable({
           </div>
 
           {/* Footer metadata notes */}
-          {metadata && (metadata.landscaping_note || metadata.massing_note) && (
-            <div className="border-t border-stone-100 bg-stone-50/50 px-5 py-3 space-y-1.5">
-              {metadata.landscaping_note && (
-                <div className="flex items-start gap-2">
-                  <span className="text-[11px] leading-none shrink-0">🌿</span>
-                  <p className="text-[10px] text-stone-400 leading-snug">
-                    {metadata.landscaping_note}
-                  </p>
-                </div>
-              )}
-              {metadata.massing_note && !metadata.has_3d_massing_data && (
-                <div className="flex items-start gap-2">
-                  <span className="text-[11px] leading-none shrink-0">🏢</span>
-                  <p className="text-[10px] text-stone-400 leading-snug">
-                    {metadata.massing_note}
-                  </p>
-                </div>
-              )}
-              {metadata.has_3d_massing_data && (
-                <div className="flex items-start gap-2">
-                  <span className="text-[11px] leading-none shrink-0">✅</span>
-                  <p className="text-[10px] text-emerald-600 leading-snug">
-                    Existing building data from City of Toronto 3D Massing Open
-                    Data
-                  </p>
-                </div>
-              )}
+          {metadata?.has_3d_massing_data && (
+            <div className="border-t border-stone-100 bg-stone-50/50 px-5 py-3">
+              <div className="flex items-start gap-2">
+                <span className="text-[11px] leading-none shrink-0">✅</span>
+                <p className="text-[10px] text-emerald-600 leading-snug">
+                  Existing building data from City of Toronto 3D Massing Open
+                  Data
+                </p>
+              </div>
             </div>
           )}
         </div>
