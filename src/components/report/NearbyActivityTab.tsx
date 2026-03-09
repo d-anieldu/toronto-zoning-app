@@ -167,7 +167,7 @@ function spreadPosition(
   total: number,
   centerLat: number,
   centerLon: number,
-  radiusKm = 0.09,
+  radiusKm = 0.04,
 ): [number, number] {
   const angle = (2 * Math.PI * index) / Math.max(total, 1);
   const dLat = (radiusKm / 111.32) * Math.cos(angle);
