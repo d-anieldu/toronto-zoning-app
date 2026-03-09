@@ -48,12 +48,12 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
                   Building Envelope
                 </p>
                 <SetbackDiagram
-                  front={dev.setbacks.front_m}
-                  rear={dev.setbacks.rear_m}
-                  side={dev.setbacks.side_m}
-                  buildableWidth={dev.setbacks.buildable_width_m}
-                  buildableDepth={dev.setbacks.buildable_depth_m}
-                  buildableArea={dev.setbacks.buildable_area_sqm}
+                  front={dev.setbacks.front_m ?? 0}
+                  rear={dev.setbacks.rear_m ?? 0}
+                  side={dev.setbacks.side_m ?? 0}
+                  buildableWidth={dev.setbacks.buildable_width_m ?? 0}
+                  buildableDepth={dev.setbacks.buildable_depth_m ?? 0}
+                  buildableArea={dev.setbacks.buildable_area_sqm ?? 0}
                 />
               </div>
             )}
@@ -67,13 +67,13 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
                   </p>
                   <p className="text-[12px] font-medium text-emerald-600">Maximum GFA</p>
                   <p className="mt-0.5 text-[11px] text-emerald-500">
-                    Limited by {dev.max_gfa.limiting_factor}
+                    Limited by {dev.max_gfa.limiting_factor || "—"}
                   </p>
                 </div>
               )}
               {dev.height && (
                 <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-                  <p className="text-[20px] font-bold text-stone-900">{dev.height.max_m} m</p>
+                  <p className="text-[20px] font-bold text-stone-900">{dev.height.max_m != null ? `${dev.height.max_m} m` : "—"}</p>
                   <p className="text-[12px] text-stone-500">Max Height</p>
                   {dev.height.max_storeys && (
                     <p className="text-[11px] text-stone-400">~{dev.height.max_storeys} storeys est.</p>
@@ -91,7 +91,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
                 <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
                   <p className="text-[20px] font-bold text-stone-900">{fmt(dev.floor_plate.max_sqm)} m²</p>
                   <p className="text-[12px] text-stone-500">Floor Plate</p>
-                  <p className="text-[11px] text-stone-400">by {dev.floor_plate.limiting_factor}</p>
+                  <p className="text-[11px] text-stone-400">by {dev.floor_plate.limiting_factor || "—"}</p>
                 </div>
               )}
               {dev.setbacks && (
@@ -99,7 +99,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
                   <p className="text-[20px] font-bold text-stone-900">{fmt(dev.setbacks.buildable_area_sqm)} m²</p>
                   <p className="text-[12px] text-stone-500">Buildable Area</p>
                   <p className="text-[11px] text-stone-400">
-                    {dev.setbacks.buildable_width_m}m × {dev.setbacks.buildable_depth_m}m
+                    {dev.setbacks.buildable_width_m != null && dev.setbacks.buildable_depth_m != null ? `${dev.setbacks.buildable_width_m}m × ${dev.setbacks.buildable_depth_m}m` : "—"}
                   </p>
                 </div>
               )}

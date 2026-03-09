@@ -416,7 +416,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                   {!["building_setback", "priority_retail", "inclusionary_zoning", "queen_st_w_community"].includes(key) && (
                     <div className="space-y-1.5">
                       {Object.entries(rule).filter(([k]) => k !== "applies" && k !== "name" && k !== "chapter").map(([k, v]: [string, any]) => (
-                        <Row key={k} label={k.replace(/_/g, " ")} value={String(v)} />
+                        <Row key={k} label={k.replace(/_/g, " ")} value={typeof v === "object" && v !== null ? JSON.stringify(v) : String(v)} />
                       ))}
                     </div>
                   )}

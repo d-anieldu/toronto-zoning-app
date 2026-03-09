@@ -93,53 +93,6 @@ export default function SummaryTab({ data }: SummaryTabProps) {
   return (
     <div className="space-y-5">
       {/* ============================================================ */}
-      {/*  ZONE IDENTITY HEADER                                         */}
-      {/* ============================================================ */}
-      <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h2 className="text-[22px] font-bold tracking-tight text-stone-900">
-              {data.address}
-            </h2>
-            <p className="mt-1 font-mono text-[12px] text-stone-400">
-              {coords.latitude != null && coords.longitude != null
-                ? `${coords.latitude.toFixed(6)}°N, ${Math.abs(coords.longitude).toFixed(6)}°W`
-                : "—"}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {zoneCode ? (
-              <RefLink type="zone-info" id={zoneCode} label={zoneCode}>
-                <span className="rounded-lg bg-stone-900 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
-                  {zoneCode}
-                </span>
-              </RefLink>
-            ) : isFormerBylaw ? (
-              <span className="rounded-lg bg-orange-600 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
-                {dev.former_bylaw_notice?.bylaw || "Former By-law"}
-              </span>
-            ) : null}
-            {zoneString && (
-              <span className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-1.5 font-mono text-[12px] text-stone-600">
-                {zoneString}
-              </span>
-            )}
-            {exceptionNum && (
-              <RefLink
-                type="exception"
-                id={String(exceptionNum)}
-                zone_code={zoneCode}
-                label={`Exception #${exceptionNum}`}
-              >
-                <Badge variant="warning">Exception #{exceptionNum}</Badge>
-              </RefLink>
-            )}
-            {holdingProvision && <Badge variant="danger">Holding (H)</Badge>}
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
       {/*  KEY METRICS — 6-card grid                                    */}
       {/* ============================================================ */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -269,21 +222,21 @@ export default function SummaryTab({ data }: SummaryTabProps) {
         <div className="grid gap-2 sm:grid-cols-2">
           {/* Heritage */}
           <FlagItem
-            status={eff.heritage_impact?.has_heritage ? "warn" : "good"}
+            status={eff.heritage_impact?.has_heritage ? "warn" : eff.heritage_impact ? "good" : "neutral"}
             label={
               eff.heritage_impact?.has_heritage
                 ? `Heritage: ${eff.heritage_impact.combined_impact}`
-                : "No Heritage designation"
+                : eff.heritage_impact ? "No Heritage designation" : "Heritage data not loaded"
             }
           />
 
           {/* Natural Hazards */}
           <FlagItem
-            status={eff.natural_hazards?.has_hazards ? "warn" : "good"}
+            status={eff.natural_hazards?.has_hazards ? "warn" : eff.natural_hazards ? "good" : "neutral"}
             label={
               eff.natural_hazards?.has_hazards
                 ? `${eff.natural_hazards.hazard_count} Natural Hazard${eff.natural_hazards.hazard_count > 1 ? "s" : ""}`
-                : "No Natural Hazard constraints"
+                : eff.natural_hazards ? "No Natural Hazard constraints" : "Hazard data not loaded"
             }
           />
 
