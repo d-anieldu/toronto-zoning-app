@@ -158,6 +158,25 @@ function pct(v: number | null | undefined): string {
 
 /* ── Mini-Map (dynamic loaded — SSR safe) ──────────────────────────── */
 
+/**
+ * Spread events that lack real coordinates in a circle around the
+ * property centre so they are visible on the map.
+ */
+function spreadPosition(
+  index: number,
+  total: number,
+  centerLat: number,
+  centerLon: number,
+  radiusKm = 0.09,
+): [number, number] {
+  const angle = (2 * Math.PI * index) / Math.max(total, 1);
+  const dLat = (radiusKm / 111.32) * Math.cos(angle);
+  const dLon =
+    (radiusKm / (111.32 * Math.cos((centerLat * Math.PI) / 180))) *
+    Math.sin(angle);
+  return [centerLat + dLat, centerLon + dLon];
+}
+
 function MiniMap({
   center,
   events,
@@ -174,14 +193,32 @@ function MiniMap({
     Promise.all([
       import("react-leaflet"),
       import("leaflet"),
+      // @ts-expect-error — CSS module import
+      import("leaflet/dist/leaflet.css"),
     ]).then(([rl, L]) => {
       setMapComponents({ rl, L: L.default || L });
     });
   }, []);
 
+  // Position events: use real coords if available, else spread around centre
+  const positioned = useMemo(() => {
+    const needSpread = events.filter((e) => !e.lat || !e.lng);
+    return events.map((e) => {
+      if (e.lat && e.lng) return { ...e, _lat: e.lat, _lng: e.lng };
+      const si = needSpread.indexOf(e);
+      const [sLat, sLon] = spreadPosition(
+        si,
+        needSpread.length,
+        center.lat,
+        center.lon,
+      );
+      return { ...e, _lat: sLat, _lng: sLon };
+    });
+  }, [events, center]);
+
   if (!mapComponents) {
     return (
-      <div className="flex h-[280px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
+      <div className="flex h-[320px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
         <p className="text-[12px] text-stone-400">Loading map…</p>
       </div>
     );
@@ -203,9 +240,9 @@ function MiniMap({
   const markerIcon = (color: string) =>
     L.divIcon({
       className: "",
-      html: `<div style="width:10px;height:10px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
-      iconSize: [10, 10],
-      iconAnchor: [5, 5],
+      html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;"></div>`,
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
     });
 
   return (
@@ -213,7 +250,7 @@ function MiniMap({
       <MapContainer
         center={[center.lat, center.lon]}
         zoom={15}
-        style={{ height: "280px", width: "100%" }}
+        style={{ height: "320px", width: "100%" }}
         scrollWheelZoom={false}
         zoomControl={false}
       >
@@ -245,49 +282,66 @@ function MiniMap({
           }}
         />
         {/* Event pins */}
-        {events
-          .filter((e: any) => e.lat && e.lng)
-          .map((e: any, i: number) => {
-            const color = pinColors[e.event_type] || "#94a3b8";
-            return (
-              <Marker
-                key={e.id || i}
-                position={[e.lat, e.lng]}
-                icon={markerIcon(color)}
-              >
-                <Popup>
-                  <div className="text-[11px] leading-relaxed max-w-[200px]">
-                    <p className="font-semibold text-stone-800">
-                      {e.address || "Unknown"}
-                    </p>
-                    <p className="text-stone-500">
+        {positioned.map((e: any, i: number) => {
+          const color = pinColors[e.event_type] || "#94a3b8";
+          return (
+            <Marker
+              key={e._key || e.id || i}
+              position={[e._lat, e._lng]}
+              icon={markerIcon(color)}
+            >
+              <Popup>
+                <div className="text-[11px] leading-relaxed max-w-[220px]">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span
+                      className="inline-block h-2 w-2 rounded-full shrink-0"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="font-semibold text-stone-700">
                       {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
-                    </p>
-                    {e.event_date && (
-                      <p className="text-stone-400">{formatDate(e.event_date)}</p>
-                    )}
-                    {e.distance_m != null && (
-                      <p className="text-stone-400">{e.distance_m}m away</p>
-                    )}
-                    {e.url && (
-                      <a
-                        href={e.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-500 hover:text-indigo-700 font-medium"
-                      >
-                        View on AIC &nearr;
-                      </a>
-                    )}
+                    </span>
                   </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+                  <p className="font-medium text-stone-800">
+                    {e.address || "Unknown"}
+                  </p>
+                  {e.event_date && (
+                    <p className="text-stone-400">{formatDate(e.event_date)}</p>
+                  )}
+                  {e._description && (
+                    <p className="text-stone-500 line-clamp-2 mt-0.5">{e._description}</p>
+                  )}
+                  {e._status && (
+                    <p className="text-stone-500 mt-0.5">Status: {e._status}</p>
+                  )}
+                  {e._cost && (
+                    <p className="text-stone-500 mt-0.5">Est. cost: {e._cost}</p>
+                  )}
+                  {e.distance_m != null && (
+                    <p className="text-stone-400">{e.distance_m}m away</p>
+                  )}
+                  {e.url && (
+                    <a
+                      href={e.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-1 text-indigo-500 hover:text-indigo-700 font-medium"
+                    >
+                      View details &nearr;
+                    </a>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
       {/* Legend */}
       <div className="flex flex-wrap gap-3 px-3 py-2 bg-stone-50 border-t border-stone-100">
         <span className="text-[10px] text-stone-400 font-medium">Legend:</span>
+        <span className="flex items-center gap-1 text-[10px] text-stone-500">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-stone-800 border border-white" />
+          Subject property
+        </span>
         {Object.entries(pinColors).map(([type, color]) => (
           <span key={type} className="flex items-center gap-1 text-[10px] text-stone-500">
             <span
@@ -934,11 +988,52 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
   const sameZone = liveData.same_zone;
   const similarLots = liveData.similar_lots;
   const trend = liveData.trend;
-  const events = liveData.events || [];
+  const events = useMemo(() => liveData.events || [], [liveData.events]);
   const permits = liveData.building_permits;
-  const permitList = permits?.permits || [];
+  const permitList = useMemo(() => permits?.permits || [], [permits]);
   const devApps = liveData.dev_applications;
-  const devAppList = devApps?.applications || [];
+  const devAppList = useMemo(() => devApps?.applications || [], [devApps]);
+
+  // Merge all event sources into a single array for MiniMap
+  const mapEvents = useMemo(() => {
+    const merged: any[] = [];
+    // CoA events
+    for (const e of events) {
+      merged.push({ ...e, _key: `evt-${e.id || merged.length}` });
+    }
+    // Building permits → map-compatible shape
+    for (const p of permitList) {
+      merged.push({
+        _key: `bp-${p.permit_num}`,
+        event_type: "building_permit",
+        address: p.address,
+        event_date: p.issued_date || p.application_date,
+        _description: p.description || `${p.work} — ${p.structure_type}`,
+        _status: p.status,
+        _cost:
+          p.est_cost != null
+            ? p.est_cost >= 1_000_000
+              ? `$${(p.est_cost / 1_000_000).toFixed(1)}M`
+              : p.est_cost >= 1_000
+                ? `$${(p.est_cost / 1_000).toFixed(0)}K`
+                : `$${p.est_cost}`
+            : undefined,
+      });
+    }
+    // Dev applications → map-compatible shape
+    for (const a of devAppList) {
+      merged.push({
+        _key: `da-${a.app_number}`,
+        event_type: "dev_application",
+        address: a.address,
+        event_date: a.date_submitted,
+        _description: a.description || a.app_type,
+        _status: a.status,
+        url: a.app_url || undefined,
+      });
+    }
+    return merged;
+  }, [events, permitList, devAppList]);
 
   // OLT decisions from dev potential
   const oltDecisions = dev.olt_decisions || {};
@@ -1023,12 +1118,12 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
       </div>
 
       {/* ─── Section B: Mini-Map ───────────────────────────────────── */}
-      {coords.latitude && coords.longitude && events.length > 0 && (
+      {coords.latitude && coords.longitude && mapEvents.length > 0 && (
         <div>
-          <SectionHeading title="Activity Map" icon="🗺️" count={events.filter((e: any) => e.lat && e.lng).length} />
+          <SectionHeading title="Activity Map" icon="🗺️" count={mapEvents.length} />
           <MiniMap
             center={{ lat: coords.latitude, lon: coords.longitude }}
-            events={events}
+            events={mapEvents}
             radiusM={radius}
           />
         </div>
