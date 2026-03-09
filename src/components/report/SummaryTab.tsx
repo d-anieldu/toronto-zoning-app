@@ -11,7 +11,6 @@
  */
 
 import { Badge, severityColor, severityIcon } from "./primitives";
-import { RefLink } from "../ReferencePanel";
 import DevChargesCalculator from "../DevChargesCalculator";
 import ZoningStatisticsTable from "./ZoningStatisticsTable";
 
@@ -32,12 +31,8 @@ export default function SummaryTab({ data }: SummaryTabProps) {
   const eff = data.effective_standards || {};
   const dev = data.development_potential || {};
   const layers = data.layers || {};
-  const coords = data.coordinates || {};
-
   /* ── zone info ── */
   const zoneLabel = eff.zone_label || {};
-  const zoneCode = eff.zone_code || zoneLabel.zone_code || "";
-  const zoneString = eff.zone_string || "";
   const exceptionNum =
     zoneLabel.exception_number || eff.exception?.exception_number;
 
@@ -352,11 +347,11 @@ export default function SummaryTab({ data }: SummaryTabProps) {
                   </span>
                   <div className="min-w-0">
                     <p className="text-[13px] font-medium text-stone-800">
-                      {c.label}
+                      {c.label || c.layer || c.tag || "Constraint"}
                     </p>
-                    {c.detail && (
+                    {(c.detail || c.impact) && (
                       <p className="mt-0.5 text-[12px] text-stone-500">
-                        {c.detail}
+                        {c.detail || c.impact}
                       </p>
                     )}
                   </div>
