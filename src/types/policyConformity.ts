@@ -29,6 +29,7 @@ export interface PolicyConformitySummary {
   requires_assessment: number;
   user_input_needed: number;
   potential_conflict: number;
+  not_applicable: number;
 }
 
 export interface PolicyConformityChecklist {

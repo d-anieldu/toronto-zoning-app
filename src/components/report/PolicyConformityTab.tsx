@@ -53,7 +53,8 @@ function SummaryBar({ summary }: { summary: PolicyConformitySummary }) {
     { count: summary.requires_assessment, label: "Assess", color: "text-amber-600" },
     { count: summary.user_input_needed, label: "Input Needed", color: "text-blue-600" },
     { count: summary.potential_conflict, label: "Conflict", color: "text-red-600" },
-  ];
+    { count: summary.not_applicable ?? 0, label: "N/A", color: "text-stone-400" },
+  ].filter((item) => item.count > 0);
   return (
     <div className="flex flex-wrap gap-4 rounded-lg border border-stone-200 bg-stone-50 px-4 py-2.5">
       {items.map((item) => (
@@ -110,6 +111,11 @@ function ChecklistSection({
           {checklist.summary.potential_conflict > 0 && (
             <span className="text-red-600">
               ❌ {checklist.summary.potential_conflict} conflicts
+            </span>
+          )}
+          {(checklist.summary.not_applicable ?? 0) > 0 && (
+            <span className="text-stone-400">
+              ⬜ {checklist.summary.not_applicable} N/A
             </span>
           )}
         </div>
