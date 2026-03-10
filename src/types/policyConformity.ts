@@ -38,6 +38,8 @@ export interface PolicyConformityChecklist {
   designation?: string;
   designation_confidence?: string;
   designation_section?: string;
+  r_zone_ambiguity_note?: string;
+  unknown_designation_note?: string;
   summary: PolicyConformitySummary;
   items: PolicyChecklistItem[];
 }
@@ -64,5 +66,9 @@ export interface PolicyConformityData {
   official_plan: PolicyConformityChecklist;
   secondary_plan?: SecondaryPlanChecklist;
   sasp?: SASPChecklist;
+  former_bylaw?: boolean;
+  former_bylaw_name?: string;
+  former_bylaw_municipality?: string;
+  former_bylaw_note?: string;
   error?: string;
 }

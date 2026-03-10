@@ -13,6 +13,7 @@
  * Session 4: Export buttons, animations, accessibility.
  */
 
+import { useState, useCallback } from "react";
 import { SectionHeading, Card, Badge } from "./primitives";
 import type {
   PolicyConformityData,
@@ -45,6 +46,31 @@ function StatusBadge({ status }: { status: ConformityStatus }) {
   );
 }
 
+/* ── localStorage helpers for user notes ──────────────────────────── */
+
+function _notesKey(address: string): string {
+  return `policy_conformity_notes_${address.replace(/\s+/g, "_").toLowerCase()}`;
+}
+
+function _loadNotes(address: string): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(_notesKey(address));
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function _saveNotes(address: string, notes: Record<string, string>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(_notesKey(address), JSON.stringify(notes));
+  } catch {
+    // localStorage full or unavailable — silently fail
+  }
+}
+
 /* ── Summary bar ──────────────────────────────────────────────────── */
 
 function SummaryBar({ summary }: { summary: PolicyConformitySummary }) {
@@ -69,16 +95,44 @@ function SummaryBar({ summary }: { summary: PolicyConformitySummary }) {
   );
 }
 
+/* ── Alert banner ─────────────────────────────────────────────────── */
+
+function AlertBanner({
+  variant,
+  icon,
+  children,
+}: {
+  variant: "amber" | "blue" | "red";
+  icon: string;
+  children: React.ReactNode;
+}) {
+  const colors = {
+    amber: "border-amber-200 bg-amber-50 text-amber-800",
+    blue: "border-blue-200 bg-blue-50 text-blue-800",
+    red: "border-red-200 bg-red-50 text-red-800",
+  };
+  return (
+    <div className={`rounded-lg border p-3 text-[13px] leading-relaxed ${colors[variant]}`}>
+      <span className="mr-1.5">{icon}</span>
+      {children}
+    </div>
+  );
+}
+
 /* ── Checklist section ────────────────────────────────────────────── */
 
 function ChecklistSection({
   checklist,
   sectionId,
   icon,
+  notes,
+  onNoteChange,
 }: {
   checklist: PolicyConformityChecklist;
   sectionId: string;
   icon: string;
+  notes: Record<string, string>;
+  onNoteChange: (itemId: string, value: string) => void;
 }) {
   const title = checklist.designation
     ? `${checklist.policy_name} — ${checklist.designation}`
@@ -93,6 +147,38 @@ function ChecklistSection({
         count={checklist.summary.total_items}
       />
       <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+        {/* R zone ambiguity warning */}
+        {checklist.r_zone_ambiguity_note && (
+          <div className="mb-3">
+            <AlertBanner variant="amber" icon="⚠️">
+              {checklist.r_zone_ambiguity_note}
+            </AlertBanner>
+          </div>
+        )}
+
+        {/* Unknown designation warning */}
+        {checklist.unknown_designation_note && (
+          <div className="mb-3">
+            <AlertBanner variant="blue" icon="ℹ️">
+              {checklist.unknown_designation_note}
+            </AlertBanner>
+          </div>
+        )}
+
+        {/* Low confidence designation warning */}
+        {checklist.designation_confidence &&
+          checklist.designation_confidence !== "high" &&
+          checklist.designation_confidence !== "none" &&
+          checklist.designation && (
+          <div className="mb-3">
+            <AlertBanner variant="amber" icon="⚠️">
+              OP designation <strong>{checklist.designation}</strong> was determined with{" "}
+              <strong>{checklist.designation_confidence}</strong> confidence.
+              Verify against Schedule 2 (Land Use Plan) of the Official Plan.
+            </AlertBanner>
+          </div>
+        )}
+
         {/* Summary counts for this tier */}
         <div className="mb-4 flex flex-wrap gap-3 text-[12px]">
           <span className="font-medium text-emerald-600">
@@ -123,7 +209,12 @@ function ChecklistSection({
         {/* Checklist items */}
         <div className="space-y-2">
           {checklist.items.map((item) => (
-            <ChecklistItem key={item.id} item={item} />
+            <ChecklistItem
+              key={item.id}
+              item={item}
+              note={notes[item.id] || ""}
+              onNoteChange={onNoteChange}
+            />
           ))}
         </div>
       </div>
@@ -133,7 +224,15 @@ function ChecklistSection({
 
 /* ── Individual checklist item ────────────────────────────────────── */
 
-function ChecklistItem({ item }: { item: PolicyChecklistItem }) {
+function ChecklistItem({
+  item,
+  note,
+  onNoteChange,
+}: {
+  item: PolicyChecklistItem;
+  note: string;
+  onNoteChange: (itemId: string, value: string) => void;
+}) {
   const statusColor =
     item.status === "conforms"
       ? "border-emerald-100 bg-emerald-50/30"
@@ -145,6 +244,9 @@ function ChecklistItem({ item }: { item: PolicyChecklistItem }) {
             ? "border-blue-100 bg-blue-50/30"
             : "border-stone-100 bg-stone-50/30";
 
+  const showNotes =
+    item.status === "user_input_needed" || item.status === "requires_assessment";
+
   return (
     <Card label={`${item.section} ${item.title}`} defaultOpen={false}>
       <div className={`rounded-lg border p-3 ${statusColor}`}>
@@ -154,6 +256,22 @@ function ChecklistItem({ item }: { item: PolicyChecklistItem }) {
         </div>
         <p className="text-[12px] italic text-stone-500 mb-2">{item.requirement}</p>
         <p className="text-[13px] leading-relaxed text-stone-700">{item.evidence}</p>
+
+        {/* User notes for actionable items */}
+        {showNotes && (
+          <div className="mt-3">
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-blue-500">
+              📝 Your Notes
+            </label>
+            <textarea
+              className="mt-1 w-full rounded-lg border border-stone-200 bg-white p-2 text-[12px] leading-relaxed text-stone-700 placeholder:text-stone-300 focus:border-blue-300 focus:outline-none focus:ring-1 focus:ring-blue-200"
+              placeholder="Add project-specific justification or notes..."
+              rows={2}
+              value={note}
+              onChange={(e) => onNoteChange(item.id, e.target.value)}
+            />
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -167,6 +285,23 @@ interface PolicyConformityTabProps {
 
 export default function PolicyConformityTab({ data }: PolicyConformityTabProps) {
   const conformity = data.policy_conformity as PolicyConformityData | undefined;
+  const address = conformity?.property_address || data.address || "";
+
+  /* ── User notes state with localStorage persistence ───────────── */
+  const [notes, setNotes] = useState<Record<string, string>>(() =>
+    address ? _loadNotes(address) : {},
+  );
+
+  const handleNoteChange = useCallback(
+    (itemId: string, value: string) => {
+      setNotes((prev) => {
+        const next = { ...prev, [itemId]: value };
+        if (address) _saveNotes(address, next);
+        return next;
+      });
+    },
+    [address],
+  );
 
   /* ── Empty / error states ─────────────────────────────────────── */
   if (!conformity) {
@@ -193,6 +328,17 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
   /* ── Main render ──────────────────────────────────────────────── */
   return (
     <div className="space-y-5">
+      {/* Former by-law banner */}
+      {conformity.former_bylaw && (
+        <AlertBanner variant="amber" icon="⚠️">
+          This property is governed by <strong>{conformity.former_bylaw_name || "a former municipal by-law"}</strong>
+          {conformity.former_bylaw_municipality && (
+            <> ({conformity.former_bylaw_municipality})</>
+          )}.
+          Some policy assessments may have reduced accuracy. Zoning-dependent items are marked for manual review.
+        </AlertBanner>
+      )}
+
       {/* Overall summary bar */}
       {conformity.overall_summary && (
         <SummaryBar summary={conformity.overall_summary} />
@@ -204,6 +350,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           checklist={conformity.pps}
           sectionId="pps"
           icon="📜"
+          notes={notes}
+          onNoteChange={handleNoteChange}
         />
       )}
 
@@ -213,6 +361,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           checklist={conformity.growth_plan}
           sectionId="growth-plan"
           icon="🏗️"
+          notes={notes}
+          onNoteChange={handleNoteChange}
         />
       )}
 
@@ -222,6 +372,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           checklist={conformity.official_plan}
           sectionId="official-plan"
           icon="🏙️"
+          notes={notes}
+          onNoteChange={handleNoteChange}
         />
       )}
 
@@ -231,6 +383,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           checklist={conformity.secondary_plan as any}
           sectionId="secondary-plan"
           icon="📑"
+          notes={notes}
+          onNoteChange={handleNoteChange}
         />
       )}
 
@@ -240,6 +394,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           checklist={conformity.sasp as any}
           sectionId="sasp"
           icon="📌"
+          notes={notes}
+          onNoteChange={handleNoteChange}
         />
       )}
     </div>
