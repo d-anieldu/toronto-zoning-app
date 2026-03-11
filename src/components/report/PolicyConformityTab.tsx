@@ -10,10 +10,10 @@
  * Session 1: Skeleton with section headings and placeholder items.
  * Session 2: Real checklist rendering with status badges and evidence.
  * Session 3: User notes, collapsible items, edge case states.
- * Session 4: Export buttons, animations, accessibility.
+ * Session 4: Export buttons, tab badge, expand/collapse all, animations, accessibility.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { SectionHeading, Card, Badge } from "./primitives";
 import type {
   PolicyConformityData,
@@ -127,12 +127,16 @@ function ChecklistSection({
   icon,
   notes,
   onNoteChange,
+  expandAll,
+  onToggleExpandAll,
 }: {
   checklist: PolicyConformityChecklist;
   sectionId: string;
   icon: string;
   notes: Record<string, string>;
   onNoteChange: (itemId: string, value: string) => void;
+  expandAll: boolean;
+  onToggleExpandAll: () => void;
 }) {
   const title = checklist.designation
     ? `${checklist.policy_name} — ${checklist.designation}`
@@ -146,7 +150,11 @@ function ChecklistSection({
         icon={icon}
         count={checklist.summary.total_items}
       />
-      <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+      <div
+        className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"
+        role="region"
+        aria-label={`${title} checklist`}
+      >
         {/* R zone ambiguity warning */}
         {checklist.r_zone_ambiguity_note && (
           <div className="mb-3">
@@ -179,41 +187,52 @@ function ChecklistSection({
           </div>
         )}
 
-        {/* Summary counts for this tier */}
-        <div className="mb-4 flex flex-wrap gap-3 text-[12px]">
-          <span className="font-medium text-emerald-600">
-            ✅ {checklist.summary.conforms}/{checklist.summary.total_items} conform
-          </span>
-          {checklist.summary.requires_assessment > 0 && (
-            <span className="text-amber-600">
-              ⚠️ {checklist.summary.requires_assessment} need assessment
+        {/* Summary counts + expand/collapse toggle */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-3 text-[12px]">
+            <span className="font-medium text-emerald-600">
+              ✅ {checklist.summary.conforms}/{checklist.summary.total_items} conform
             </span>
-          )}
-          {checklist.summary.user_input_needed > 0 && (
-            <span className="text-blue-600">
-              🔧 {checklist.summary.user_input_needed} need input
-            </span>
-          )}
-          {checklist.summary.potential_conflict > 0 && (
-            <span className="text-red-600">
-              ❌ {checklist.summary.potential_conflict} conflicts
-            </span>
-          )}
-          {(checklist.summary.not_applicable ?? 0) > 0 && (
-            <span className="text-stone-400">
-              ⬜ {checklist.summary.not_applicable} N/A
-            </span>
-          )}
+            {checklist.summary.requires_assessment > 0 && (
+              <span className="text-amber-600">
+                ⚠️ {checklist.summary.requires_assessment} need assessment
+              </span>
+            )}
+            {checklist.summary.user_input_needed > 0 && (
+              <span className="text-blue-600">
+                🔧 {checklist.summary.user_input_needed} need input
+              </span>
+            )}
+            {checklist.summary.potential_conflict > 0 && (
+              <span className="text-red-600">
+                ❌ {checklist.summary.potential_conflict} conflicts
+              </span>
+            )}
+            {(checklist.summary.not_applicable ?? 0) > 0 && (
+              <span className="text-stone-400">
+                ⬜ {checklist.summary.not_applicable} N/A
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onToggleExpandAll}
+            className="text-[11px] font-medium text-stone-400 hover:text-stone-600 transition-colors"
+            aria-label={expandAll ? `Collapse all ${title} items` : `Expand all ${title} items`}
+          >
+            {expandAll ? "▲ Collapse all" : "▼ Expand all"}
+          </button>
         </div>
 
         {/* Checklist items */}
-        <div className="space-y-2">
+        <div className="space-y-2" role="list" aria-label={`${title} policy items`}>
           {checklist.items.map((item) => (
             <ChecklistItem
               key={item.id}
               item={item}
               note={notes[item.id] || ""}
               onNoteChange={onNoteChange}
+              forceOpen={expandAll}
             />
           ))}
         </div>
@@ -228,10 +247,12 @@ function ChecklistItem({
   item,
   note,
   onNoteChange,
+  forceOpen,
 }: {
   item: PolicyChecklistItem;
   note: string;
   onNoteChange: (itemId: string, value: string) => void;
+  forceOpen: boolean;
 }) {
   const statusColor =
     item.status === "conforms"
@@ -248,32 +269,43 @@ function ChecklistItem({
     item.status === "user_input_needed" || item.status === "requires_assessment";
 
   return (
-    <Card label={`${item.section} ${item.title}`} defaultOpen={false}>
-      <div className={`rounded-lg border p-3 ${statusColor}`}>
-        <div className="flex items-center gap-2 mb-2">
-          <StatusBadge status={item.status} />
-          <span className="text-[11px] text-stone-400">{item.data_source}</span>
-        </div>
-        <p className="text-[12px] italic text-stone-500 mb-2">{item.requirement}</p>
-        <p className="text-[13px] leading-relaxed text-stone-700">{item.evidence}</p>
-
-        {/* User notes for actionable items */}
-        {showNotes && (
-          <div className="mt-3">
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-blue-500">
-              📝 Your Notes
-            </label>
-            <textarea
-              className="mt-1 w-full rounded-lg border border-stone-200 bg-white p-2 text-[12px] leading-relaxed text-stone-700 placeholder:text-stone-300 focus:border-blue-300 focus:outline-none focus:ring-1 focus:ring-blue-200"
-              placeholder="Add project-specific justification or notes..."
-              rows={2}
-              value={note}
-              onChange={(e) => onNoteChange(item.id, e.target.value)}
-            />
+    <div role="listitem">
+      <Card
+        label={`${item.section} ${item.title}`}
+        defaultOpen={forceOpen}
+        aria-label={`${item.section} ${item.title} — ${STATUS_CONFIG[item.status]?.label || item.status}`}
+      >
+        <div className={`rounded-lg border p-3 transition-all duration-200 ease-in-out ${statusColor}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <StatusBadge status={item.status} />
+            <span className="text-[11px] text-stone-400" aria-label={`Data source: ${item.data_source}`}>{item.data_source}</span>
           </div>
-        )}
-      </div>
-    </Card>
+          <p className="text-[12px] italic text-stone-500 mb-2">{item.requirement}</p>
+          <p className="text-[13px] leading-relaxed text-stone-700">{item.evidence}</p>
+
+          {/* User notes for actionable items */}
+          {showNotes && (
+            <div className="mt-3">
+              <label
+                htmlFor={`note-${item.id}`}
+                className="text-[11px] font-semibold uppercase tracking-wide text-blue-500"
+              >
+                📝 Your Notes
+              </label>
+              <textarea
+                id={`note-${item.id}`}
+                className="mt-1 w-full rounded-lg border border-stone-200 bg-white p-2 text-[12px] leading-relaxed text-stone-700 placeholder:text-stone-300 focus:border-blue-300 focus:outline-none focus:ring-1 focus:ring-blue-200"
+                placeholder="Add project-specific justification or notes..."
+                rows={2}
+                value={note}
+                onChange={(e) => onNoteChange(item.id, e.target.value)}
+                aria-label={`Notes for ${item.section} ${item.title}`}
+              />
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -282,6 +314,14 @@ function ChecklistItem({
 interface PolicyConformityTabProps {
   data: Record<string, any>;
 }
+
+const STATUS_TEXT: Record<ConformityStatus, string> = {
+  conforms: "Conforms",
+  requires_assessment: "Requires Assessment",
+  user_input_needed: "User Input Needed",
+  potential_conflict: "Potential Conflict",
+  not_applicable: "N/A",
+};
 
 export default function PolicyConformityTab({ data }: PolicyConformityTabProps) {
   const conformity = data.policy_conformity as PolicyConformityData | undefined;
@@ -302,6 +342,82 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
     },
     [address],
   );
+
+  /* ── Expand/collapse all state per tier ───────────────────────── */
+  const [expandState, setExpandState] = useState<Record<string, boolean>>({});
+
+  const toggleExpandAll = useCallback((tierId: string) => {
+    setExpandState((prev) => ({ ...prev, [tierId]: !prev[tierId] }));
+  }, []);
+
+  /* ── Export: copy to clipboard as Markdown table ──────────────── */
+  const [showCopied, setShowCopied] = useState(false);
+
+  const handleCopyToClipboard = useCallback(() => {
+    if (!conformity) return;
+
+    const lines: string[] = [
+      `# Policy Conformity — ${address}`,
+      "",
+    ];
+
+    const tiers: [string, PolicyConformityChecklist | undefined][] = [
+      ["PPS", conformity.pps],
+      ["Growth Plan", conformity.growth_plan],
+      ["Official Plan", conformity.official_plan],
+      ["Secondary Plan", conformity.secondary_plan as any],
+      ["SASP", conformity.sasp as any],
+    ];
+
+    for (const [tierName, checklist] of tiers) {
+      if (!checklist?.items?.length) continue;
+      const title = checklist.designation
+        ? `${tierName} — ${checklist.designation}`
+        : tierName;
+      lines.push(`## ${title}`);
+      lines.push("");
+      lines.push("| Section | Policy Item | Status | Evidence |");
+      lines.push("|---------|-------------|--------|----------|");
+      for (const item of checklist.items) {
+        const statusLabel = STATUS_TEXT[item.status] || item.status;
+        const evidence = (item.evidence || "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+        const userNote = notes[item.id];
+        const evidenceCol = userNote
+          ? `${evidence} — _Note: ${userNote.replace(/\|/g, "\\|").replace(/\n/g, " ")}_`
+          : evidence;
+        lines.push(`| ${item.section} | ${item.title} | ${statusLabel} | ${evidenceCol} |`);
+      }
+      lines.push("");
+    }
+
+    // Overall summary
+    if (conformity.overall_summary) {
+      const s = conformity.overall_summary;
+      const total = s.total_items || 0;
+      const pct = total > 0 ? Math.round((s.conforms / total) * 100) : 0;
+      lines.push(`**Overall: ${pct}%** — ${s.conforms}/${total} conform`);
+    }
+
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    });
+  }, [conformity, address, notes]);
+
+  /* ── Export: PDF via backend ──────────────────────────────────── */
+  const handleExportPDF = useCallback(() => {
+    if (!address) return;
+    const url = `/export/pdf/html?address=${encodeURIComponent(address)}`;
+    window.open(url, "_blank");
+  }, [address]);
+
+  /* ── Conformity score for tab badge (exposed via data attribute) ── */
+  const conformityScore = useMemo(() => {
+    if (!conformity?.overall_summary) return null;
+    const { conforms, total_items } = conformity.overall_summary;
+    if (!total_items || total_items === 0) return null;
+    return Math.round((conforms / total_items) * 100);
+  }, [conformity]);
 
   /* ── Empty / error states ─────────────────────────────────────── */
   if (!conformity) {
@@ -327,7 +443,7 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
 
   /* ── Main render ──────────────────────────────────────────────── */
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-conformity-score={conformityScore ?? ""}>
       {/* Former by-law banner */}
       {conformity.former_bylaw && (
         <AlertBanner variant="amber" icon="⚠️">
@@ -339,9 +455,19 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
         </AlertBanner>
       )}
 
-      {/* Overall summary bar */}
+      {/* Overall summary bar with score badge */}
       {conformity.overall_summary && (
-        <SummaryBar summary={conformity.overall_summary} />
+        <div className="flex items-center gap-4" aria-live="polite">
+          <SummaryBar summary={conformity.overall_summary} />
+          {conformityScore !== null && (
+            <div
+              className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[13px] font-bold text-emerald-700"
+              aria-label={`Conformity score: ${conformityScore} percent`}
+            >
+              <span aria-hidden="true">📊</span> {conformityScore}%
+            </div>
+          )}
+        </div>
       )}
 
       {/* PPS */}
@@ -352,6 +478,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           icon="📜"
           notes={notes}
           onNoteChange={handleNoteChange}
+          expandAll={!!expandState["pps"]}
+          onToggleExpandAll={() => toggleExpandAll("pps")}
         />
       )}
 
@@ -363,6 +491,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           icon="🏗️"
           notes={notes}
           onNoteChange={handleNoteChange}
+          expandAll={!!expandState["growth-plan"]}
+          onToggleExpandAll={() => toggleExpandAll("growth-plan")}
         />
       )}
 
@@ -374,6 +504,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           icon="🏙️"
           notes={notes}
           onNoteChange={handleNoteChange}
+          expandAll={!!expandState["official-plan"]}
+          onToggleExpandAll={() => toggleExpandAll("official-plan")}
         />
       )}
 
@@ -385,6 +517,8 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           icon="📑"
           notes={notes}
           onNoteChange={handleNoteChange}
+          expandAll={!!expandState["secondary-plan"]}
+          onToggleExpandAll={() => toggleExpandAll("secondary-plan")}
         />
       )}
 
@@ -396,8 +530,47 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           icon="📌"
           notes={notes}
           onNoteChange={handleNoteChange}
+          expandAll={!!expandState["sasp"]}
+          onToggleExpandAll={() => toggleExpandAll("sasp")}
         />
       )}
+
+      {/* Export buttons */}
+      <div className="flex flex-wrap gap-3 mt-6 print:hidden" role="group" aria-label="Export options">
+        <button
+          type="button"
+          onClick={handleCopyToClipboard}
+          className="flex items-center gap-2 rounded-lg border border-stone-200 px-4 py-2.5 text-[13px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-stone-300"
+          aria-label="Copy conformity checklist to clipboard as Markdown"
+        >
+          {showCopied ? (
+            <>
+              <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Copied!
+            </>
+          ) : (
+            <>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+              </svg>
+              📋 Copy to Clipboard
+            </>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={handleExportPDF}
+          className="flex items-center gap-2 rounded-lg bg-stone-800 px-4 py-2.5 text-[13px] font-medium text-white shadow-sm transition-all hover:bg-stone-700 hover:shadow focus:outline-none focus:ring-2 focus:ring-stone-500"
+          aria-label="Export full report with conformity matrix as PDF"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          📥 Export as PDF
+        </button>
+      </div>
     </div>
   );
 }

@@ -114,6 +114,15 @@ export default function ZoningReport({ data }: Props) {
   const hasEffError = eff.error;
   const hasDevError = dev.error;
 
+  /* -------- policy conformity score for tab badge -------- */
+  const conformityScore = useMemo(() => {
+    const pc = data.policy_conformity;
+    if (!pc?.overall_summary) return null;
+    const { conforms, total_items } = pc.overall_summary;
+    if (!total_items || total_items === 0) return null;
+    return Math.round((conforms / total_items) * 100);
+  }, [data.policy_conformity]);
+
   /* -------- zone info -------- */
   const zoneLabel = eff.zone_label || {};
   const zoneCode = eff.zone_code || zoneLabel.zone_code || "";
@@ -531,6 +540,11 @@ export default function ZoningReport({ data }: Props) {
             >
               <span className="text-[14px]" aria-hidden="true">{tab.icon}</span>
               {tab.label}
+              {tab.id === "conformity" && conformityScore !== null && (
+                <span className="ml-1.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                  {conformityScore}%
+                </span>
+              )}
             </button>
           ))}
         </nav>

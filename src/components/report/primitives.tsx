@@ -7,7 +7,7 @@
  * Extracted from the original ZoningReport monolith for reuse.
  */
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 
 /* ================================================================== */
 /*  PRIMITIVES                                                         */
@@ -46,21 +46,31 @@ export function Card({
   children,
   defaultOpen = true,
   className = "",
+  ...rest
 }: {
   label: string;
   children: ReactNode;
   defaultOpen?: boolean;
   className?: string;
+  [key: string]: any;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+
+  // Sync with external defaultOpen changes (e.g., expand/collapse all)
+  useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen]);
   return (
     <section
       className={`rounded-xl border border-stone-200 bg-white shadow-sm ${className}`}
+      {...rest}
     >
       <button
         type="button"
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-5 py-3.5 text-left"
+        aria-expanded={open}
+        aria-label={`${open ? "Collapse" : "Expand"} ${label}`}
       >
         <h4 className="text-[13px] font-semibold uppercase tracking-wide text-stone-400">
           {label}
