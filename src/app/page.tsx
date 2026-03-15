@@ -12,12 +12,6 @@ export default async function Home() {
           </span>
           <div className="flex items-center gap-6">
             <Link
-              href="/intelligence"
-              className="text-[13px] text-stone-500 hover:text-stone-900"
-            >
-              Intelligence
-            </Link>
-            <Link
               href="/dashboard"
               className="rounded-full bg-stone-900 px-4 py-1.5 text-[13px] font-medium text-white hover:bg-stone-800"
             >
@@ -329,9 +323,6 @@ export default async function Home() {
             Data sourced from the City of Toronto Open Data Portal. Not legal advice.
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/intelligence" className="text-[12px] text-stone-400 hover:text-stone-600">
-              Intelligence
-            </Link>
             <span className="text-[12px] text-stone-300">By-law 569-2013</span>
           </div>
         </div>
