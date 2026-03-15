@@ -14,6 +14,210 @@ import { Badge, severityColor, severityIcon } from "./primitives";
 import DevChargesCalculator from "../DevChargesCalculator";
 import ZoningStatisticsTable from "./ZoningStatisticsTable";
 
+/* ── Zone look-up: code → plain-English label + inferred current use ── */
+const ZONE_META: Record<string, { label: string; use: string; category: string; color: string }> = {
+  RD:  { label: "Residential Detached",          use: "Single detached dwelling",                  category: "Residential",  color: "stone"  },
+  RS:  { label: "Residential Semi-Detached",      use: "Semi-detached dwellings",                   category: "Residential",  color: "stone"  },
+  RB:  { label: "Residential — Small Lot",        use: "Small residential lots / bachelor housing", category: "Residential",  color: "stone"  },
+  RM:  { label: "Residential Multiple",           use: "Low-rise multiple dwellings",               category: "Residential",  color: "blue"   },
+  RA:  { label: "Residential Apartment",          use: "Mid- to high-rise apartments",              category: "Residential",  color: "blue"   },
+  RT:  { label: "Residential Townhouse",          use: "Townhouse and row dwellings",               category: "Residential",  color: "blue"   },
+  CR:  { label: "Commercial Residential",         use: "Mixed-use: street-level retail + housing",  category: "Mixed-Use",    color: "violet" },
+  CL:  { label: "Commercial Local",               use: "Local neighbourhood commercial",            category: "Commercial",   color: "violet" },
+  CS:  { label: "Commercial Shopfront",           use: "Main-street retail / shopfront commercial", category: "Commercial",   color: "violet" },
+  CH:  { label: "Commercial Highway",             use: "Highway-oriented commercial / big-box",     category: "Commercial",   color: "amber"  },
+  CG:  { label: "Commercial General",             use: "General commercial uses",                   category: "Commercial",   color: "amber"  },
+  MC:  { label: "Mixed Commercial",               use: "Mixed commercial / employment",             category: "Mixed-Use",    color: "amber"  },
+  MH:  { label: "Mixed-Use — Heavy",              use: "Intensive mixed-use / commercial",          category: "Mixed-Use",    color: "amber"  },
+  E:   { label: "Employment",                     use: "Employment / light industrial",             category: "Employment",   color: "orange" },
+  EL:  { label: "Employment Light",               use: "Light industrial / employment",             category: "Employment",   color: "orange" },
+  EH:  { label: "Employment Heavy",               use: "Heavy industrial uses",                     category: "Employment",   color: "red"    },
+  EO:  { label: "Employment Office",              use: "Office-focused employment",                 category: "Employment",   color: "orange" },
+  I:   { label: "Institutional",                  use: "Schools, hospitals, civic uses",            category: "Institutional",color: "sky"    },
+  O:   { label: "Open Space",                     use: "Parkland / recreational open space",        category: "Open Space",   color: "emerald"},
+  ON:  { label: "Open Space Natural",             use: "Natural areas / ravine / conservation",     category: "Open Space",   color: "green"  },
+  OR:  { label: "Open Space Recreation",          use: "Active recreation facilities",              category: "Open Space",   color: "emerald"},
+  UT:  { label: "Utility & Transportation",       use: "Infrastructure, utilities, transit yards",  category: "Utility",      color: "stone"  },
+};
+
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
+  Residential:   { bg: "bg-stone-100",   text: "text-stone-700",  ring: "ring-stone-200"  },
+  "Mixed-Use":   { bg: "bg-violet-100",  text: "text-violet-700", ring: "ring-violet-200" },
+  Commercial:    { bg: "bg-amber-100",   text: "text-amber-700",  ring: "ring-amber-200"  },
+  Employment:    { bg: "bg-orange-100",  text: "text-orange-700", ring: "ring-orange-200" },
+  Institutional: { bg: "bg-sky-100",     text: "text-sky-700",    ring: "ring-sky-200"    },
+  "Open Space":  { bg: "bg-emerald-100", text: "text-emerald-700",ring: "ring-emerald-200"},
+  Utility:       { bg: "bg-stone-100",   text: "text-stone-600",  ring: "ring-stone-200"  },
+};
+
+function resolveZoneMeta(zoneCode: string) {
+  // Exact match first, then prefix match (e.g. "CR.10" → "CR")
+  if (ZONE_META[zoneCode]) return ZONE_META[zoneCode];
+  const prefix = zoneCode.match(/^[A-Z]+/)?.[0] || "";
+  return ZONE_META[prefix] || null;
+}
+
+/** Derives a simple opportunity grade from available data. */
+function computeOpportunity(dev: any, eff: any) {
+  const constraints = dev.constraints?.items || [];
+  const highCount = constraints.filter((c: any) => c.severity === "high").length;
+  const holding = !!(dev.holding_detail?.detected);
+  const heritage = !!(eff.heritage_impact?.has_heritage);
+  const pmtsa = !!(dev.constraints?.pmtsa_advisory);
+  const fsiAllowed = eff.fsi?.effective_total;
+  // Opportunity score: start at 100, deduct
+  let score = 100;
+  if (highCount >= 3) score -= 40;
+  else if (highCount >= 1) score -= 20;
+  if (holding) score -= 30;
+  if (heritage) score -= 15;
+  if (pmtsa) score += 10; // PMTSA = area prioritized for intensification
+  // As-of-right FSI signal
+  if (fsiAllowed != null && fsiAllowed >= 3) score += 15;
+  else if (fsiAllowed != null && fsiAllowed >= 1.5) score += 5;
+  score = Math.max(0, Math.min(100, score));
+  if (score >= 70) return { grade: "Strong",   color: "emerald", summary: "Good as-of-right development potential with few constraints." };
+  if (score >= 40) return { grade: "Moderate", color: "amber",   summary: "Some constraints to navigate — minor variances or studies may be required." };
+  return              { grade: "Limited",  color: "red",     summary: "Significant constraints are present. Pre-consultation with the City is strongly recommended." };
+}
+
+/* ── PropertySnapshotCard ─────────────────────────────────────────── */
+function PropertySnapshotCard({ data }: { data: Record<string, any> }) {
+  const eff  = data.effective_standards || {};
+  const dev  = data.development_potential || {};
+
+  const zoneCode     = eff.zone_code || eff.zone_label?.zone_code || "";
+  const zoneMeta     = resolveZoneMeta(zoneCode);
+  const categoryClr  = zoneMeta ? (CATEGORY_COLORS[zoneMeta.category] || CATEGORY_COLORS.Utility) : CATEGORY_COLORS.Utility;
+
+  const opDesignation   = eff.op_context?.op_designation?.designation;
+  const lotArea         = dev.lot?.area_sqm;
+  const frontage        = dev.lot?.frontage_m;
+  const depth           = dev.lot?.depth_m;
+  const maxGFA          = dev.max_gfa?.sqm;
+  const maxHeight       = eff.height?.effective_m ?? dev.height?.max_m;
+  const maxHeightSt     = eff.height?.effective_storeys ?? dev.height?.max_storeys;
+  const hasHeritage     = eff.heritage_impact?.has_heritage;
+  const hasPMTSA        = !!(dev.constraints?.pmtsa_advisory);
+  const pmtsaStation    = dev.constraints?.pmtsa_advisory?.station_name;
+  const opportunity     = computeOpportunity(dev, eff);
+
+  const oppColors = {
+    emerald: { bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-800", dot: "bg-emerald-500" },
+    amber:   { bg: "bg-amber-50",   border: "border-amber-200",   badge: "bg-amber-100 text-amber-800",     dot: "bg-amber-500"   },
+    red:     { bg: "bg-red-50",     border: "border-red-200",     badge: "bg-red-100 text-red-800",         dot: "bg-red-500"     },
+  };
+  const opc = oppColors[opportunity.color as keyof typeof oppColors];
+
+  return (
+    <div className="rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+      {/* ── Part A: What it is today ── */}
+      <div className="p-5 border-b border-stone-100">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+          Property As-Is
+        </p>
+        <div className="flex flex-wrap items-start gap-4">
+          {/* Zone classification pill */}
+          <div className="flex flex-col gap-1.5 min-w-0">
+            {zoneMeta ? (
+              <span className={`inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1 text-[12px] font-semibold ring-1 ${categoryClr.bg} ${categoryClr.text} ${categoryClr.ring}`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-current opacity-60" />
+                {zoneMeta.category}
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-stone-100 px-3 py-1 text-[12px] font-medium text-stone-600 ring-1 ring-stone-200">
+                Unknown Zone Type
+              </span>
+            )}
+            <p className="text-[17px] font-bold tracking-tight text-stone-900 leading-snug">
+              {zoneMeta?.label || zoneCode || "—"}
+            </p>
+            {zoneMeta && (
+              <p className="text-[13px] text-stone-500 leading-snug">
+                Currently used for: <span className="font-medium text-stone-700">{zoneMeta.use}</span>
+              </p>
+            )}
+            {hasPMTSA && (
+              <p className="text-[12px] text-sky-600 font-medium">
+                📍 Within {pmtsaStation} Station transit area — growth prioritized
+              </p>
+            )}
+            {hasHeritage && (
+              <p className="text-[12px] text-amber-700 font-medium">
+                🏛 Heritage designation — additional approvals required
+              </p>
+            )}
+          </div>
+
+          {/* Lot dimensions */}
+          <div className="ml-auto flex gap-5 shrink-0">
+            {lotArea != null && (
+              <div>
+                <p className="text-[22px] font-bold tracking-tight text-stone-900">{fmt(lotArea)} m²</p>
+                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Lot Area</p>
+              </div>
+            )}
+            {frontage != null && (
+              <div>
+                <p className="text-[22px] font-bold tracking-tight text-stone-900">{frontage}m</p>
+                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Frontage</p>
+              </div>
+            )}
+            {depth != null && (
+              <div>
+                <p className="text-[22px] font-bold tracking-tight text-stone-900">{depth}m</p>
+                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Depth</p>
+              </div>
+            )}
+            {opDesignation && (
+              <div>
+                <p className="text-[13px] font-semibold text-stone-800 leading-snug">{opDesignation}</p>
+                <p className="text-[11px] text-stone-400 uppercase tracking-wide">OP Designation</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Part B: Development opportunity ── */}
+      <div className={`p-5 ${opc.bg} ${opc.border} border-t-0`}>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+          Development Opportunity
+        </p>
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Grade badge */}
+          <div className="flex items-center gap-2">
+            <span className={`h-2.5 w-2.5 rounded-full ${opc.dot}`} />
+            <span className={`rounded-full px-3 py-1 text-[13px] font-bold ${opc.badge}`}>
+              {opportunity.grade}
+            </span>
+          </div>
+          <p className="text-[13px] text-stone-600 flex-1 min-w-0">
+            {opportunity.summary}
+          </p>
+          {/* Key numbers */}
+          <div className="flex gap-4 shrink-0 ml-auto">
+            {maxGFA != null && (
+              <div className="text-right">
+                <p className="text-[16px] font-bold text-stone-900">{fmt(maxGFA)} m²</p>
+                <p className="text-[10px] uppercase tracking-wide text-stone-400">Max GFA</p>
+              </div>
+            )}
+            {maxHeight != null && (
+              <div className="text-right">
+                <p className="text-[16px] font-bold text-stone-900">
+                  {maxHeight}m{maxHeightSt ? ` / ${maxHeightSt}st` : ""}
+                </p>
+                <p className="text-[10px] uppercase tracking-wide text-stone-400">Max Height</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface SummaryTabProps {
   data: Record<string, any>;
 }
@@ -88,6 +292,11 @@ export default function SummaryTab({ data }: SummaryTabProps) {
 
   return (
     <div className="space-y-5">
+      {/* ============================================================ */}
+      {/*  PROPERTY SNAPSHOT — current state + opportunity              */}
+      {/* ============================================================ */}
+      <PropertySnapshotCard data={data} />
+
       {/* ============================================================ */}
       {/*  KEY METRICS — 6-card grid                                    */}
       {/* ============================================================ */}
