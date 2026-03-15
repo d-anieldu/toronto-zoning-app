@@ -985,6 +985,14 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
     [coords, zoneCode, data.parcel, data.address],
   );
 
+  // On mount: if nearby data wasn't included in the lookup response, fetch it now
+  useEffect(() => {
+    if (data.nearby_activity) return; // already loaded server-side
+    if (!coords.longitude || !coords.latitude) return;
+    handleRadiusChange(radius);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coords.latitude, coords.longitude]);
+
   const overview = liveData.overview;
   const sameZone = liveData.same_zone;
   const similarLots = liveData.similar_lots;
