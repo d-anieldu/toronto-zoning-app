@@ -6,6 +6,8 @@
  */
 
 import { useState, useRef, useEffect } from "react";
+import { Share2, Copy, Check, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface Props {
   address: string;
@@ -73,6 +75,7 @@ export default function ShareReportButton({ address, lookupData }: Props) {
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      toast.success("Link copied to clipboard");
     });
   }
 
@@ -85,14 +88,9 @@ export default function ShareReportButton({ address, lookupData }: Props) {
         className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow disabled:opacity-50"
       >
         {loading ? (
-          <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-          </svg>
+          <Share2 className="h-3.5 w-3.5" />
         )}
         Share
       </button>
@@ -115,13 +113,13 @@ export default function ShareReportButton({ address, lookupData }: Props) {
             />
             <button
               onClick={handleCopy}
-              className={`shrink-0 rounded-lg px-3 py-2 text-[12px] font-medium transition-colors ${
+              className={`shrink-0 flex items-center gap-1 rounded-lg px-3 py-2 text-[12px] font-medium transition-colors ${
                 copied
                   ? "bg-emerald-100 text-emerald-700"
                   : "bg-stone-900 text-white hover:bg-stone-800"
               }`}
             >
-              {copied ? "Copied!" : "Copy"}
+              {copied ? <><Check className="h-3 w-3" /> Copied!</> : <><Copy className="h-3 w-3" /> Copy</>}
             </button>
           </div>
 
@@ -137,9 +135,9 @@ export default function ShareReportButton({ address, lookupData }: Props) {
             <p className="text-[12px] text-red-600">{error}</p>
             <button
               onClick={() => setError(null)}
-              className="shrink-0 text-[12px] text-red-400 hover:text-red-600"
+              className="shrink-0 text-red-400 hover:text-red-600"
             >
-              ✕
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import UserNav from "@/components/UserNav";
 
 export default async function Home() {
@@ -53,9 +54,7 @@ export default async function Home() {
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-stone-900 px-6 py-3 text-[14px] font-semibold text-white shadow-lg shadow-stone-900/20 hover:bg-stone-800 hover:shadow-xl transition-all"
               >
                 Start a lookup
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+                <ArrowRight className="h-4 w-4" />
               </Link>
               <span className="text-[13px] text-stone-400">
                 No credit card required

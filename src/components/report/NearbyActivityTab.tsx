@@ -16,6 +16,9 @@
  */
 
 import { useState, useMemo, useCallback, useEffect } from "react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend,
+} from "recharts";
 import { Card, Row, Badge, StatCard, SectionHeading, Tag } from "./primitives";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
@@ -373,7 +376,7 @@ function MiniMap({
   );
 }
 
-/* ── Trend Bar Chart (pure CSS) ────────────────────────────────────── */
+/* ── Trend Bar Chart (Recharts) ────────────────────────────────────── */
 
 function TrendChart({
   data,
@@ -384,53 +387,54 @@ function TrendChart({
     return <p className="text-[12px] text-stone-400 italic">Not enough data for trend analysis.</p>;
   }
 
-  const maxTotal = Math.max(...data.map((d) => d.total), 1);
+  const chartData = data.map((d) => ({
+    year: String(d.year),
+    Approved: d.approved,
+    Refused: d.refused,
+    Withdrawn: Math.max(0, d.total - d.approved - d.refused),
+    rate: d.rate,
+  }));
 
   return (
-    <div className="space-y-2">
-      {data.map((d) => (
-        <div key={d.year} className="flex items-center gap-3">
-          <span className="w-10 text-[12px] font-mono text-stone-500 text-right">
-            {d.year}
-          </span>
-          <div className="flex-1">
-            <div className="flex h-6 rounded overflow-hidden bg-stone-100">
-              {d.approved > 0 && (
-                <div
-                  className="bg-emerald-400 transition-all duration-500"
-                  style={{ width: `${(d.approved / maxTotal) * 100}%` }}
-                  title={`${d.approved} approved`}
-                />
-              )}
-              {d.refused > 0 && (
-                <div
-                  className="bg-red-400 transition-all duration-500"
-                  style={{ width: `${(d.refused / maxTotal) * 100}%` }}
-                  title={`${d.refused} refused`}
-                />
-              )}
-            </div>
-          </div>
-          <span className="w-14 text-[11px] text-stone-500 text-right">
-            {d.rate != null ? `${d.rate}%` : "—"}
-          </span>
-          <span className="w-8 text-[11px] text-stone-400 text-right">
-            n={d.total}
-          </span>
-        </div>
-      ))}
-      <div className="flex items-center gap-3 pt-1">
-        <span className="w-10" />
-        <div className="flex gap-4 text-[10px] text-stone-400">
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-sm bg-emerald-400" /> Approved
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-sm bg-red-400" /> Refused
-          </span>
-        </div>
-        <span className="w-14 text-[10px] text-stone-400 text-right">Rate</span>
-        <span className="w-8" />
+    <div className="space-y-1">
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={chartData} barSize={18} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+          <XAxis
+            dataKey="year"
+            tick={{ fontSize: 11, fill: "#78716c" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 11, fill: "#78716c" }}
+            axisLine={false}
+            tickLine={false}
+            allowDecimals={false}
+          />
+          <Tooltip
+            contentStyle={{
+              fontSize: 12,
+              borderRadius: 8,
+              border: "1px solid #e7e5e4",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            }}
+            formatter={(value, name) => [value, name]}
+            labelFormatter={(label) => `${label}`}
+          />
+          <Legend
+            wrapperStyle={{ fontSize: 11, paddingTop: 4 }}
+            iconType="square"
+            iconSize={8}
+          />
+          <Bar dataKey="Approved" stackId="a" fill="#4ade80" radius={[0, 0, 0, 0]} />
+          <Bar dataKey="Refused"  stackId="a" fill="#f87171" radius={[0, 0, 0, 0]} />
+          <Bar dataKey="Withdrawn" stackId="a" fill="#d6d3d1" radius={[3, 3, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-stone-400 pl-1">
+        {chartData.map((d) => d.rate != null && (
+          <span key={d.year}><span className="font-medium text-stone-600">{d.year}</span>: {d.rate}% approval</span>
+        ))}
       </div>
     </div>
   );

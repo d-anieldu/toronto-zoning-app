@@ -11,6 +11,12 @@
 
 import { useState, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import {
+  Zap, Building2, Home, ClipboardList, MapPin, ScrollText,
+  Copy, Check, Printer, ChevronUp, Share2, Loader2, AlertTriangle,
+  CheckCircle2, Train,
+} from "lucide-react";
+import { toast } from "sonner";
 import { ReferenceProvider, RefLink } from "./ReferencePanel";
 import UseAnalysisPanel from "./UseAnalysisPanel";
 import ShareReportButton from "./ShareReportButton";
@@ -38,12 +44,12 @@ interface Props {
 /* ================================================================== */
 
 const TABS = [
-  { id: "summary", label: "Summary", icon: "⚡" },
-  { id: "envelope", label: "Building Envelope", icon: "🏗️" },
-  { id: "uses", label: "Uses & Parking", icon: "🏠" },
-  { id: "context", label: "Constraints & Context", icon: "📋" },
-  { id: "nearby", label: "Nearby Activity", icon: "📍" },
-  { id: "conformity", label: "Policy Conformity", icon: "📜" },
+  { id: "summary",    label: "Summary",               Icon: Zap },
+  { id: "envelope",   label: "Building Envelope",      Icon: Building2 },
+  { id: "uses",       label: "Uses & Parking",         Icon: Home },
+  { id: "context",    label: "Constraints & Context",  Icon: ClipboardList },
+  { id: "nearby",     label: "Nearby Activity",        Icon: MapPin },
+  { id: "conformity", label: "Policy Conformity",      Icon: ScrollText },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -61,15 +67,9 @@ function FloatingActions({ onCopy, copied }: { onCopy: () => void; copied: boole
         className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
         title={copied ? "Copied!" : "Copy summary"}
       >
-        {copied ? (
-          <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-        ) : (
-          <svg className="h-4 w-4 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
-          </svg>
-        )}
+        {copied
+          ? <Check className="h-4 w-4 text-emerald-500" />
+          : <Copy className="h-4 w-4 text-stone-500" />}
       </button>
       <button
         type="button"
@@ -77,9 +77,7 @@ function FloatingActions({ onCopy, copied }: { onCopy: () => void; copied: boole
         className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
         title="Print report"
       >
-        <svg className="h-4 w-4 text-stone-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m0 0a48.032 48.032 0 0110.5 0m-10.5 0V5.625c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v3.284" />
-        </svg>
+        <Printer className="h-4 w-4 text-stone-500" />
       </button>
       <button
         type="button"
@@ -87,9 +85,7 @@ function FloatingActions({ onCopy, copied }: { onCopy: () => void; copied: boole
         className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-stone-900 shadow-lg transition-all hover:scale-105 hover:shadow-xl"
         title="Back to top"
       >
-        <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-        </svg>
+        <ChevronUp className="h-4 w-4 text-white" />
       </button>
     </div>
   );
@@ -167,6 +163,7 @@ export default function ZoningReport({ data }: Props) {
     navigator.clipboard.writeText(lines.filter(Boolean).join("\n")).then(() => {
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
+      toast.success("Report summary copied to clipboard");
     });
   }, [data, zoneCode, zoneString, exceptionNum, eff, dev, coords]);
 
@@ -230,31 +227,16 @@ export default function ZoningReport({ data }: Props) {
                 onClick={handleCopyReport}
                 className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow"
               >
-                {showCopied ? (
-                  <>
-                    <svg className="h-3.5 w-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
-                    </svg>
-                    Copy
-                  </>
-                )}
+                {showCopied
+                  ? <><Check className="h-3.5 w-3.5 text-emerald-500" /> Copied!</>
+                  : <><Copy className="h-3.5 w-3.5" /> Copy</>}
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
                 className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow"
               >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m0 0a48.032 48.032 0 0110.5 0m-10.5 0V5.625c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v3.284" />
-                </svg>
-                Print
+                <Printer className="h-3.5 w-3.5" /> Print
               </button>
               <ShareReportButton address={data.address} lookupData={data} />
             </div>
@@ -295,10 +277,8 @@ export default function ZoningReport({ data }: Props) {
           {dev.constraints?.pmtsa_advisory && (
             <div className="mt-4 rounded-xl border-2 border-sky-300 bg-gradient-to-r from-sky-50 to-indigo-50 p-5 shadow-sm">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0H21M3.375 14.25V3.375a1.125 1.125 0 011.125-1.125h3.026a1.125 1.125 0 01.95.524l.574.957c.189.316.528.524.95.524H21" />
-                  </svg>
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                  <Train className="h-5 w-5" />
                 </span>
                 <div>
                   <div className="flex items-center gap-2 mb-1.5">
@@ -360,8 +340,8 @@ export default function ZoningReport({ data }: Props) {
       {dev.former_bylaw_notice?.applies && (
         <div className="rounded-xl border-2 border-orange-300 bg-gradient-to-r from-orange-50 to-amber-50 p-5 shadow-sm">
           <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 text-xl">
-              📜
+            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+              <ScrollText className="h-5 w-5" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -390,9 +370,7 @@ export default function ZoningReport({ data }: Props) {
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-4 py-2 text-[12px] font-medium text-white shadow-sm hover:bg-orange-700 transition-colors"
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                  </svg>
+                  <Share2 className="h-3.5 w-3.5" />
                   City of Toronto Zoning Map
                 </a>
               )}
@@ -448,7 +426,9 @@ export default function ZoningReport({ data }: Props) {
           }`}
         >
           <div className="flex items-center gap-2.5 pb-3">
-            <span className="text-[18px]" aria-hidden="true">{dev.site_plan_control.required ? "📋" : "✅"}</span>
+            {dev.site_plan_control.required
+              ? <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+              : <CheckCircle2 className="h-5 w-5 text-emerald-500" aria-hidden="true" />}
             <h3 className="text-[15px] font-semibold tracking-tight text-stone-900">Site Plan Control</h3>
             <Badge variant={dev.site_plan_control.required ? (dev.site_plan_control.confidence === "high" ? "danger" : "warning") : "success"}>
               {dev.site_plan_control.required ? "Required" : "Likely Exempt"}
@@ -538,7 +518,7 @@ export default function ZoningReport({ data }: Props) {
                   : "text-stone-500 hover:text-stone-700 hover:bg-stone-50"
               }`}
             >
-              <span className="text-[14px]" aria-hidden="true">{tab.icon}</span>
+              <tab.Icon className="h-3.5 w-3.5" aria-hidden="true" />
               {tab.label}
               {tab.id === "conformity" && conformityScore !== null && (
                 <span className="ml-1.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
