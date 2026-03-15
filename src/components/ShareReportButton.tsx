@@ -133,7 +133,15 @@ export default function ShareReportButton({ address, lookupData }: Props) {
 
       {error && (
         <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-red-200 bg-red-50 p-3 shadow-lg">
-          <p className="text-[12px] text-red-600">{error}</p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-[12px] text-red-600">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="shrink-0 text-[12px] text-red-400 hover:text-red-600"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
     </div>
