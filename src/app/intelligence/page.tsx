@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import UserNav from "@/components/UserNav";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -70,9 +71,12 @@ export default function IntelligencePage() {
       {/* Header */}
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto max-w-5xl px-6 py-10">
-          <Link href="/" className="text-[12px] text-stone-400 hover:text-stone-600">
-            ← Toronto Zoning
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/" className="text-[12px] text-stone-400 hover:text-stone-600">
+              ← Toronto Zoning
+            </Link>
+            <UserNav />
+          </div>
           <h1 className="mt-3 text-[28px] font-bold tracking-tight text-stone-900">
             Planning Intelligence
           </h1>

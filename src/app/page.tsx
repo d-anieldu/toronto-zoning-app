@@ -1,4 +1,5 @@
 import Link from "next/link";
+import UserNav from "@/components/UserNav";
 
 export default async function Home() {
   return (
@@ -21,6 +22,7 @@ export default async function Home() {
             >
               Get started
             </Link>
+            <UserNav />
           </div>
         </div>
       </header>

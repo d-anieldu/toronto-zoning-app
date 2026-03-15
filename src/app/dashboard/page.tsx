@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SearchForm from "@/components/SearchForm";
+import UserNav from "@/components/UserNav";
 
 export default function DashboardPage() {
   return (
@@ -41,7 +42,7 @@ export default function DashboardPage() {
             <span className="hidden text-[12px] text-stone-400 lg:block">
               By-law 569-2013 · 19 GIS layers
             </span>
-            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
+            <UserNav />
           </div>
         </div>
       </header>
