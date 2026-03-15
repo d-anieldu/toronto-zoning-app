@@ -2,10 +2,13 @@
 
 /**
  * ZoningStatisticsTable — Renders the industry-standard "Zoning Statistics"
- * table with REQUIRED and EXISTING BLDG columns.
+ * table with adaptive layout:
+ *   - Filters out N/A rows so only applicable metrics are shown
+ *   - Hides the "Existing Bldg" column when no existing data is available
+ *   - Shows a zone summary bar for immediate context
+ *   - Supports supplementary rows (permitted uses, parking, FSI breakdown)
  *
  * Data comes from `data.zoning_statistics_table` in the /lookup response.
- * When no data is available the component renders nothing.
  */
 
 import { useState } from "react";
@@ -30,6 +33,9 @@ interface ZoningStatsMetadata {
 export interface ZoningStatisticsData {
   zone_code?: string;
   zone_label?: string;
+  zone_category?: string;
+  zone_summary?: string;
+  has_existing_data?: boolean;
   rows?: ZoningStatsRow[];
   metadata?: ZoningStatsMetadata;
   error?: string;
@@ -42,12 +48,13 @@ function getCategory(label: string): string {
   if (l === "USE") return "use";
   if (l.includes("LOT FRONTAGE") || l.includes("LOT AREA")) return "lot";
   if (l.includes("HEIGHT") || l.includes("STOREYS")) return "height";
-  if (l.includes("BUILDING LENGTH") || l.includes("BUILDING DEPTH")) return "building";
+  if (l.includes("BUILDING LENGTH") || l.includes("BUILDING DEPTH") || l.includes("BUILDING TYPES")) return "building";
   if (l.includes("FSI") || l.includes("GFA")) return "density";
   if (l.includes("COVERAGE")) return "coverage";
   if (l.includes("YARD SB") || l.includes("SETBACK")) return "setback";
   if (l.includes("LANDSCAPING") || l.includes("LANDSCAPE")) return "landscaping";
   if (l.includes("PARKING")) return "parking";
+  if (l.includes("PERMITTED USES")) return "use";
   return "other";
 }
 
@@ -62,6 +69,15 @@ const CATEGORY_ICON: Record<string, string> = {
   landscaping: "🌿",
   parking: "🅿️",
   other: "📋",
+};
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  residential: "🏠",
+  commercial: "🏪",
+  employment: "🏭",
+  institutional: "🏛️",
+  open_space: "🌳",
+  utility: "⚡",
 };
 
 /* ── Component ─────────────────────────────────────────────────────────── */
@@ -83,12 +99,22 @@ export default function ZoningStatisticsTable({
   }
   if (!data.rows || data.rows.length === 0) return null;
 
-  const { zone_label, rows, metadata } = data;
+  const { zone_label, zone_category, zone_summary, rows, metadata } = data;
 
-  // Pre-compute which rows start a new category group (avoids mutation during render)
+  // Determine whether to show the existing column
+  const showExisting = data.has_existing_data === true;
+
+  // Grid layout adapts based on whether existing column is needed
+  const gridCols = showExisting
+    ? "grid-cols-[1fr_minmax(110px,170px)_minmax(110px,170px)]"
+    : "grid-cols-[1fr_minmax(140px,220px)]";
+
+  // Pre-compute which rows start a new category group
   const isNewGroup = rows.map((row, i) =>
     i > 0 ? getCategory(row.label) !== getCategory(rows[i - 1].label) : false,
   );
+
+  const categoryEmoji = CATEGORY_EMOJI[zone_category ?? ""] ?? "📋";
 
   return (
     <div className="rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
@@ -135,17 +161,31 @@ export default function ZoningStatisticsTable({
         }`}
       >
         <div className="border-t border-stone-100">
+          {/* ── Zone summary bar ─────────────────────────────────── */}
+          {zone_summary && (
+            <div className="flex items-start gap-2.5 bg-stone-50/80 px-5 py-3 border-b border-stone-100">
+              <span className="text-[14px] leading-none mt-0.5 shrink-0" aria-hidden="true">
+                {categoryEmoji}
+              </span>
+              <p className="text-[12px] text-stone-500 leading-snug">
+                {zone_summary}
+              </p>
+            </div>
+          )}
+
           {/* Column headers */}
-          <div className="grid grid-cols-[1fr_minmax(110px,170px)_minmax(110px,170px)] bg-stone-50 px-5 py-2.5">
+          <div className={`grid ${gridCols} bg-stone-50 px-5 py-2.5`}>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-400">
               Standard
             </span>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 text-right">
-              Required
+              {showExisting ? "Required" : "Zoning Limit"}
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 text-right">
-              Existing&nbsp;Bldg
-            </span>
+            {showExisting && (
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 text-right">
+                Existing&nbsp;Bldg
+              </span>
+            )}
           </div>
 
           {/* Data rows */}
@@ -155,6 +195,7 @@ export default function ZoningStatisticsTable({
               const newGroup = isNewGroup[i];
 
               const isLandscaping = cat === "landscaping";
+              const isParking = cat === "parking";
               const isDash =
                 !row.existing ||
                 row.existing === "—" ||
@@ -169,12 +210,14 @@ export default function ZoningStatisticsTable({
 
                   {/* Main row */}
                   <div
-                    className={`grid grid-cols-[1fr_minmax(110px,170px)_minmax(110px,170px)] items-baseline px-5 py-2.5 ${
+                    className={`grid ${gridCols} items-baseline px-5 py-2.5 ${
                       isLandscaping
                         ? "bg-emerald-50/30"
-                        : i % 2 === 0
-                          ? "bg-white"
-                          : "bg-stone-50/40"
+                        : isParking
+                          ? "bg-blue-50/20"
+                          : i % 2 === 0
+                            ? "bg-white"
+                            : "bg-stone-50/40"
                     }`}
                   >
                     {/* Label */}
@@ -187,25 +230,31 @@ export default function ZoningStatisticsTable({
                       </span>
                     </div>
 
-                    {/* Required */}
+                    {/* Required / Zoning Limit */}
                     <span
-                      className={`text-[13px] font-semibold text-right whitespace-nowrap ${
-                        isLandscaping ? "text-emerald-800" : "text-stone-900"
-                      }`}
+                      className={`text-[13px] font-semibold text-right ${
+                        isLandscaping
+                          ? "text-emerald-800"
+                          : isParking
+                            ? "text-blue-800"
+                            : "text-stone-900"
+                      } ${row.required.length > 30 ? "whitespace-normal text-[12px]" : "whitespace-nowrap"}`}
                     >
                       {row.required}
                     </span>
 
-                    {/* Existing */}
-                    <span
-                      className={`text-[13px] text-right whitespace-nowrap ${
-                        isDash
-                          ? "text-stone-300 italic"
-                          : "font-medium text-stone-700"
-                      }`}
-                    >
-                      {row.existing}
-                    </span>
+                    {/* Existing (conditional) */}
+                    {showExisting && (
+                      <span
+                        className={`text-[13px] text-right whitespace-nowrap ${
+                          isDash
+                            ? "text-stone-300 italic"
+                            : "font-medium text-stone-700"
+                        }`}
+                      >
+                        {row.existing}
+                      </span>
+                    )}
                   </div>
 
                   {/* Note sub-row */}
