@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-// TODO: Re-add UserButton when auth is re-enabled
 import Link from "next/link";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
@@ -181,7 +180,7 @@ export default function AdminArticleEditPage({
                 Publish
               </button>
             )}
-            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
+
           </div>
         </div>
       </header>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-// TODO: Re-add UserButton when auth is re-enabled
 import Link from "next/link";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
@@ -172,7 +171,7 @@ export default function AdminIntelligencePage() {
             to access this page.
           </p>
           <p className="mt-1 text-xs text-stone-400">
-            Set <code>{"{ \"role\": \"admin\" }"}</code> in your Clerk public metadata.
+            Contact an administrator to get the <code className="rounded bg-stone-200 px-1.5 py-0.5 text-sm">admin</code> role assigned to your account.
           </p>
           <Link href="/dashboard" className="mt-4 inline-block text-sm text-stone-600 underline">
             ← Back to Dashboard
@@ -200,7 +199,7 @@ export default function AdminIntelligencePage() {
             <Link href="/intelligence" className="text-[12px] text-stone-400 hover:text-stone-600">
               View Public Page →
             </Link>
-            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
+
           </div>
         </div>
       </header>
