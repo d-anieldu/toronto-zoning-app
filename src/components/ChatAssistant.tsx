@@ -41,8 +41,8 @@ export default function ChatAssistant({ address }: Props) {
     }
   }, [open]);
 
-  const sendMessage = useCallback(async () => {
-    const text = input.trim();
+  const sendMessage = useCallback(async (overrideText?: string) => {
+    const text = (overrideText || input).trim();
     if (!text || loading) return;
 
     const userMsg: Message = { role: "user", content: text };
@@ -171,8 +171,7 @@ export default function ChatAssistant({ address }: Props) {
                 <button
                   key={q}
                   onClick={() => {
-                    setInput(q);
-                    setTimeout(() => inputRef.current?.focus(), 50);
+                    sendMessage(q);
                   }}
                   className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1.5 text-[11px] text-stone-600 transition-colors hover:border-stone-300 hover:bg-stone-100"
                 >
@@ -240,7 +239,7 @@ export default function ChatAssistant({ address }: Props) {
             disabled={loading}
           />
           <button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-900 text-white transition-colors hover:bg-stone-800 disabled:opacity-30"
           >
