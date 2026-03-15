@@ -18,18 +18,6 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link
-              href="/projects"
-              className="hidden sm:flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50 transition-colors"
-            >
-              📁 Projects
-            </Link>
-            <Link
-              href="/compare"
-              className="hidden sm:flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50 transition-colors"
-            >
-              ⚖️ Compare
-            </Link>
             <span className="hidden text-[12px] text-stone-400 lg:block">
               By-law 569-2013 · 19 GIS layers
             </span>
