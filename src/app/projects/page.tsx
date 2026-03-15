@@ -1,13 +1,14 @@
 "use client";
 
 /**
- * /projects — Project folders & saved reports dashboard.
- * Shows user's projects, saved lookups, and shared reports.
+ * /projects — Project workspace.
+ * Supabase-powered: projects, saved reports, shared links.
  */
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-// TODO: Re-add UserButton when auth is re-enabled
+import { createClient } from "@/lib/supabase";
+import UserNav from "@/components/UserNav";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -15,19 +16,21 @@ interface Project {
   id: string;
   name: string;
   description: string;
-  property_count?: number;
   created_at: string;
+  updated_at: string;
+  property_count?: number;
 }
 
 interface SavedReport {
-  id: number;
+  id: string;
   address: string;
-  saved_at: string;
-  lookup_data?: any;
+  title: string | null;
+  is_favorite: boolean;
+  created_at: string;
 }
 
 interface SharedReport {
-  report_id: string;
+  id: string;
   address: string;
   view_count: number;
   created_at: string;
@@ -49,34 +52,40 @@ export default function ProjectsPage() {
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [creating, setCreating] = useState(false);
-
-  // Add property state
-  const [addingTo, setAddingTo] = useState<string | null>(null);
-  const [propertyAddress, setPropertyAddress] = useState("");
-  const [addingProperty, setAddingProperty] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      const supabase = createClient();
       const [projRes, savedRes, sharedRes] = await Promise.all([
-        fetch("/api/projects"),
-        fetch("/api/reports/save"),
-        fetch("/api/reports/share"),
+        supabase
+          .from("projects")
+          .select("*, project_properties(id)")
+          .order("updated_at", { ascending: false }),
+        supabase
+          .from("saved_reports")
+          .select("id, address, title, is_favorite, created_at")
+          .order("created_at", { ascending: false })
+          .limit(50),
+        supabase
+          .from("shared_reports")
+          .select("id, address, view_count, created_at, expires_at")
+          .order("created_at", { ascending: false })
+          .limit(50),
       ]);
 
-      if (projRes.ok) {
-        const data = await projRes.json();
-        setProjects(data.projects || []);
+      if (projRes.data) {
+        setProjects(
+          projRes.data.map((p: any) => ({
+            ...p,
+            property_count: p.project_properties?.length ?? 0,
+          }))
+        );
       }
-      if (savedRes.ok) {
-        const data = await savedRes.json();
-        setSavedReports(data.reports || []);
-      }
-      if (sharedRes.ok) {
-        const data = await sharedRes.json();
-        setSharedReports(data.reports || []);
-      }
+      if (savedRes.data) setSavedReports(savedRes.data);
+      if (sharedRes.data) setSharedReports(sharedRes.data);
     } catch {
       setError("Failed to load data");
     } finally {
@@ -92,12 +101,17 @@ export default function ProjectsPage() {
     if (!newName.trim()) return;
     setCreating(true);
     try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), description: newDesc.trim() }),
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setError("Please sign in to create projects"); setCreating(false); return; }
+
+      const { error: err } = await supabase.from("projects").insert({
+        user_id: user.id,
+        name: newName.trim(),
+        description: newDesc.trim(),
       });
-      if (res.ok) {
+
+      if (err) { setError(err.message); } else {
         setNewName("");
         setNewDesc("");
         setShowNewProject(false);
@@ -112,45 +126,18 @@ export default function ProjectsPage() {
 
   async function deleteProject(id: string) {
     if (!confirm("Delete this project and all its properties?")) return;
-    try {
-      await fetch(`/api/projects/${id}`, { method: "DELETE" });
-      fetchData();
-    } catch {
-      setError("Failed to delete project");
-    }
-  }
-
-  async function addProperty(projectId: string) {
-    if (!propertyAddress.trim()) return;
-    setAddingProperty(true);
-    try {
-      const res = await fetch(`/api/projects/${projectId}/properties`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: propertyAddress.trim() }),
-      });
-      if (res.ok) {
-        setPropertyAddress("");
-        setAddingTo(null);
-        fetchData();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setError(err.detail || err.error || "Failed to add property");
-      }
-    } catch {
-      setError("Failed to add property");
-    } finally {
-      setAddingProperty(false);
-    }
+    const supabase = createClient();
+    const { error: err } = await supabase.from("projects").delete().eq("id", id);
+    if (err) setError(err.message);
+    else fetchData();
   }
 
   async function deleteSharedReport(reportId: string) {
-    try {
-      await fetch(`/api/reports/shared/${reportId}`, { method: "DELETE" });
-      fetchData();
-    } catch {
-      setError("Failed to delete shared report");
-    }
+    if (!confirm("Delete this shared link? Anyone with the URL will lose access.")) return;
+    const supabase = createClient();
+    const { error: err } = await supabase.from("shared_reports").delete().eq("id", reportId);
+    if (err) setError(err.message);
+    else fetchData();
   }
 
   return (
@@ -178,7 +165,7 @@ export default function ProjectsPage() {
             >
               Compare
             </Link>
-            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
+            <UserNav />
           </div>
         </div>
       </header>
@@ -186,12 +173,14 @@ export default function ProjectsPage() {
       <main className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-[24px] font-bold tracking-tight text-stone-900">Your Workspace</h1>
-          <button
-            onClick={() => setShowNewProject(true)}
-            className="rounded-xl bg-stone-900 px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-stone-800"
-          >
-            + New Project
-          </button>
+          {tab === "projects" && (
+            <button
+              onClick={() => setShowNewProject(true)}
+              className="rounded-xl bg-stone-900 px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-stone-800"
+            >
+              + New Project
+            </button>
+          )}
         </div>
 
         {/* Tab bar */}
@@ -237,7 +226,10 @@ export default function ProjectsPage() {
 
         {/* ── Create Project Modal ─── */}
         {showNewProject && (
-          <div className="mb-6 rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+          <form
+            onSubmit={(e) => { e.preventDefault(); createProject(); }}
+            className="mb-6 rounded-xl border border-stone-200 bg-white p-5 shadow-sm"
+          >
             <h3 className="text-[15px] font-semibold text-stone-900">Create Project</h3>
             <div className="mt-3 space-y-3">
               <input
@@ -257,13 +249,14 @@ export default function ProjectsPage() {
               />
               <div className="flex gap-2">
                 <button
-                  onClick={createProject}
+                  type="submit"
                   disabled={creating || !newName.trim()}
                   className="rounded-lg bg-stone-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-stone-800 disabled:opacity-40"
                 >
-                  {creating ? "Creating…" : "Create"}
+                  {creating ? "Creating..." : "Create"}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShowNewProject(false)}
                   className="rounded-lg border border-stone-200 px-4 py-2 text-[13px] text-stone-600 hover:bg-stone-50"
                 >
@@ -271,7 +264,7 @@ export default function ProjectsPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </form>
         )}
 
         {/* ── Projects Tab ─── */}
@@ -294,7 +287,11 @@ export default function ProjectsPage() {
             )}
 
             {projects.map((proj) => (
-              <div key={proj.id} className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+              <Link
+                key={proj.id}
+                href={`/projects/${proj.id}`}
+                className="block rounded-xl border border-stone-200 bg-white p-5 shadow-sm transition-colors hover:border-stone-300"
+              >
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-[15px] font-semibold text-stone-900">📁 {proj.name}</h3>
@@ -306,52 +303,14 @@ export default function ProjectsPage() {
                       <span>Created {new Date(proj.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setAddingTo(addingTo === proj.id ? null : proj.id)}
-                      className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-medium text-stone-600 hover:bg-stone-50"
-                    >
-                      + Add Property
-                    </button>
-                    <button
-                      onClick={() => deleteProject(proj.id)}
-                      className="rounded-lg border border-red-200 px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteProject(proj.id); }}
+                    className="rounded-lg border border-red-200 px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
                 </div>
-
-                {/* Add property form */}
-                {addingTo === proj.id && (
-                  <div className="mt-4 flex gap-2 border-t border-stone-100 pt-4">
-                    <input
-                      type="text"
-                      value={propertyAddress}
-                      onChange={(e) => setPropertyAddress(e.target.value)}
-                      placeholder="Enter address — e.g. 446 Roselawn Ave"
-                      className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") addProperty(proj.id);
-                      }}
-                    />
-                    <button
-                      onClick={() => addProperty(proj.id)}
-                      disabled={addingProperty || !propertyAddress.trim()}
-                      className="rounded-lg bg-stone-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-stone-800 disabled:opacity-40"
-                    >
-                      {addingProperty ? "Adding…" : "Add"}
-                    </button>
-                    <button
-                      onClick={() => setAddingTo(null)}
-                      className="rounded-lg border border-stone-200 px-3 py-2 text-[13px] text-stone-500 hover:bg-stone-50"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </div>
+              </Link>
             ))}
           </div>
         )}
@@ -382,9 +341,11 @@ export default function ProjectsPage() {
               >
                 <div>
                   <p className="text-[14px] font-semibold text-stone-900">{report.address}</p>
-                  <p className="text-[11px] text-stone-400">
-                    Saved {new Date(report.saved_at).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-2 text-[11px] text-stone-400">
+                    {report.title && <span>{report.title} · </span>}
+                    <span>Saved {new Date(report.created_at).toLocaleDateString()}</span>
+                    {report.is_favorite && <span className="text-amber-500">★</span>}
+                  </div>
                 </div>
                 <Link
                   href={`/dashboard?address=${encodeURIComponent(report.address)}`}
@@ -412,7 +373,7 @@ export default function ProjectsPage() {
 
             {sharedReports.map((report) => (
               <div
-                key={report.report_id}
+                key={report.id}
                 className="flex items-center justify-between rounded-xl border border-stone-200 bg-white px-5 py-4 shadow-sm"
               >
                 <div>
@@ -429,15 +390,17 @@ export default function ProjectsPage() {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        `${window.location.origin}/report/${report.report_id}`
+                        `${window.location.origin}/report/${report.id}`
                       );
+                      setCopiedId(report.id);
+                      setTimeout(() => setCopiedId(null), 2000);
                     }}
                     className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-medium text-stone-600 hover:bg-stone-50"
                   >
-                    Copy Link
+                    {copiedId === report.id ? "Copied!" : "Copy Link"}
                   </button>
                   <button
-                    onClick={() => deleteSharedReport(report.report_id)}
+                    onClick={() => deleteSharedReport(report.id)}
                     className="rounded-lg border border-red-200 px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-50"
                   >
                     Delete
