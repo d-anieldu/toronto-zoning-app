@@ -9,7 +9,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-// TODO: Re-add UserButton when auth is re-enabled
+import UserNav from "@/components/UserNav";
 
 interface CompareResult {
   properties: any[];
@@ -18,21 +18,21 @@ interface CompareResult {
 }
 
 /* ── Field display config ── */
-const FIELD_CONFIG: Record<string, { label: string; fmt: (v: any) => string }> = {
+const FIELD_CONFIG: Record<string, { label: string; fmt: (v: any) => string; higher?: boolean }> = {
   zone_code: { label: "Zone Code", fmt: (v) => v || "—" },
-  max_height_m: { label: "Max Height (m)", fmt: (v) => (v != null ? `${v}m` : "—") },
-  max_storeys: { label: "Max Storeys", fmt: (v) => (v != null ? `${v}` : "—") },
-  fsi: { label: "FSI", fmt: (v) => (v != null ? `${v}` : "—") },
-  max_gfa_sqm: { label: "Max GFA (m²)", fmt: (v) => (v != null ? `${Number(v).toLocaleString()}` : "—") },
-  lot_area_sqm: { label: "Lot Area (m²)", fmt: (v) => (v != null ? `${Number(v).toLocaleString()}` : "—") },
-  lot_frontage_m: { label: "Lot Frontage (m)", fmt: (v) => (v != null ? `${v}` : "—") },
-  coverage_pct: { label: "Coverage %", fmt: (v) => (v != null ? `${v}%` : "—") },
+  max_height_m: { label: "Max Height (m)", fmt: (v) => (v != null ? `${v}m` : "—"), higher: true },
+  max_storeys: { label: "Max Storeys", fmt: (v) => (v != null ? `${v}` : "—"), higher: true },
+  fsi: { label: "FSI", fmt: (v) => (v != null ? `${v}` : "—"), higher: true },
+  max_gfa_sqm: { label: "Max GFA (m²)", fmt: (v) => (v != null ? `${Number(v).toLocaleString()}` : "—"), higher: true },
+  lot_area_sqm: { label: "Lot Area (m²)", fmt: (v) => (v != null ? `${Number(v).toLocaleString()}` : "—"), higher: true },
+  lot_frontage_m: { label: "Lot Frontage (m)", fmt: (v) => (v != null ? `${v}` : "—"), higher: true },
+  coverage_pct: { label: "Coverage %", fmt: (v) => (v != null ? `${v}%` : "—"), higher: true },
   exception_number: { label: "Exception #", fmt: (v) => v || "None" },
   heritage: { label: "Heritage", fmt: (v) => (v ? "Yes 🏛️" : "No") },
   site_plan_required: { label: "Site Plan Req.", fmt: (v) => (v == null ? "—" : v ? "Yes" : "No") },
-  dc_total: { label: "Dev Charges (est.)", fmt: (v) => (v != null ? `$${Number(v).toLocaleString()}` : "—") },
-  confidence_score: { label: "Confidence", fmt: (v) => (v != null ? `${v}%` : "—") },
-  constraints_count: { label: "Constraints", fmt: (v) => (v != null ? `${v}` : "—") },
+  dc_total: { label: "Dev Charges (est.)", fmt: (v) => (v != null ? `$${Number(v).toLocaleString()}` : "—"), higher: false },
+  confidence_score: { label: "Confidence", fmt: (v) => (v != null ? `${v}%` : "—"), higher: true },
+  constraints_count: { label: "Constraints", fmt: (v) => (v != null ? `${v}` : "—"), higher: false },
   building_types: { label: "Building Types", fmt: (v) => (Array.isArray(v) && v.length ? v.join(", ") : "—") },
 };
 
@@ -113,7 +113,7 @@ export default function ComparePage() {
             >
               Projects
             </Link>
-            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
+            <UserNav />
           </div>
         </div>
       </header>
@@ -228,6 +228,11 @@ export default function ComparePage() {
                       values.length > 1 &&
                       values.every((v) => JSON.stringify(v) === JSON.stringify(values[0]));
                     const hasDiff = !allSame && values.some((v) => v != null);
+                    const nums = values.filter((v: any) => typeof v === "number");
+                    const bestVal =
+                      hasDiff && nums.length > 0 && cfg.higher !== undefined
+                        ? (cfg.higher ? Math.max(...nums) : Math.min(...nums))
+                        : undefined;
 
                     return (
                       <tr
@@ -247,9 +252,9 @@ export default function ComparePage() {
                           const formatted = cfg.fmt(val);
                           // Highlight best / worst
                           const isBest =
-                            hasDiff &&
+                            bestVal !== undefined &&
                             typeof val === "number" &&
-                            val === Math.max(...values.filter((v: any) => typeof v === "number"));
+                            val === bestVal;
 
                           return (
                             <td
@@ -279,7 +284,7 @@ export default function ComparePage() {
                 <span className="text-amber-500">●</span> = values differ
               </span>
               <span>
-                <span className="font-bold text-emerald-700">Bold green</span> = highest numeric value
+                <span className="font-bold text-emerald-700">Bold green</span> = best value
               </span>
             </div>
           </div>
