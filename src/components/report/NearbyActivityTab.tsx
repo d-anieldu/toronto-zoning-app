@@ -946,7 +946,8 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
 
   const [radius, setRadius] = useState(nearby.radius_m || 500);
   const [liveData, setLiveData] = useState<NearbyData>(nearby);
-  const [loading, setLoading] = useState(false);
+  // Start loading immediately if nearby_activity was not included in the initial lookup response
+  const [loading, setLoading] = useState(!data.nearby_activity);
 
   // Effective standards for zone info
   const eff = data.effective_standards || {};
