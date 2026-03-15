@@ -216,6 +216,23 @@ function MiniMap({
     });
   }, [events, center]);
 
+  // Pre-build icon cache per colour so L.divIcon is not recreated on every render
+  const iconsByColor = useMemo(() => {
+    if (!mapComponents) return {} as Record<string, any>;
+    const { L } = mapComponents;
+    const colors = ["#22c55e", "#ef4444", "#f59e0b", "#94a3b8", "#3b82f6", "#8b5cf6"];
+    const cache: Record<string, any> = {};
+    for (const color of colors) {
+      cache[color] = L.divIcon({
+        className: "",
+        html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;"></div>`,
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+    }
+    return cache;
+  }, [mapComponents]);
+
   if (!mapComponents) {
     return (
       <div className="flex h-[320px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
@@ -238,7 +255,7 @@ function MiniMap({
   };
 
   const markerIcon = (color: string) =>
-    L.divIcon({
+    iconsByColor[color] || L.divIcon({
       className: "",
       html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;"></div>`,
       iconSize: [12, 12],
@@ -948,6 +965,9 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
   const [liveData, setLiveData] = useState<NearbyData>(nearby);
   // Start loading immediately if nearby_activity was not included in the initial lookup response
   const [loading, setLoading] = useState(!data.nearby_activity);
+  const [loadingMessage, setLoadingMessage] = useState(() =>
+    `Searching ${nearby.radius_m || 500}m around ${data.address || "this location"}…`
+  );
 
   // Effective standards for zone info
   const eff = data.effective_standards || {};
@@ -960,6 +980,7 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
       if (!coords.longitude || !coords.latitude) return;
 
       setLoading(true);
+      setLoadingMessage(`Searching ${newRadius}m around ${data.address || "this location"}…`);
       try {
         const params = new URLSearchParams({
           lon: String(coords.longitude),
@@ -1004,7 +1025,9 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
   const devAppList = useMemo(() => devApps?.applications || [], [devApps]);
 
   // Merge all event sources into a single array for MiniMap
-  const mapEvents = useMemo(() => {
+  // Cap at 50 markers (sorted by recency) to keep the DOM lean in dense areas
+  const MAP_EVENT_LIMIT = 50;
+  const { mapEvents, mapEventTotal } = useMemo(() => {
     const merged: any[] = [];
     // CoA events
     for (const e of events) {
@@ -1041,7 +1064,15 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
         url: a.app_url || undefined,
       });
     }
-    return merged;
+    const total = merged.length;
+    if (total > MAP_EVENT_LIMIT) {
+      // Keep the most recent events for the map
+      merged.sort((a, b) =>
+        String(b.event_date || "").localeCompare(String(a.event_date || ""))
+      );
+      merged.splice(MAP_EVENT_LIMIT);
+    }
+    return { mapEvents: merged, mapEventTotal: total };
   }, [events, permitList, devAppList]);
 
   // OLT decisions from dev potential
@@ -1055,21 +1086,48 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
   /* ── Skeleton loading state (shown while initial fetch is in progress) ── */
   if (loading && !hasData && events.length === 0 && !hasPermits && !hasDevApps) {
     return (
-      <div className="space-y-6 py-6 animate-pulse">
+      <div className="space-y-6 py-6">
         <SectionHeading title="Nearby Activity" icon="📍" />
-        {/* Hero stat placeholders */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="rounded-xl border border-stone-100 bg-stone-100 h-20" />
-          ))}
+        {/* Informative loading status */}
+        <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
+          <p className="text-[12px] font-medium text-indigo-700">{loadingMessage}</p>
+          <p className="mt-0.5 text-[11px] text-indigo-400">
+            Querying Committee of Adjustment records, building permits, and development applications…
+          </p>
         </div>
-        {/* Mini-map placeholder */}
-        <div className="rounded-xl border border-stone-100 bg-stone-100 h-[320px]" />
-        {/* Row placeholders */}
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-14 rounded-lg bg-stone-100" />
-          ))}
+        <div className="animate-pulse space-y-6">
+          {/* Stats cards */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="rounded-xl border border-stone-100 bg-stone-100 h-20" />
+            ))}
+          </div>
+          {/* Map placeholder */}
+          <div className="space-y-1.5">
+            <div className="h-3.5 w-28 rounded-full bg-stone-100" />
+            <div className="rounded-xl border border-stone-100 bg-stone-100 h-[320px]" />
+          </div>
+          {/* CoA / precedents section */}
+          <div className="rounded-xl border border-stone-100 bg-white p-4 space-y-3">
+            <div className="h-3.5 w-44 rounded-full bg-stone-100" />
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-12 rounded-lg bg-stone-100" />
+            ))}
+          </div>
+          {/* Building Permits section */}
+          <div className="rounded-xl border border-stone-100 bg-white p-4 space-y-3">
+            <div className="h-3.5 w-36 rounded-full bg-stone-100" />
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-12 rounded-lg bg-stone-100" />
+            ))}
+          </div>
+          {/* Dev Applications section */}
+          <div className="rounded-xl border border-stone-100 bg-white p-4 space-y-3">
+            <div className="h-3.5 w-52 rounded-full bg-stone-100" />
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-12 rounded-lg bg-stone-100" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -1153,6 +1211,11 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
       {coords.latitude && coords.longitude && mapEvents.length > 0 && (
         <div>
           <SectionHeading title="Activity Map" icon="🗺️" count={mapEvents.length} />
+          {mapEventTotal > MAP_EVENT_LIMIT && (
+            <p className="mb-2 text-[10px] text-stone-400">
+              Showing {MAP_EVENT_LIMIT} most recent of {mapEventTotal} total events
+            </p>
+          )}
           <MiniMap
             center={{ lat: coords.latitude, lon: coords.longitude }}
             events={mapEvents}
