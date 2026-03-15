@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-// TODO: Re-enable auth when sign-in is restored
-// import { auth } from "@clerk/nextjs/server";
 
 const API_URL = process.env.API_URL;
 
@@ -14,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { address, include_nearby, include_parcel, include_policy } = body;
+    const { address } = body;
 
     if (!address || typeof address !== "string") {
       return NextResponse.json(
@@ -23,16 +21,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Forward the full request to the Railway backend (preserving optional flags)
-    const payload: Record<string, unknown> = { address };
-    if (include_nearby !== undefined) payload.include_nearby = include_nearby;
-    if (include_parcel !== undefined) payload.include_parcel = include_parcel;
-    if (include_policy !== undefined) payload.include_policy = include_policy;
-
-    const res = await fetch(`${API_URL}/lookup`, {
+    const res = await fetch(`${API_URL}/policy-conformity`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ address }),
     });
 
     if (!res.ok) {
@@ -46,7 +38,7 @@ export async function POST(request: NextRequest) {
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Lookup API error:", error);
+    console.error("Policy conformity API error:", error);
     return NextResponse.json(
       { detail: "Failed to connect to zoning API" },
       { status: 502 }

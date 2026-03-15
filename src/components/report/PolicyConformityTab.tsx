@@ -13,7 +13,7 @@
  * Session 4: Export buttons, tab badge, expand/collapse all, animations, accessibility.
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { SectionHeading, Card, Badge } from "./primitives";
 import type {
   PolicyConformityData,
@@ -324,8 +324,40 @@ const STATUS_TEXT: Record<ConformityStatus, string> = {
 };
 
 export default function PolicyConformityTab({ data }: PolicyConformityTabProps) {
-  const conformity = data.policy_conformity as PolicyConformityData | undefined;
+  const [liveConformity, setLiveConformity] = useState<PolicyConformityData | undefined>(
+    data.policy_conformity as PolicyConformityData | undefined,
+  );
+  const [loading, setLoading] = useState(!data.policy_conformity);
+
+  const conformity = liveConformity;
   const address = conformity?.property_address || data.address || "";
+
+  /* ── Lazy-fetch on mount if not included in initial lookup ────── */
+  useEffect(() => {
+    if (data.policy_conformity) return; // already loaded
+    if (!data.address) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/policy-conformity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: data.address }),
+        });
+        if (res.ok && !cancelled) {
+          const json = await res.json();
+          setLiveConformity(json);
+        }
+      } catch (err) {
+        console.error("Failed to fetch policy conformity:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.address]);
 
   /* ── User notes state with localStorage persistence ───────────── */
   const [notes, setNotes] = useState<Record<string, string>>(() =>
@@ -419,7 +451,22 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
     return Math.round((conforms / total_items) * 100);
   }, [conformity]);
 
-  /* ── Empty / error states ─────────────────────────────────────── */
+  /* ── Loading / empty states ─────────────────────────────────── */
+  if (loading) {
+    return (
+      <div className="space-y-5 animate-pulse">
+        <div className="h-10 rounded-lg bg-stone-100" />
+        <div className="h-24 rounded-xl bg-stone-100" />
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="space-y-2">
+            <div className="h-8 w-48 rounded bg-stone-100" />
+            <div className="h-40 rounded-xl bg-stone-100" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (!conformity) {
     return (
       <div className="rounded-xl border border-stone-200 bg-white p-8 text-center shadow-sm">
