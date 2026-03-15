@@ -1,16 +1,28 @@
-// TODO: Restore Clerk auth when re-enabling sign-in
-// import { auth, currentUser } from "@clerk/nextjs/server";
+import { createServerSupabase } from "./supabase-server";
 
-/**
- * Auth is currently disabled — all users are treated as admin.
- * To re-enable: restore Clerk imports above and the original
- * isAdmin / requireAdmin implementations that checked
- * publicMetadata.role via currentUser().
- */
+export async function getUser() {
+  const supabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
+
 export async function isAdmin(): Promise<boolean> {
-  return true;
+  const user = await getUser();
+  if (!user) return false;
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  return data?.role === "admin";
 }
 
 export async function requireAdmin(): Promise<{ userId: string }> {
-  return { userId: "anonymous" };
+  const admin = await isAdmin();
+  if (!admin) throw new Error("Unauthorized");
+  const user = await getUser();
+  return { userId: user!.id };
 }
