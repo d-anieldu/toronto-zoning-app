@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+// TODO: Re-enable auth when sign-in is restored
+// import { auth } from "@clerk/nextjs/server";
 
 const API_URL = process.env.API_URL;
 
 /** POST /api/reports/save — Save a report to user history */
 export async function POST(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
   if (!API_URL) {
     return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
   }
@@ -19,7 +16,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${userId}`,
+        Authorization: `Bearer anonymous`,
       },
       body: JSON.stringify(body),
     });
@@ -39,10 +36,6 @@ export async function POST(request: NextRequest) {
 
 /** GET /api/reports/save — List saved reports */
 export async function GET(request: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
   if (!API_URL) {
     return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
   }
@@ -52,7 +45,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get("limit") || "50";
 
     const res = await fetch(`${API_URL}/reports/saved?limit=${limit}`, {
-      headers: { Authorization: `Bearer ${userId}` },
+      headers: { Authorization: `Bearer anonymous` },
     });
 
     if (!res.ok) {

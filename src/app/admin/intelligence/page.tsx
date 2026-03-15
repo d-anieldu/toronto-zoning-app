@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { UserButton } from "@clerk/nextjs";
+// TODO: Re-add UserButton when auth is re-enabled
 import Link from "next/link";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
@@ -200,7 +200,7 @@ export default function AdminIntelligencePage() {
             <Link href="/intelligence" className="text-[12px] text-stone-400 hover:text-stone-600">
               View Public Page →
             </Link>
-            <UserButton />
+            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
           </div>
         </div>
       </header>

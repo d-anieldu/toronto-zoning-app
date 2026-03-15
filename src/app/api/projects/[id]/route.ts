@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+// TODO: Re-enable auth when sign-in is restored
+// import { auth } from "@clerk/nextjs/server";
 
 const API_URL = process.env.API_URL;
 
@@ -9,17 +10,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
   if (!API_URL) {
     return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
   }
 
   try {
     const res = await fetch(`${API_URL}/projects/${id}`, {
-      headers: { Authorization: `Bearer ${userId}` },
+      headers: { Authorization: `Bearer anonymous` },
     });
 
     if (!res.ok) {
@@ -41,10 +38,6 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
   if (!API_URL) {
     return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
   }
@@ -55,7 +48,7 @@ export async function PATCH(
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${userId}`,
+        Authorization: `Bearer anonymous`,
       },
       body: JSON.stringify(body),
     });
@@ -79,10 +72,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
   if (!API_URL) {
     return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
   }
@@ -90,7 +79,7 @@ export async function DELETE(
   try {
     const res = await fetch(`${API_URL}/projects/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${userId}` },
+      headers: { Authorization: `Bearer anonymous` },
     });
 
     if (!res.ok) {

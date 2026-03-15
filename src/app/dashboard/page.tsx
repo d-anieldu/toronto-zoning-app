@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 import SearchForm from "@/components/SearchForm";
 
 export default function DashboardPage() {
@@ -42,7 +41,7 @@ export default function DashboardPage() {
             <span className="hidden text-[12px] text-stone-400 lg:block">
               By-law 569-2013 · 19 GIS layers
             </span>
-            <UserButton />
+            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
           </div>
         </div>
       </header>

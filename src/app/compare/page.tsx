@@ -9,7 +9,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
+// TODO: Re-add UserButton when auth is re-enabled
 
 interface CompareResult {
   properties: any[];
@@ -113,7 +113,7 @@ export default function ComparePage() {
             >
               Projects
             </Link>
-            <UserButton />
+            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
           </div>
         </div>
       </header>

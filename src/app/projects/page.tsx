@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
+// TODO: Re-add UserButton when auth is re-enabled
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -178,7 +178,7 @@ export default function ProjectsPage() {
             >
               Compare
             </Link>
-            <UserButton />
+            {/* TODO: Re-add <UserButton /> when auth is re-enabled */}
           </div>
         </div>
       </header>

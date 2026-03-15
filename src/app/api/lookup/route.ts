@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+// TODO: Re-enable auth when sign-in is restored
+// import { auth } from "@clerk/nextjs/server";
 
 const API_URL = process.env.API_URL;
 
 export async function POST(request: NextRequest) {
-  // Verify the user is authenticated
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
-  }
-
   if (!API_URL) {
     return NextResponse.json(
       { detail: "API URL not configured" },

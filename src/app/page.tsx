@@ -1,14 +1,6 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const { userId } = await auth();
-
-  if (userId) {
-    redirect("/dashboard");
-  }
-
   return (
     <div className="min-h-screen bg-stone-50">
       <header className="fixed top-0 left-0 right-0 z-50 bg-stone-50/80 backdrop-blur-sm">
@@ -24,13 +16,7 @@ export default async function Home() {
               Intelligence
             </Link>
             <Link
-              href="/sign-in"
-              className="text-[13px] text-stone-500 hover:text-stone-900"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/sign-up"
+              href="/dashboard"
               className="rounded-full bg-stone-900 px-4 py-1.5 text-[13px] font-medium text-white hover:bg-stone-800"
             >
               Get started
@@ -61,7 +47,7 @@ export default async function Home() {
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Link
-                href="/sign-up"
+                href="/dashboard"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-stone-900 px-6 py-3 text-[14px] font-semibold text-white shadow-lg shadow-stone-900/20 hover:bg-stone-800 hover:shadow-xl transition-all"
               >
                 Start a lookup
@@ -325,7 +311,7 @@ export default async function Home() {
             Get the same data a planning consultant would compile — in seconds, not days.
           </p>
           <Link
-            href="/sign-up"
+            href="/dashboard"
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-[14px] font-semibold text-stone-900 shadow-lg transition-all hover:bg-stone-50 hover:shadow-xl"
           >
             Start your first lookup
