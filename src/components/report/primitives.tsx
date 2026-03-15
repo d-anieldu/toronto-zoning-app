@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, type ReactNode } from "react";
+import FlagButton from "../FlagButton";
 
 /* ================================================================== */
 /*  PRIMITIVES                                                         */
@@ -160,24 +161,40 @@ export function Row({
   value,
   mono,
   sub,
+  flagAddress,
+  flagFieldPath,
+  flagTabName,
 }: {
   label: string;
   value: any;
   mono?: boolean;
   sub?: string;
+  flagAddress?: string;
+  flagFieldPath?: string;
+  flagTabName?: string;
 }) {
   if (value === null || value === undefined || value === "" || value === "not specified")
     return null;
   const display = typeof value === "object" && !("props" in value) ? JSON.stringify(value) : value;
+  const displayStr = typeof display === "string" ? display : String(display);
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-stone-50 py-2.5 last:border-0">
+    <div className="group flex items-baseline justify-between gap-4 border-b border-stone-50 py-2.5 last:border-0">
       <span className="shrink-0 text-[13px] text-stone-400">{label}</span>
-      <div className="text-right">
+      <div className="flex items-center gap-1 text-right">
         <span
           className={`text-[13px] font-medium text-stone-900 ${mono ? "font-mono" : ""}`}
         >
           {display}
         </span>
+        {flagAddress && flagFieldPath && (
+          <FlagButton
+            address={flagAddress}
+            fieldPath={flagFieldPath}
+            fieldLabel={label}
+            currentValue={displayStr}
+            tabName={flagTabName || ""}
+          />
+        )}
         {sub && <p className="text-[11px] text-stone-400">{sub}</p>}
       </div>
     </div>

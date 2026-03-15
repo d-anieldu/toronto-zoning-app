@@ -32,6 +32,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
   const dev = data.development_potential || {};
   const hasEffError = eff.error;
   const hasDevError = dev.error;
+  const addr = data.address || "";
 
   return (
     <div className="space-y-5">
@@ -187,14 +188,14 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
           <div className="grid gap-4 md:grid-cols-2">
             {/* Height & Density */}
             <Card label="Height & Density">
-              <Row label="Effective height" value={eff.height?.effective_m ? `${eff.height.effective_m} m` : null} />
-              <Row label="Max storeys" value={eff.height?.effective_storeys ?? (eff.height?.storeys_unlimited ? "Unlimited" : null)} />
+              <Row label="Effective height" value={eff.height?.effective_m ? `${eff.height.effective_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.height.effective_m" flagTabName="building_envelope" />
+              <Row label="Max storeys" value={eff.height?.effective_storeys ?? (eff.height?.storeys_unlimited ? "Unlimited" : null)} flagAddress={addr} flagFieldPath="effective_standards.height.effective_storeys" flagTabName="building_envelope" />
               <Row label="Height source" value={eff.height?.effective_source} />
               <Row label="Base default" value={eff.height?.base_default_m ? `${eff.height.base_default_m} m` : null} sub={eff.height?.source_base} />
               <Row label="Overlay height" value={eff.height?.overlay_m ? `${eff.height.overlay_m} m` : null} />
               <Row label="Overlay storeys" value={eff.height?.overlay_storeys} />
               <div className="my-2 border-t border-stone-100" />
-              <Row label="FSI" value={eff.fsi?.effective_total} />
+              <Row label="FSI" value={eff.fsi?.effective_total} flagAddress={addr} flagFieldPath="effective_standards.fsi.effective_total" flagTabName="building_envelope" />
               <Row label="FSI source" value={eff.fsi?.effective_source} />
               {eff.fsi?.is_compound && (
                 <>
@@ -207,9 +208,9 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
 
             {/* Setbacks */}
             <Card label="Setbacks">
-              <Row label="Front" value={eff.setbacks?.effective_front_m ? `${eff.setbacks.effective_front_m} m` : null} />
-              <Row label="Rear" value={eff.setbacks?.effective_rear_m ? `${eff.setbacks.effective_rear_m} m` : null} />
-              <Row label="Side" value={eff.setbacks?.effective_side_m ? `${eff.setbacks.effective_side_m} m` : null} />
+              <Row label="Front" value={eff.setbacks?.effective_front_m ? `${eff.setbacks.effective_front_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_front_m" flagTabName="building_envelope" />
+              <Row label="Rear" value={eff.setbacks?.effective_rear_m ? `${eff.setbacks.effective_rear_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_rear_m" flagTabName="building_envelope" />
+              <Row label="Side" value={eff.setbacks?.effective_side_m ? `${eff.setbacks.effective_side_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_side_m" flagTabName="building_envelope" />
               {eff.setbacks?.exception_side_m && (
                 <Row label="Side (exception)" value={`${eff.setbacks.exception_side_m} m`} />
               )}

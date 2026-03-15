@@ -149,9 +149,10 @@ export default function SearchForm() {
     };
   }, []);
 
-  async function handleSubmit(e?: React.FormEvent) {
+  async function handleSubmit(e?: React.FormEvent, overrideAddress?: string) {
     e?.preventDefault();
-    if (!address.trim()) return;
+    const lookupAddr = overrideAddress || address;
+    if (!lookupAddr.trim()) return;
 
     setLoading(true);
     setError(null);
@@ -161,7 +162,7 @@ export default function SearchForm() {
       const res = await fetch("/api/lookup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: address.trim(), include_nearby: false, include_policy: false }),
+        body: JSON.stringify({ address: lookupAddr.trim(), include_nearby: false, include_policy: false }),
       });
 
       if (!res.ok) {
@@ -182,6 +183,7 @@ export default function SearchForm() {
     setAddress(addr);
     setSuggestions([]);
     setShowSuggestions(false);
+    handleSubmit(undefined, addr);
   }
 
   return (
