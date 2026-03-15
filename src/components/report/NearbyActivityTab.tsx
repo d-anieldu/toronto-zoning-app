@@ -1052,6 +1052,29 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
   const hasPermits = (permits?.total ?? 0) > 0;
   const hasDevApps = (devApps?.total ?? 0) > 0;
 
+  /* ── Skeleton loading state (shown while initial fetch is in progress) ── */
+  if (loading && !hasData && events.length === 0 && !hasPermits && !hasDevApps) {
+    return (
+      <div className="space-y-6 py-6 animate-pulse">
+        <SectionHeading title="Nearby Activity" icon="📍" />
+        {/* Hero stat placeholders */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="rounded-xl border border-stone-100 bg-stone-100 h-20" />
+          ))}
+        </div>
+        {/* Mini-map placeholder */}
+        <div className="rounded-xl border border-stone-100 bg-stone-100 h-[320px]" />
+        {/* Row placeholders */}
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-14 rounded-lg bg-stone-100" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   /* ── Empty state ─────────────────────────────────────────────────── */
   if (!hasData && events.length === 0 && !hasPermits && !hasDevApps) {
     return (
