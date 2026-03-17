@@ -109,7 +109,6 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
   const frontageField   = rv("development_potential.lot.frontage_m");
   const depthField      = rv("development_potential.lot.depth_m");
   const frontage        = frontageField.value as number | undefined;
-  const frontage        = frontageField.value as number | undefined;
   const depth           = depthField.value as number | undefined;
   const maxGfaField     = rv("development_potential.max_gfa.sqm");
   const heightMField    = rv("effective_standards.height.effective_m");
