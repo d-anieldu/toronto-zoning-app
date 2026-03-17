@@ -21,7 +21,7 @@ export const EDITABLE_FIELDS: Record<string, EditableFieldConfig> = {
   "effective_standards.setbacks.effective_front_m":               { label: "Front Setback (m)",      tab: "summary", type: "number" },
   "effective_standards.setbacks.effective_rear_m":                { label: "Rear Setback (m)",       tab: "summary", type: "number" },
   "effective_standards.setbacks.effective_side_m":                { label: "Side Setback (m)",       tab: "summary", type: "number" },
-  "development_potential.lot.area_sqm":                          { label: "Lot Area (m²)",          tab: "summary", type: "number" },
+  "development_potential.lot.area_sqm":                          { label: "Parcel Size (m²)",      tab: "summary", type: "number" },
   "development_potential.lot.frontage_m":                        { label: "Lot Frontage (m)",       tab: "summary", type: "number" },
   "development_potential.lot.depth_m":                           { label: "Lot Depth (m)",          tab: "summary", type: "number" },
   "development_potential.max_gfa.sqm":                           { label: "Max GFA (m²)",           tab: "summary", type: "number" },

@@ -102,10 +102,13 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
   const categoryClr    = zoneMeta ? (CATEGORY_COLORS[zoneMeta.category] || CATEGORY_COLORS.Utility) : CATEGORY_COLORS.Utility;
 
   const opDesignation   = eff.op_context?.op_designation?.designation;
-  const lotAreaField    = rv("development_potential.lot.area_sqm");
+  const minLotAreaField = rv("effective_standards.lot_dimensions.min_area_sqm");
+  const minLotArea      = minLotAreaField.value as number | undefined;
+  const parcelAreaField = rv("development_potential.lot.area_sqm");
+  const parcelArea      = parcelAreaField.value as number | undefined;
   const frontageField   = rv("development_potential.lot.frontage_m");
   const depthField      = rv("development_potential.lot.depth_m");
-  const lotArea         = lotAreaField.value as number | undefined;
+  const frontage        = frontageField.value as number | undefined;
   const frontage        = frontageField.value as number | undefined;
   const depth           = depthField.value as number | undefined;
   const maxGfaField     = rv("development_potential.max_gfa.sqm");
@@ -182,10 +185,16 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
 
           {/* Lot dimensions */}
           <div className="ml-auto flex gap-5 shrink-0">
-            {lotArea != null && (
+            {minLotArea != null && (
               <div>
-                <p className="text-[22px] font-bold tracking-tight text-stone-900">{fmt(lotArea)} m²</p>
-                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Lot Area</p>
+                <p className="text-[22px] font-bold tracking-tight text-stone-900">{fmt(minLotArea)} m²</p>
+                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Min Lot Area</p>
+              </div>
+            )}
+            {parcelArea != null && (
+              <div>
+                <p className="text-[22px] font-bold tracking-tight text-stone-900">{fmt(parcelArea)} m²</p>
+                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Parcel Size</p>
               </div>
             )}
             {(frontage != null || frontageField.isEdited) && (
@@ -287,7 +296,8 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
   const frontSetback = rv("effective_standards.setbacks.effective_front_m");
   const rearSetback = rv("effective_standards.setbacks.effective_rear_m");
   const sideSetback = rv("effective_standards.setbacks.effective_side_m");
-  const lotAreaField = rv("development_potential.lot.area_sqm");
+  const minLotAreaField2 = rv("effective_standards.lot_dimensions.min_area_sqm");
+  const parcelAreaField2 = rv("development_potential.lot.area_sqm");
   const maxGfaField = rv("development_potential.max_gfa.sqm");
   const maxFootprintField = rv("development_potential.coverage.max_footprint_sqm");
   const buildableAreaField = rv("development_potential.setbacks.buildable_area_sqm");
@@ -378,7 +388,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/* ============================================================ */}
       {/*  KEY METRICS — 6-card grid                                    */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
         {/* Height */}
         <MetricCard
           icon="📏"
@@ -446,13 +456,22 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           editSubProps={maxFootprintField.value != null ? ep("development_potential.coverage.max_footprint_sqm", maxFootprintField) : undefined}
         />
 
-        {/* Lot Area */}
+        {/* Min Lot Area */}
         <MetricCard
           icon="📍"
-          label="Lot Area"
-          value={lotAreaField.value != null ? `${fmt(lotAreaField.value as number)} m²` : "—"}
+          label="Min Lot Area"
+          value={minLotAreaField2.value != null ? `${fmt(minLotAreaField2.value as number)} m²` : "—"}
+          sub={eff.lot_dimensions?.area_source}
+          editFieldProps={ep("effective_standards.lot_dimensions.min_area_sqm", minLotAreaField2)}
+        />
+
+        {/* Parcel Size */}
+        <MetricCard
+          icon="📐"
+          label="Parcel Size"
+          value={parcelAreaField2.value != null ? `${fmt(parcelAreaField2.value as number)} m²` : "—"}
           sub={dev.lot?.area_source}
-          editFieldProps={ep("development_potential.lot.area_sqm", lotAreaField)}
+          editFieldProps={ep("development_potential.lot.area_sqm", parcelAreaField2)}
         />
 
         {/* Parking Zone */}
