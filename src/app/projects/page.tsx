@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
+import UserNav from "@/components/UserNav";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -178,7 +178,7 @@ export default function ProjectsPage() {
             >
               Compare
             </Link>
-            <UserButton />
+            <UserNav />
           </div>
         </div>
       </header>

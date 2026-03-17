@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 // TODO: Re-enable auth when sign-in is restored
-// import { auth } from "@clerk/nextjs/server";
 
 const API_URL = process.env.API_URL;
 
