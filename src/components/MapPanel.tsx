@@ -373,27 +373,36 @@ export default function MapPanel({
     return () => cancelAnimationFrame(id);
   }, [pendingAutoLoad, fetchLayer]);
 
-  /* ── Fetch parcel on mount (with retry for cold-start) ──────────── */
+  /* ── Fetch nearby parcels on mount (with retry for cold-start) ──── */
   useEffect(() => {
     let cancelled = false;
-    const fetchParcel = async (attempt = 1) => {
+    const fetchParcels = async (attempt = 1) => {
       try {
-        const r = await fetch(`/api/map/parcel?lon=${longitude}&lat=${latitude}`);
-        if (!r.ok) throw new Error(`Parcel fetch ${r.status}`);
+        const r = await fetch(`/api/map/parcels?lon=${longitude}&lat=${latitude}&radius=0.002`);
+        if (!r.ok) throw new Error(`Parcels fetch ${r.status}`);
         const d = await r.json();
         if (!cancelled) setParcelData(d);
       } catch (e) {
-        if (attempt < 2 && !cancelled) {
-          // Retry once after 3s (backend may be loading the GeoDataFrame)
-          setTimeout(() => fetchParcel(attempt + 1), 3000);
+        if (attempt < 3 && !cancelled) {
+          // Retry with exponential backoff (backend may be loading the ~50 MB GeoDataFrame)
+          setTimeout(() => fetchParcels(attempt + 1), 3000 * attempt);
         } else {
-          console.error("Failed to load parcel:", e);
+          console.error("Failed to load parcels:", e);
         }
       }
     };
-    fetchParcel();
+    fetchParcels();
     return () => { cancelled = true; };
   }, [latitude, longitude]);
+
+  /* ── Derived: subject parcel edges for dimension labels ──────────── */
+  const subjectEdges = useMemo(() => {
+    if (!parcelData?.features) return [];
+    const subject = parcelData.features.find(
+      (f: any) => f.properties?.is_subject
+    );
+    return subject?.properties?.edges || [];
+  }, [parcelData]);
 
   /* ── Toggle a layer on/off ───────────────────────────────────────── */
   const toggleLayer = useCallback(
@@ -454,22 +463,28 @@ export default function MapPanel({
               </Popup>
             </Marker>
 
-            {/* Parcel boundary */}
+            {/* Parcel boundaries (subject + neighbours) */}
             {parcelVisible &&
               parcelData &&
               parcelData.features?.length > 0 && (
                 <GeoJSON
-                  key={"parcel-" + basemap}
+                  key={"parcels-" + basemap + "-" + parcelData.features.length}
                   data={parcelData}
-                  style={{
-                    color: basemap === "satellite" ? "#facc15" : "#1e293b",
-                    weight: 3,
-                    fillOpacity: 0.05,
-                    dashArray: "6 4",
+                  style={(feature: any) => {
+                    const isSub = feature?.properties?.is_subject;
+                    return {
+                      color: isSub
+                        ? basemap === "satellite" ? "#facc15" : "#1e293b"
+                        : basemap === "satellite" ? "#94a3b8" : "#a8a29e",
+                      weight: isSub ? 3 : 1.5,
+                      fillOpacity: isSub ? 0.08 : 0.02,
+                      dashArray: isSub ? "6 4" : "4 3",
+                    };
                   }}
                   onEachFeature={(feature, layer) => {
                     const p = feature.properties || {};
                     const lines = [];
+                    if (p.is_subject) lines.push("<strong>Subject Property</strong>");
                     if (p.area_sqm)
                       lines.push(
                         `Area: ${Number(p.area_sqm).toFixed(1)} m²`
@@ -478,14 +493,35 @@ export default function MapPanel({
                       lines.push(
                         `Frontage: ${Number(p.frontage_m).toFixed(1)} m`
                       );
+                    if (p.depth_m)
+                      lines.push(
+                        `Depth: ${Number(p.depth_m).toFixed(1)} m`
+                      );
                     if (lines.length) {
                       layer.bindPopup(
-                        `<div style="font-size:12px"><strong>Property Parcel</strong><br/>${lines.join("<br/>")}</div>`
+                        `<div style="font-size:12px">${lines.join("<br/>")}</div>`
                       );
                     }
                   }}
                 />
               )}
+
+            {/* Dimension labels on subject parcel edges */}
+            {parcelVisible &&
+              subjectEdges.length > 0 &&
+              subjectEdges.map((edge: any, i: number) => (
+                <Marker
+                  key={`dim-${i}`}
+                  position={[edge.midpoint[0], edge.midpoint[1]]}
+                  icon={L.divIcon({
+                    className: "",
+                    html: `<span style="background:rgba(255,255,255,0.92);padding:1px 4px;border-radius:3px;font-size:10px;font-weight:600;color:#1e293b;white-space:nowrap;border:1px solid #cbd5e1;pointer-events:none">${edge.length_m.toFixed(1)}m</span>`,
+                    iconSize: [0, 0],
+                    iconAnchor: [0, 0],
+                  })}
+                  interactive={false}
+                />
+              ))}
 
             {/* Active GIS layers */}
             {Array.from(activeLayers).map((key) => {
@@ -658,7 +694,7 @@ export default function MapPanel({
                 className="accent-stone-700"
               />
               <Dot color="#1e293b" />
-              Property Parcel
+              Property Parcels
             </label>
 
             {/* Grouped layer toggles */}
