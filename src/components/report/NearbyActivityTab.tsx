@@ -20,6 +20,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend,
 } from "recharts";
 import { Card, Row, Badge, StatCard, SectionHeading, Tag } from "./primitives";
+import SectionNoteEditor from "./SectionNoteEditor";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
@@ -960,7 +961,7 @@ function DevApplicationsSection({
 /*  MAIN COMPONENT                                                     */
 /* ================================================================== */
 
-export default function NearbyActivityTab({ data }: { data: Record<string, any> }) {
+export default function NearbyActivityTab({ data, editMode, sectionNotes, onEditNote }: { data: Record<string, any>; editMode?: boolean; sectionNotes?: Record<string, string>; onEditNote?: (sectionId: string, note: string) => void }) {
   const coords = useMemo(() => data.coordinates || {}, [data.coordinates]);
   const nearby: NearbyData = data.nearby_activity || {};
   const dev = data.development_potential || {};
@@ -1449,6 +1450,15 @@ export default function NearbyActivityTab({ data }: { data: Record<string, any> 
         <Card label="Approval Trend (Year over Year)">
           <TrendChart data={trend} />
         </Card>
+      )}
+
+      {editMode && (
+        <SectionNoteEditor
+          sectionId="nearby_activity"
+          note={sectionNotes?.nearby_activity ?? ""}
+          onNoteChange={onEditNote!}
+          editMode={!!editMode}
+        />
       )}
 
       {/* ─── Disclaimer ───────────────────────────────────────────── */}

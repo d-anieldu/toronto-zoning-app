@@ -13,6 +13,9 @@
 import { Card, Row, Badge, Icons, SectionHeading } from "./primitives";
 import { RefLink } from "../ReferencePanel";
 import ExceptionDetail from "../ExceptionDetail";
+import EditableField from "./EditableField";
+import SectionNoteEditor from "./SectionNoteEditor";
+import { getFieldValue } from "@/lib/report-edits";
 
 /* ── Overlay definition helper ────────────────────────────────────── */
 
@@ -63,12 +66,47 @@ function buildOverlayDefs(layers: Record<string, any>, eff?: Record<string, any>
 
 interface ConstraintsContextTabProps {
   data: Record<string, any>;
+  editMode?: boolean;
+  userEdits?: Record<string, { value: unknown; note?: string; edited_at: string }>;
+  sectionNotes?: Record<string, string>;
+  onEditField?: (path: string, value: unknown, note?: string) => void;
+  onRevertField?: (path: string) => void;
+  onEditNote?: (sectionId: string, note: string) => void;
+  reportId?: string;
 }
 
-export default function ConstraintsContextTab({ data }: ConstraintsContextTabProps) {
+export default function ConstraintsContextTab({ data, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote }: ConstraintsContextTabProps) {
   const eff = data.effective_standards || {};
   const dev = data.development_potential || {};
   const layers = data.layers || {};
+
+  /* ── Edit helpers ──────────────────────────────── */
+  const rv = (path: string) => getFieldValue(data, userEdits ?? {}, path);
+  const ep = (path: string, v: unknown, edited: boolean, orig: unknown, note?: string) => ({
+    fieldPath: path, value: v, isEdited: edited, original: orig, editNote: note,
+    onEdit: onEditField!, onRevert: onRevertField!, editMode: !!editMode,
+  });
+  const ev = (fieldPath: string, display: any) => {
+    if (!editMode) return display;
+    const r = rv(fieldPath);
+    return <EditableField {...ep(fieldPath, r.value, r.isEdited, r.original, r.editNote)}>{display}</EditableField>;
+  };
+
+  /* Overlay fields that are editable */
+  const overlayEditable: Record<string, { field: string; fmt: (v: unknown) => string }> = {
+    height_overlay: { field: "layers.height_overlay.HT_LABEL", fmt: (v) => `HT ${v}m${layers.height_overlay?.HT_STORIES ? `, ${layers.height_overlay.HT_STORIES} st` : ""}` },
+    lot_coverage_overlay: { field: "layers.lot_coverage_overlay.PRCNT_CVER", fmt: (v) => `${v}%` },
+    building_setback_overlay: { field: "layers.building_setback_overlay.SETBACK", fmt: (v) => `${v}m` },
+  };
+
+  /* Pre-resolve non-overlay editable fields */
+  const hazardSetback = rv("effective_standards.natural_hazards.combined_setback_m");
+  const heritageImpact = rv("effective_standards.heritage_impact.combined_impact");
+  const coaRate = rv("development_potential.coa_precedents.approval_rate");
+  const devChargesTotal = rv("development_potential.development_charges.total_estimated");
+  const opDesignationName = rv("effective_standards.op_context.op_designation.designation");
+  const exceptionNum = rv("effective_standards.exception.exception_number");
+  const rentalApplies = rv("development_potential.rental_replacement.potentially_applies");
 
   const { active: activeOverlays, inactive: inactiveOverlays } = buildOverlayDefs(layers, eff);
 
@@ -91,15 +129,26 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
               Active ({activeOverlays.length})
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
-              {activeOverlays.map((o) => (
-                <div key={o.key} className="flex items-start gap-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
-                  <span className="mt-0.5 text-[16px]" aria-hidden="true">{o.icon}</span>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-stone-700">{o.label}</p>
-                    {o.detail && <p className="font-mono text-[12px] text-emerald-600">{o.detail}</p>}
+              {activeOverlays.map((o) => {
+                const oe = overlayEditable[o.key];
+                const ov = oe ? rv(oe.field) : null;
+                const detail = ov?.isEdited ? oe!.fmt(ov.value) : o.detail;
+                return (
+                  <div key={o.key} className="flex items-start gap-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
+                    <span className="mt-0.5 text-[16px]" aria-hidden="true">{o.icon}</span>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-stone-700">{o.label}</p>
+                      {detail && oe && editMode ? (
+                        <EditableField {...ep(oe.field, ov!.value, ov!.isEdited, ov!.original, ov!.editNote)}>
+                          <p className="font-mono text-[12px] text-emerald-600">{detail}</p>
+                        </EditableField>
+                      ) : detail ? (
+                        <p className="font-mono text-[12px] text-emerald-600">{detail}</p>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -128,10 +177,12 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
 
           <div className="rounded-xl border border-red-200 bg-red-50 p-4">
             <p className="text-[13px] font-medium leading-relaxed text-red-700">{eff.natural_hazards.summary}</p>
-            {eff.natural_hazards.combined_setback_m && (
-              <p className="mt-2 text-[12px] text-red-600">
-                Combined maximum setback: <span className="font-bold">{eff.natural_hazards.combined_setback_m}m</span>
-              </p>
+            {(eff.natural_hazards.combined_setback_m || hazardSetback.isEdited) && (
+              <EditableField {...ep("effective_standards.natural_hazards.combined_setback_m", hazardSetback.value, hazardSetback.isEdited, hazardSetback.original, hazardSetback.editNote)}>
+                <p className="mt-2 text-[12px] text-red-600">
+                  Combined maximum setback: <span className="font-bold">{hazardSetback.value as number}m</span>
+                </p>
+              </EditableField>
             )}
           </div>
 
@@ -234,7 +285,9 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
           <SectionHeading id="heritage" title="Heritage Constraints" icon={Icons.landmark} count={eff.heritage_impact.item_count} />
 
           <div className="rounded-xl border border-violet-200 bg-violet-50 p-4">
-            <p className="text-[13px] font-medium leading-relaxed text-violet-700">{eff.heritage_impact.combined_impact}</p>
+            <EditableField {...ep("effective_standards.heritage_impact.combined_impact", heritageImpact.value, heritageImpact.isEdited, heritageImpact.original, heritageImpact.editNote)}>
+              <p className="text-[13px] font-medium leading-relaxed text-violet-700">{heritageImpact.value as string}</p>
+            </EditableField>
           </div>
 
           <div className="grid gap-4 md:grid-cols-1">
@@ -444,7 +497,7 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
           <div className="grid gap-4 md:grid-cols-2">
             <Card label="Application Statistics" defaultOpen>
               <Row label="Total applications" value={dev.coa_precedents.total_matches} />
-              <Row label="Approval rate" value={`${dev.coa_precedents.approval_rate}%`} />
+              <Row label="Approval rate" value={ev("development_potential.coa_precedents.approval_rate", `${coaRate.value as number}%`)} />
               {dev.coa_precedents.same_zone_count > 0 && (
                 <>
                   <Row label="Same zone applications" value={dev.coa_precedents.same_zone_count} />
@@ -513,7 +566,9 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                     </span>
                   )}
                 </div>
-                <h4 className="mt-2 text-[17px] font-bold text-stone-900">{opDesignation.designation}</h4>
+                <EditableField {...ep("effective_standards.op_context.op_designation.designation", opDesignationName.value, opDesignationName.isEdited, opDesignationName.original, opDesignationName.editNote)}>
+                  <h4 className="mt-2 text-[17px] font-bold text-stone-900">{opDesignationName.value as string}</h4>
+                </EditableField>
                 {opDesignation.caveat && (
                   <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
                     <p className="text-[12px] leading-relaxed text-amber-700">
@@ -654,7 +709,9 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
       {/* ============================================================ */}
       {eff.exception && eff.exception.exception_number && (
         <>
-          <SectionHeading id="exception" title={`Exception #${eff.exception.exception_number}`} icon={Icons.doc} />
+          <EditableField {...ep("effective_standards.exception.exception_number", exceptionNum.value, exceptionNum.isEdited, exceptionNum.original, exceptionNum.editNote)}>
+            <SectionHeading id="exception" title={`Exception #${exceptionNum.value}`} icon={Icons.doc} />
+          </EditableField>
           <ExceptionDetail exception={eff.exception} exceptionDiff={eff.exception_diff} />
 
           {eff.exception.interpreted_prevailing?.length > 0 && (
@@ -773,17 +830,19 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
       {/* ============================================================ */}
       {/*  RENTAL REPLACEMENT                                           */}
       {/* ============================================================ */}
-      {dev.rental_replacement?.potentially_applies && (
+      {(rentalApplies.value || editMode) && dev.rental_replacement && (
         <>
           <SectionHeading id="rental" title="Rental Replacement" icon={Icons.building} />
 
           <div className="rounded-xl border border-violet-200 bg-violet-50 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant={dev.rental_replacement.confidence === "high" ? "danger" : "warning"}>
-                {dev.rental_replacement.confidence === "high" ? "LIKELY APPLIES" : "MAY APPLY"}
-              </Badge>
-              <span className="text-[12px] text-violet-600">{dev.rental_replacement.triggered_by}</span>
-            </div>
+            <EditableField {...ep("development_potential.rental_replacement.potentially_applies", rentalApplies.value, rentalApplies.isEdited, rentalApplies.original, rentalApplies.editNote)}>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant={dev.rental_replacement.confidence === "high" ? "danger" : "warning"}>
+                  {dev.rental_replacement.confidence === "high" ? "LIKELY APPLIES" : "MAY APPLY"}
+                </Badge>
+                <span className="text-[12px] text-violet-600">{dev.rental_replacement.triggered_by}</span>
+              </div>
+            </EditableField>
             <p className="text-[13px] font-medium leading-relaxed text-violet-700">{dev.rental_replacement.note}</p>
           </div>
 
@@ -827,11 +886,13 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
                 ))}
               </div>
             )}
-            {dev.development_charges.total_estimated && (
-              <div className="mt-3 flex items-baseline justify-between border-t border-stone-200 pt-3">
-                <span className="text-[14px] font-semibold text-stone-700">Total Estimated</span>
-                <span className="font-mono text-[22px] font-bold text-stone-900">${Number(dev.development_charges.total_estimated).toLocaleString()}</span>
-              </div>
+            {(dev.development_charges.total_estimated || devChargesTotal.isEdited) && (
+              <EditableField {...ep("development_potential.development_charges.total_estimated", devChargesTotal.value, devChargesTotal.isEdited, devChargesTotal.original, devChargesTotal.editNote)}>
+                <div className="mt-3 flex items-baseline justify-between border-t border-stone-200 pt-3">
+                  <span className="text-[14px] font-semibold text-stone-700">Total Estimated</span>
+                  <span className="font-mono text-[22px] font-bold text-stone-900">${Number(devChargesTotal.value as number).toLocaleString()}</span>
+                </div>
+              </EditableField>
             )}
             {dev.development_charges.note && (
               <p className="mt-3 rounded-lg bg-stone-50 p-3 text-[11px] leading-relaxed text-stone-400">{dev.development_charges.note}</p>
@@ -1209,6 +1270,15 @@ export default function ConstraintsContextTab({ data }: ConstraintsContextTabPro
             ))}
           </ul>
         </div>
+      )}
+
+      {editMode && (
+        <SectionNoteEditor
+          sectionId="constraints_context"
+          note={sectionNotes?.constraints_context ?? ""}
+          onNoteChange={onEditNote!}
+          editMode={!!editMode}
+        />
       )}
 
       <div className="rounded-xl border border-stone-200 bg-stone-50 p-5">

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { FileText, CheckCircle } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 export default function UserNav() {
@@ -92,18 +93,18 @@ export default function UserNav() {
 
           <div className="py-1">
             <Link
-              href="/projects"
+              href="/reports"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-4 py-2 text-[12px] text-stone-600 hover:bg-stone-50"
             >
-              📁 My Projects
+              <FileText className="h-3.5 w-3.5" /> My Reports
             </Link>
             <Link
               href="/corrections"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-4 py-2 text-[12px] text-stone-600 hover:bg-stone-50"
             >
-              ✓ Corrections Log
+              <CheckCircle className="h-3.5 w-3.5" /> Corrections Log
             </Link>
           </div>
 

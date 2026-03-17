@@ -22,6 +22,7 @@ interface FeedbackItem {
   admin_notes: string | null;
   created_at: string;
   user_id: string | null;
+  report_id: string | null;
 }
 
 const STATUS_COLORS: Record<Status, string> = {
@@ -40,6 +41,11 @@ export default function AdminFeedbackPage() {
   const [adminNotes, setAdminNotes] = useState("");
   const [correctedValue, setCorrectedValue] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [addressFilter, setAddressFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<Status | null>(null);
 
   const fetchItems = useCallback(async () => {
     const supabase = createClient();
@@ -52,11 +58,20 @@ export default function AdminFeedbackPage() {
     if (filter !== "all") {
       query = query.eq("status", filter);
     }
+    if (addressFilter.trim()) {
+      query = query.ilike("address", `%${addressFilter.trim()}%`);
+    }
+    if (dateFrom) {
+      query = query.gte("created_at", `${dateFrom}T00:00:00`);
+    }
+    if (dateTo) {
+      query = query.lte("created_at", `${dateTo}T23:59:59`);
+    }
 
     const { data } = await query.limit(100);
     setItems(data ?? []);
     setLoading(false);
-  }, [filter]);
+  }, [filter, addressFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     // Check admin role
@@ -114,6 +129,45 @@ export default function AdminFeedbackPage() {
     fetchItems();
   }
 
+  async function bulkUpdateStatus(newStatus: Status) {
+    if (selected.size === 0) return;
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const updates: any = {
+      status: newStatus,
+      reviewed_by: user?.id,
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    await supabase
+      .from("feedback_reports")
+      .update(updates)
+      .in("id", Array.from(selected));
+
+    setSelected(new Set());
+    setBulkConfirm(null);
+    fetchItems();
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === items.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(items.map((i) => i.id)));
+    }
+  }
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50">
@@ -166,7 +220,7 @@ export default function AdminFeedbackPage() {
         </div>
 
         {/* Status filter tabs */}
-        <div className="flex gap-1 mb-6 rounded-lg bg-stone-100 p-1 w-fit">
+        <div className="flex gap-1 mb-4 rounded-lg bg-stone-100 p-1 w-fit">
           {(["all", "pending", "reviewing", "accepted", "rejected", "duplicate"] as const).map(
             (s) => (
               <button
@@ -184,6 +238,105 @@ export default function AdminFeedbackPage() {
           )}
         </div>
 
+        {/* Address + date range filters */}
+        <div className="flex flex-wrap items-end gap-3 mb-6">
+          <label className="block">
+            <span className="text-[11px] font-medium text-stone-500">Address</span>
+            <input
+              type="text"
+              value={addressFilter}
+              onChange={(e) => setAddressFilter(e.target.value)}
+              placeholder="Filter by address…"
+              className="mt-1 block w-56 rounded-lg border border-stone-200 px-3 py-1.5 text-[12px] outline-none focus:border-stone-400"
+            />
+          </label>
+          <label className="block">
+            <span className="text-[11px] font-medium text-stone-500">From</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="mt-1 block rounded-lg border border-stone-200 px-3 py-1.5 text-[12px] outline-none focus:border-stone-400"
+            />
+          </label>
+          <label className="block">
+            <span className="text-[11px] font-medium text-stone-500">To</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="mt-1 block rounded-lg border border-stone-200 px-3 py-1.5 text-[12px] outline-none focus:border-stone-400"
+            />
+          </label>
+          {(addressFilter || dateFrom || dateTo) && (
+            <button
+              onClick={() => { setAddressFilter(""); setDateFrom(""); setDateTo(""); }}
+              className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-medium text-stone-500 hover:text-stone-700 hover:bg-stone-50 transition-colors"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+
+        {/* Bulk action bar */}
+        {selected.size > 0 && (
+          <div className="mb-4 flex items-center gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5">
+            <span className="text-[12px] font-medium text-sky-800">
+              {selected.size} selected
+            </span>
+            <button
+              onClick={() => setBulkConfirm("accepted")}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700 transition-colors"
+            >
+              Accept Selected
+            </button>
+            <button
+              onClick={() => setBulkConfirm("rejected")}
+              className="rounded-lg bg-red-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-red-700 transition-colors"
+            >
+              Reject Selected
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="ml-auto text-[11px] text-stone-500 hover:text-stone-700"
+            >
+              Clear selection
+            </button>
+          </div>
+        )}
+
+        {/* Bulk confirm dialog */}
+        {bulkConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-xl max-w-sm w-full mx-4">
+              <h3 className="text-[15px] font-bold text-stone-900">
+                {bulkConfirm === "accepted" ? "Accept" : "Reject"} {selected.size} items?
+              </h3>
+              <p className="mt-2 text-[12px] text-stone-500">
+                This will update the status of {selected.size} feedback item{selected.size > 1 ? "s" : ""} to <span className="font-semibold">{bulkConfirm}</span>. This action cannot be undone.
+              </p>
+              <div className="mt-4 flex gap-2 justify-end">
+                <button
+                  onClick={() => setBulkConfirm(null)}
+                  className="rounded-lg border border-stone-200 px-4 py-2 text-[11px] font-medium text-stone-600 hover:bg-stone-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => bulkUpdateStatus(bulkConfirm)}
+                  className={`rounded-lg px-4 py-2 text-[11px] font-semibold text-white transition-colors ${
+                    bulkConfirm === "accepted"
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  Confirm {bulkConfirm === "accepted" ? "Accept" : "Reject"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-[13px] text-stone-400">Loading…</p>
         ) : items.length === 0 ? (
@@ -194,16 +347,39 @@ export default function AdminFeedbackPage() {
           </div>
         ) : (
           <div className="space-y-3">
+            {/* Select all header */}
+            <div className="flex items-center gap-3 px-5 py-2">
+              <input
+                type="checkbox"
+                checked={selected.size === items.length && items.length > 0}
+                onChange={toggleSelectAll}
+                className="h-3.5 w-3.5 rounded border-stone-300 text-sky-600 focus:ring-sky-500"
+              />
+              <span className="text-[11px] text-stone-400">
+                {selected.size === items.length && items.length > 0 ? "Deselect all" : "Select all"}
+              </span>
+            </div>
             {items.map((item) => (
               <div
                 key={item.id}
-                className="rounded-xl border border-stone-200 bg-white shadow-sm"
+                className={`rounded-xl border bg-white shadow-sm ${
+                  selected.has(item.id) ? "border-sky-300 ring-1 ring-sky-100" : "border-stone-200"
+                }`}
               >
+                <div className="flex items-start">
+                  <div className="flex items-center pl-4 pt-4">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(item.id)}
+                      onChange={() => toggleSelect(item.id)}
+                      className="h-3.5 w-3.5 rounded border-stone-300 text-sky-600 focus:ring-sky-500"
+                    />
+                  </div>
                 <button
                   onClick={() =>
                     setExpanded(expanded === item.id ? null : item.id)
                   }
-                  className="w-full px-5 py-4 text-left"
+                  className="w-full px-4 py-4 text-left"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -246,8 +422,18 @@ export default function AdminFeedbackPage() {
                         </span>
                       </span>
                     )}
+                    {item.report_id && (
+                      <Link
+                        href={`/reports/${item.report_id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-sky-600 hover:text-sky-700 font-medium"
+                      >
+                        View Report →
+                      </Link>
+                    )}
                   </div>
                 </button>
+                </div>
 
                 {/* Expanded detail */}
                 {expanded === item.id && (

@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-// TODO: Re-enable auth when sign-in is restored
-// import { auth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 
 const API_URL = process.env.API_URL;
 
 /** POST /api/projects — Create a new project */
 export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   if (!API_URL) {
     return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
   }
@@ -16,7 +19,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer anonymous`,
+        Authorization: `Bearer ${userId}`,
       },
       body: JSON.stringify(body),
     });
@@ -36,13 +39,17 @@ export async function POST(request: NextRequest) {
 
 /** GET /api/projects — List user's projects */
 export async function GET() {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   if (!API_URL) {
     return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
   }
 
   try {
     const res = await fetch(`${API_URL}/projects`, {
-      headers: { Authorization: `Bearer anonymous` },
+      headers: { Authorization: `Bearer ${userId}` },
     });
 
     if (!res.ok) {

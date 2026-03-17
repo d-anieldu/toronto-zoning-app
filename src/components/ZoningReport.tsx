@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { ReferenceProvider, RefLink } from "./ReferencePanel";
 import UseAnalysisPanel from "./UseAnalysisPanel";
 import ShareReportButton from "./ShareReportButton";
+import CreateReportButton from "./CreateReportButton";
 import ChatAssistant from "./ChatAssistant";
 
 /* ── Tab components ──────────────────────────────────────────────── */
@@ -32,11 +33,19 @@ import PolicyConformityTab from "./report/PolicyConformityTab";
 
 /* ── Primitives (shared across shell + tabs) ─────────────────────── */
 import { Badge, Icons, SectionHeading } from "./report/primitives";
+import type { UserEdits, SectionNotes } from "@/types/reports";
 
 const MapPanel = dynamic(() => import("./MapPanel"), { ssr: false });
 
 interface Props {
   data: Record<string, any>;
+  editMode?: boolean;
+  userEdits?: UserEdits;
+  sectionNotes?: SectionNotes;
+  onEditField?: (path: string, value: unknown, note?: string) => void;
+  onRevertField?: (path: string) => void;
+  onEditNote?: (sectionId: string, note: string) => void;
+  reportId?: string;
 }
 
 /* ================================================================== */
@@ -95,7 +104,16 @@ function FloatingActions({ onCopy, copied }: { onCopy: () => void; copied: boole
 /*  MAIN COMPONENT                                                     */
 /* ================================================================== */
 
-export default function ZoningReport({ data }: Props) {
+export default function ZoningReport({
+  data,
+  editMode = false,
+  userEdits,
+  sectionNotes,
+  onEditField,
+  onRevertField,
+  onEditNote,
+  reportId,
+}: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<TabId>("summary");
   const [analyzeUse, setAnalyzeUse] = useState<string | null>(null);
@@ -239,6 +257,7 @@ export default function ZoningReport({ data }: Props) {
                 <Printer className="h-3.5 w-3.5" /> Print
               </button>
               <ShareReportButton address={data.address} lookupData={data} />
+              {!editMode && <CreateReportButton address={data.address} lookupData={data} />}
             </div>
           </div>
 
@@ -534,16 +553,24 @@ export default function ZoningReport({ data }: Props) {
       {/*  TAB CONTENT                                                  */}
       {/* ============================================================ */}
       <div className="min-h-[400px]">
-        {activeTab === "summary" && <SummaryTab data={data} />}
+        {activeTab === "summary" && (
+          <SummaryTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
+        )}
         {activeTab === "envelope" && (
-          <BuildingEnvelopeTab data={data} onAnalyzeUse={setAnalyzeUse} />
+          <BuildingEnvelopeTab data={data} onAnalyzeUse={setAnalyzeUse} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
         )}
         {activeTab === "uses" && (
-          <UsesParkingTab data={data} onAnalyzeUse={setAnalyzeUse} />
+          <UsesParkingTab data={data} onAnalyzeUse={setAnalyzeUse} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
         )}
-        {activeTab === "context" && <ConstraintsContextTab data={data} />}
-        {activeTab === "nearby" && <NearbyActivityTab data={data} />}
-        {activeTab === "conformity" && <PolicyConformityTab data={data} />}
+        {activeTab === "context" && (
+          <ConstraintsContextTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
+        )}
+        {activeTab === "nearby" && (
+          <NearbyActivityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
+        )}
+        {activeTab === "conformity" && (
+          <PolicyConformityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
+        )}
       </div>
     </div>
 

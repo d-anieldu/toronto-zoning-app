@@ -13,6 +13,9 @@
 import { Badge, severityColor, severityIcon } from "./primitives";
 import DevChargesCalculator from "../DevChargesCalculator";
 import ZoningStatisticsTable from "./ZoningStatisticsTable";
+import EditableField from "./EditableField";
+import SectionNoteEditor from "./SectionNoteEditor";
+import { getFieldValue } from "@/lib/report-edits";
 
 /* ── Zone look-up: code → plain-English label + inferred current use ── */
 const ZONE_META: Record<string, { label: string; use: string; category: string; color: string }> = {
@@ -82,22 +85,48 @@ function computeOpportunity(dev: any, eff: any) {
 }
 
 /* ── PropertySnapshotCard ─────────────────────────────────────────── */
-function PropertySnapshotCard({ data }: { data: Record<string, any> }) {
+function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevertField }: {
+  data: Record<string, any>;
+  editMode?: boolean;
+  userEdits?: Record<string, { value: unknown; note?: string; edited_at: string }>;
+  onEditField?: (path: string, value: unknown, note?: string) => void;
+  onRevertField?: (path: string) => void;
+}) {
   const eff  = data.effective_standards || {};
   const dev  = data.development_potential || {};
 
-  const zoneCode     = eff.zone_code || eff.zone_label?.zone_code || "";
-  const zoneMeta     = resolveZoneMeta(zoneCode);
-  const categoryClr  = zoneMeta ? (CATEGORY_COLORS[zoneMeta.category] || CATEGORY_COLORS.Utility) : CATEGORY_COLORS.Utility;
+  const rv = (p: string) => getFieldValue(data, userEdits, p);
+  const zoneCodeField  = rv("effective_standards.zone_code");
+  const zoneCode       = (zoneCodeField.value as string) || eff.zone_label?.zone_code || "";
+  const zoneMeta       = resolveZoneMeta(zoneCode);
+  const categoryClr    = zoneMeta ? (CATEGORY_COLORS[zoneMeta.category] || CATEGORY_COLORS.Utility) : CATEGORY_COLORS.Utility;
 
   const opDesignation   = eff.op_context?.op_designation?.designation;
-  const lotArea         = dev.lot?.area_sqm;
-  const frontage        = dev.lot?.frontage_m;
-  const depth           = dev.lot?.depth_m;
-  const maxGFA          = dev.max_gfa?.sqm;
-  const maxHeight       = eff.height?.effective_m ?? dev.height?.max_m;
-  const maxHeightSt     = eff.height?.effective_storeys ?? dev.height?.max_storeys;
+  const lotAreaField    = rv("development_potential.lot.area_sqm");
+  const frontageField   = rv("development_potential.lot.frontage_m");
+  const depthField      = rv("development_potential.lot.depth_m");
+  const lotArea         = lotAreaField.value as number | undefined;
+  const frontage        = frontageField.value as number | undefined;
+  const depth           = depthField.value as number | undefined;
+  const maxGfaField     = rv("development_potential.max_gfa.sqm");
+  const heightMField    = rv("effective_standards.height.effective_m");
+  const heightStField   = rv("effective_standards.height.effective_storeys");
+  const maxGFA          = (maxGfaField.value as number | undefined) ?? dev.max_gfa?.sqm;
+  const maxHeight       = (heightMField.value as number | undefined) ?? dev.height?.max_m;
+  const maxHeightSt     = (heightStField.value as number | undefined) ?? dev.height?.max_storeys;
   const hasHeritage     = eff.heritage_impact?.has_heritage;
+
+  /** Shorthand to build EditableField props for a resolved field. */
+  const efp = (path: string, field: ReturnType<typeof getFieldValue>) => ({
+    fieldPath: path,
+    value: field.value,
+    isEdited: field.isEdited,
+    original: field.original,
+    editNote: field.editNote,
+    onEdit: onEditField || (() => {}),
+    onRevert: onRevertField,
+    editMode: !!editMode,
+  });
   const hasPMTSA        = !!(dev.constraints?.pmtsa_advisory);
   const pmtsaStation    = dev.constraints?.pmtsa_advisory?.station_name;
   const opportunity     = computeOpportunity(dev, eff);
@@ -129,9 +158,11 @@ function PropertySnapshotCard({ data }: { data: Record<string, any> }) {
                 Unknown Zone Type
               </span>
             )}
-            <p className="text-[17px] font-bold tracking-tight text-stone-900 leading-snug">
-              {zoneMeta?.label || zoneCode || "—"}
-            </p>
+            <EditableField {...efp("effective_standards.zone_code", zoneCodeField)}>
+              <p className="text-[17px] font-bold tracking-tight text-stone-900 leading-snug">
+                {zoneMeta?.label || zoneCode || "—"}
+              </p>
+            </EditableField>
             {zoneMeta && (
               <p className="text-[13px] text-stone-500 leading-snug">
                 Currently used for: <span className="font-medium text-stone-700">{zoneMeta.use}</span>
@@ -157,15 +188,19 @@ function PropertySnapshotCard({ data }: { data: Record<string, any> }) {
                 <p className="text-[11px] text-stone-400 uppercase tracking-wide">Lot Area</p>
               </div>
             )}
-            {frontage != null && (
+            {(frontage != null || frontageField.isEdited) && (
               <div>
-                <p className="text-[22px] font-bold tracking-tight text-stone-900">{frontage}m</p>
+                <EditableField {...efp("development_potential.lot.frontage_m", frontageField)}>
+                  <p className="text-[22px] font-bold tracking-tight text-stone-900">{frontage}m</p>
+                </EditableField>
                 <p className="text-[11px] text-stone-400 uppercase tracking-wide">Frontage</p>
               </div>
             )}
-            {depth != null && (
+            {(depth != null || depthField.isEdited) && (
               <div>
-                <p className="text-[22px] font-bold tracking-tight text-stone-900">{depth}m</p>
+                <EditableField {...efp("development_potential.lot.depth_m", depthField)}>
+                  <p className="text-[22px] font-bold tracking-tight text-stone-900">{depth}m</p>
+                </EditableField>
                 <p className="text-[11px] text-stone-400 uppercase tracking-wide">Depth</p>
               </div>
             )}
@@ -220,6 +255,13 @@ function PropertySnapshotCard({ data }: { data: Record<string, any> }) {
 
 interface SummaryTabProps {
   data: Record<string, any>;
+  editMode?: boolean;
+  userEdits?: Record<string, { value: unknown; note?: string; edited_at: string }>;
+  sectionNotes?: Record<string, string>;
+  onEditField?: (path: string, value: unknown, note?: string) => void;
+  onRevertField?: (path: string) => void;
+  onEditNote?: (sectionId: string, note: string) => void;
+  reportId?: string;
 }
 
 /* ── helper: format number with commas ── */
@@ -231,10 +273,40 @@ function fmt(n: number | undefined | null, decimals = 0) {
   });
 }
 
-export default function SummaryTab({ data }: SummaryTabProps) {
+export default function SummaryTab({ data, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote }: SummaryTabProps) {
   const eff = data.effective_standards || {};
   const dev = data.development_potential || {};
   const layers = data.layers || {};
+
+  /* ── resolve editable fields through user-edit overlay ── */
+  const rv = (p: string) => getFieldValue(data, userEdits, p);
+  const heightM = rv("effective_standards.height.effective_m");
+  const heightSt = rv("effective_standards.height.effective_storeys");
+  const fsiField = rv("effective_standards.fsi.effective_total");
+  const lotCovPct = rv("effective_standards.lot_coverage.effective_pct");
+  const frontSetback = rv("effective_standards.setbacks.effective_front_m");
+  const rearSetback = rv("effective_standards.setbacks.effective_rear_m");
+  const sideSetback = rv("effective_standards.setbacks.effective_side_m");
+  const lotAreaField = rv("development_potential.lot.area_sqm");
+  const maxGfaField = rv("development_potential.max_gfa.sqm");
+  const maxFootprintField = rv("development_potential.coverage.max_footprint_sqm");
+  const buildableAreaField = rv("development_potential.setbacks.buildable_area_sqm");
+  const buildableWidthField = rv("development_potential.setbacks.buildable_width_m");
+  const buildableDepthField = rv("development_potential.setbacks.buildable_depth_m");
+  const parkingZoneField = rv("effective_standards.parking.parking_zone");
+  const parkingSpacesField = rv("development_potential.parking_estimate.residential_spaces");
+
+  /** Build EditableField props (minus children) for a resolved field. */
+  const ep = (path: string, field: ReturnType<typeof getFieldValue>) => ({
+    fieldPath: path,
+    value: field.value,
+    isEdited: field.isEdited,
+    original: field.original,
+    editNote: field.editNote,
+    onEdit: onEditField || (() => {}),
+    onRevert: onRevertField,
+    editMode: !!editMode,
+  });
   /* ── zone info ── */
   const zoneLabel = eff.zone_label || {};
   const exceptionNum =
@@ -295,7 +367,13 @@ export default function SummaryTab({ data }: SummaryTabProps) {
       {/* ============================================================ */}
       {/*  PROPERTY SNAPSHOT — current state + opportunity              */}
       {/* ============================================================ */}
-      <PropertySnapshotCard data={data} />
+      <PropertySnapshotCard
+        data={data}
+        editMode={editMode}
+        userEdits={userEdits}
+        onEditField={onEditField}
+        onRevertField={onRevertField}
+      />
 
       {/* ============================================================ */}
       {/*  KEY METRICS — 6-card grid                                    */}
@@ -306,15 +384,15 @@ export default function SummaryTab({ data }: SummaryTabProps) {
           icon="📏"
           label="Max Height"
           value={
-            eff.height?.effective_m != null
-              ? `${eff.height.effective_m}m`
+            heightM.value != null
+              ? `${heightM.value}m`
               : dev.height?.max_m != null
                 ? `${dev.height.max_m}m`
                 : "—"
           }
           sub={
-            eff.height?.effective_storeys != null
-              ? `${eff.height.effective_storeys} storeys`
+            heightSt.value != null
+              ? `${heightSt.value} storeys`
               : dev.height?.max_storeys != null
                 ? `${dev.height.max_storeys} storeys`
                 : dev.height?.estimated_storeys != null
@@ -322,23 +400,27 @@ export default function SummaryTab({ data }: SummaryTabProps) {
                   : eff.height?.effective_source || dev.height?.source
           }
           accent={isFormerBylaw ? "amber" : undefined}
+          editFieldProps={ep("effective_standards.height.effective_m", heightM)}
+          editSubProps={heightSt.value != null ? ep("effective_standards.height.effective_storeys", heightSt) : undefined}
         />
 
         {/* FSI */}
         <MetricCard
           icon="📊"
           label="Max FSI"
-          value={eff.fsi?.effective_total != null ? `${eff.fsi.effective_total}` : "—"}
+          value={fsiField.value != null ? `${fsiField.value}` : "—"}
           sub={eff.fsi?.effective_source}
+          editFieldProps={ep("effective_standards.fsi.effective_total", fsiField)}
         />
 
         {/* GFA */}
         <MetricCard
           icon="🏗️"
           label="Max GFA"
-          value={dev.max_gfa?.sqm != null ? `${fmt(dev.max_gfa.sqm)} m²` : "—"}
+          value={maxGfaField.value != null ? `${fmt(maxGfaField.value as number)} m²` : "—"}
           sub={dev.max_gfa?.limiting_factor ? `by ${dev.max_gfa.limiting_factor}` : undefined}
           accent="emerald"
+          editFieldProps={ep("development_potential.max_gfa.sqm", maxGfaField)}
         />
 
         {/* Lot Coverage */}
@@ -346,40 +428,45 @@ export default function SummaryTab({ data }: SummaryTabProps) {
           icon="📐"
           label="Lot Coverage"
           value={
-            eff.lot_coverage?.effective_pct != null
-              ? `${eff.lot_coverage.effective_pct}%`
+            lotCovPct.value != null
+              ? `${lotCovPct.value}%`
               : dev.lot_coverage?.max_pct != null
                 ? `${dev.lot_coverage.max_pct}%`
                 : "—"
           }
           sub={
-            dev.coverage?.max_footprint_sqm
-              ? `${fmt(dev.coverage.max_footprint_sqm)} m² max footprint`
+            maxFootprintField.value != null
+              ? `${fmt(maxFootprintField.value as number)} m² max footprint`
               : isFormerBylaw && dev.lot_coverage?.max_pct != null
                 ? "from coverage overlay"
                 : undefined
           }
           accent={isFormerBylaw && dev.lot_coverage?.max_pct != null ? "amber" : undefined}
+          editFieldProps={ep("effective_standards.lot_coverage.effective_pct", lotCovPct)}
+          editSubProps={maxFootprintField.value != null ? ep("development_potential.coverage.max_footprint_sqm", maxFootprintField) : undefined}
         />
 
         {/* Lot Area */}
         <MetricCard
           icon="📍"
           label="Lot Area"
-          value={dev.lot?.area_sqm != null ? `${fmt(dev.lot.area_sqm)} m²` : "—"}
+          value={lotAreaField.value != null ? `${fmt(lotAreaField.value as number)} m²` : "—"}
           sub={dev.lot?.area_source}
+          editFieldProps={ep("development_potential.lot.area_sqm", lotAreaField)}
         />
 
         {/* Parking Zone */}
         <MetricCard
           icon="🅿️"
           label="Parking Zone"
-          value={eff.parking?.parking_zone || eff.parking_zone || "—"}
+          value={(parkingZoneField.value as string) || eff.parking_zone || "—"}
           sub={
-            dev.parking_estimate?.residential_spaces != null
-              ? `${dev.parking_estimate.residential_spaces} residential spaces est.`
+            parkingSpacesField.value != null
+              ? `${parkingSpacesField.value} residential spaces est.`
               : undefined
           }
+          editFieldProps={ep("effective_standards.parking.parking_zone", parkingZoneField)}
+          editSubProps={parkingSpacesField.value != null ? ep("development_potential.parking_estimate.residential_spaces", parkingSpacesField) : undefined}
         />
       </div>
 
@@ -392,19 +479,54 @@ export default function SummaryTab({ data }: SummaryTabProps) {
             Setbacks
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <SetbackChip label="Front" value={eff.setbacks.effective_front_m} />
-            <SetbackChip label="Rear" value={eff.setbacks.effective_rear_m} />
-            <SetbackChip label="Side" value={eff.setbacks.effective_side_m} />
-            {dev.setbacks?.buildable_area_sqm && (
+            <SetbackChip label="Front" value={frontSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_front_m", frontSetback)} />
+            <SetbackChip label="Rear" value={rearSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_rear_m", rearSetback)} />
+            <SetbackChip label="Side" value={sideSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_side_m", sideSetback)} />
+            {(buildableAreaField.value != null || buildableAreaField.isEdited) && (
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
-                <p className="text-[18px] font-bold tracking-tight text-emerald-800">
-                  {fmt(dev.setbacks.buildable_area_sqm)} m²
-                </p>
-                <p className="text-[11px] text-emerald-600">Buildable Area</p>
-                {dev.setbacks.buildable_width_m && dev.setbacks.buildable_depth_m && (
-                  <p className="text-[10px] font-mono text-emerald-500">
-                    {dev.setbacks.buildable_width_m}m × {dev.setbacks.buildable_depth_m}m
+                <EditableField
+                  fieldPath="development_potential.setbacks.buildable_area_sqm"
+                  value={buildableAreaField.value}
+                  isEdited={buildableAreaField.isEdited}
+                  original={buildableAreaField.original}
+                  editNote={buildableAreaField.editNote}
+                  onEdit={onEditField || (() => {})}
+                  onRevert={onRevertField}
+                  editMode={!!editMode}
+                >
+                  <p className="text-[18px] font-bold tracking-tight text-emerald-800">
+                    {fmt(buildableAreaField.value as number)} m²
                   </p>
+                </EditableField>
+                <p className="text-[11px] text-emerald-600">Buildable Area</p>
+                {(buildableWidthField.value != null && buildableDepthField.value != null) && (
+                  <div className="flex items-center gap-1 text-[10px] font-mono text-emerald-500">
+                    <EditableField
+                      fieldPath="development_potential.setbacks.buildable_width_m"
+                      value={buildableWidthField.value}
+                      isEdited={buildableWidthField.isEdited}
+                      original={buildableWidthField.original}
+                      editNote={buildableWidthField.editNote}
+                      onEdit={onEditField || (() => {})}
+                      onRevert={onRevertField}
+                      editMode={!!editMode}
+                    >
+                      <span>{buildableWidthField.value as number}m</span>
+                    </EditableField>
+                    <span>×</span>
+                    <EditableField
+                      fieldPath="development_potential.setbacks.buildable_depth_m"
+                      value={buildableDepthField.value}
+                      isEdited={buildableDepthField.isEdited}
+                      original={buildableDepthField.original}
+                      editNote={buildableDepthField.editNote}
+                      onEdit={onEditField || (() => {})}
+                      onRevert={onRevertField}
+                      editMode={!!editMode}
+                    >
+                      <span>{buildableDepthField.value as number}m</span>
+                    </EditableField>
+                  </div>
                 )}
               </div>
             )}
@@ -755,6 +877,14 @@ export default function SummaryTab({ data }: SummaryTabProps) {
           </p>
         </div>
       )}
+
+      {/* ── Section Note ── */}
+      <SectionNoteEditor
+        sectionId="summary"
+        note={sectionNotes?.summary || ""}
+        onNoteChange={onEditNote || (() => {})}
+        editMode={!!editMode}
+      />
     </div>
   );
 }
@@ -763,18 +893,33 @@ export default function SummaryTab({ data }: SummaryTabProps) {
 /*  SUB-COMPONENTS                                                     */
 /* ================================================================== */
 
+type EditFieldInfo = {
+  fieldPath: string;
+  value: unknown;
+  isEdited: boolean;
+  original: unknown;
+  editNote?: string;
+  onEdit: (path: string, value: unknown, note?: string) => void;
+  onRevert?: (path: string) => void;
+  editMode: boolean;
+};
+
 function MetricCard({
   icon,
   label,
   value,
   sub,
   accent,
+  editFieldProps,
+  editSubProps,
 }: {
   icon: string;
   label: string;
   value: string;
   sub?: string;
   accent?: "emerald" | "amber" | "red";
+  editFieldProps?: EditFieldInfo;
+  editSubProps?: EditFieldInfo;
 }) {
   const accentStyles = {
     emerald: "border-emerald-200 bg-emerald-50",
@@ -791,6 +936,15 @@ function MetricCard({
     : "border-stone-200 bg-white shadow-sm";
   const textColor = accent ? accentText[accent] : "text-stone-900";
 
+  const valueEl = (
+    <p className={`text-[20px] font-bold tracking-tight leading-tight ${textColor}`}>
+      {value}
+    </p>
+  );
+  const subEl = sub ? (
+    <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-1">{sub}</p>
+  ) : null;
+
   return (
     <div className={`rounded-xl border px-4 py-3.5 ${borderBg}`}>
       <div className="flex items-center gap-1.5 mb-1.5">
@@ -799,11 +953,15 @@ function MetricCard({
           {label}
         </span>
       </div>
-      <p className={`text-[20px] font-bold tracking-tight leading-tight ${textColor}`}>
-        {value}
-      </p>
-      {sub && (
-        <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-1">{sub}</p>
+      {editFieldProps ? (
+        <EditableField {...editFieldProps}>{valueEl}</EditableField>
+      ) : (
+        valueEl
+      )}
+      {editSubProps && subEl ? (
+        <EditableField {...editSubProps}>{subEl}</EditableField>
+      ) : (
+        subEl
       )}
     </div>
   );
@@ -812,16 +970,25 @@ function MetricCard({
 function SetbackChip({
   label,
   value,
+  editFieldProps,
 }: {
   label: string;
   value: number | null | undefined;
+  editFieldProps?: EditFieldInfo;
 }) {
-  if (value == null) return null;
+  if (value == null && !editFieldProps?.isEdited) return null;
+  const valueEl = (
+    <p className="text-[18px] font-bold tracking-tight text-stone-800">
+      {value}m
+    </p>
+  );
   return (
     <div className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5">
-      <p className="text-[18px] font-bold tracking-tight text-stone-800">
-        {value}m
-      </p>
+      {editFieldProps ? (
+        <EditableField {...editFieldProps}>{valueEl}</EditableField>
+      ) : (
+        valueEl
+      )}
       <p className="text-[11px] text-stone-500">{label}</p>
     </div>
   );

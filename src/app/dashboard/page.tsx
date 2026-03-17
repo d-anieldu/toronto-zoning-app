@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SearchForm from "@/components/SearchForm";
 import UserNav from "@/components/UserNav";
+import RecentReports from "@/components/RecentReports";
 
 export default function DashboardPage() {
   return (
@@ -71,6 +72,8 @@ export default function DashboardPage() {
         </div>
 
         <SearchForm />
+
+        <RecentReports />
       </main>
     </div>
   );

@@ -15,6 +15,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { SectionHeading, Card, Badge } from "./primitives";
+import SectionNoteEditor from "./SectionNoteEditor";
 import type {
   PolicyConformityData,
   PolicyConformityChecklist,
@@ -313,6 +314,9 @@ function ChecklistItem({
 
 interface PolicyConformityTabProps {
   data: Record<string, any>;
+  editMode?: boolean;
+  sectionNotes?: Record<string, string>;
+  onEditNote?: (sectionId: string, note: string) => void;
 }
 
 const STATUS_TEXT: Record<ConformityStatus, string> = {
@@ -323,7 +327,7 @@ const STATUS_TEXT: Record<ConformityStatus, string> = {
   not_applicable: "N/A",
 };
 
-export default function PolicyConformityTab({ data }: PolicyConformityTabProps) {
+export default function PolicyConformityTab({ data, editMode, sectionNotes, onEditNote }: PolicyConformityTabProps) {
   const [liveConformity, setLiveConformity] = useState<PolicyConformityData | undefined>(
     data.policy_conformity as PolicyConformityData | undefined,
   );
@@ -579,6 +583,15 @@ export default function PolicyConformityTab({ data }: PolicyConformityTabProps) 
           onNoteChange={handleNoteChange}
           expandAll={!!expandState["sasp"]}
           onToggleExpandAll={() => toggleExpandAll("sasp")}
+        />
+      )}
+
+      {editMode && (
+        <SectionNoteEditor
+          sectionId="policy_conformity"
+          note={sectionNotes?.policy_conformity ?? ""}
+          onNoteChange={onEditNote!}
+          editMode={!!editMode}
         />
       )}
 

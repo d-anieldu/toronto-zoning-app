@@ -9,15 +9,53 @@
 
 import { Card, Row, Badge, Icons, Tag, SectionHeading } from "./primitives";
 import { RefLink } from "../ReferencePanel";
+import EditableField from "./EditableField";
+import SectionNoteEditor from "./SectionNoteEditor";
+import { getFieldValue } from "@/lib/report-edits";
 
 interface UsesParkingTabProps {
   data: Record<string, any>;
   onAnalyzeUse: (use: string) => void;
+  editMode?: boolean;
+  userEdits?: Record<string, { value: unknown; note?: string; edited_at: string }>;
+  sectionNotes?: Record<string, string>;
+  onEditField?: (path: string, value: unknown, note?: string) => void;
+  onRevertField?: (path: string) => void;
+  onEditNote?: (sectionId: string, note: string) => void;
+  reportId?: string;
 }
 
-export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabProps) {
+export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote }: UsesParkingTabProps) {
   const eff = data.effective_standards || {};
   const dev = data.development_potential || {};
+
+  /* ── resolve editable fields through user-edit overlay ── */
+  const rv = (p: string) => getFieldValue(data, userEdits, p);
+  type FV = ReturnType<typeof rv>;
+  const ep = (path: string, field: FV) => ({
+    fieldPath: path, value: field.value, isEdited: field.isEdited,
+    original: field.original, editNote: field.editNote,
+    onEdit: onEditField || (() => {}), onRevert: onRevertField, editMode: !!editMode,
+  });
+  const ev = (path: string, field: FV, display: string | number | null) => {
+    if (!editMode) return display;
+    if (display === null && !field.isEdited) return null;
+    return (<EditableField {...ep(path, field)}><span>{display ?? "\u2014"}</span></EditableField>);
+  };
+
+  const estUnits = rv("development_potential.parking_estimate.estimated_units");
+  const visitorSpaces = rv("development_potential.parking_estimate.visitor_spaces");
+  const maxSpacesPerm = rv("development_potential.parking_maximum.max_spaces_permitted");
+  const longTermBike = rv("development_potential.bicycle_parking.long_term");
+  const shortTermBike = rv("development_potential.bicycle_parking.short_term");
+  const totalAmenity = rv("development_potential.amenity_space.total_required_sqm");
+  const indoorAmenity = rv("development_potential.amenity_space.indoor_required_sqm");
+  const outdoorAmenity = rv("development_potential.amenity_space.outdoor_required_sqm");
+  const izRate = rv("development_potential.inclusionary_zoning.effective_rate_pct");
+  const izGfa = rv("development_potential.inclusionary_zoning.required_affordable_gfa_sqm");
+  const izUnits = rv("development_potential.inclusionary_zoning.required_affordable_units");
+  const loadingSpaces = rv("development_potential.loading_space.required_spaces");
+  const visitorFormula = rv("effective_standards.parking.visitor_parking.formula");
 
   return (
     <div className="space-y-5">
@@ -156,9 +194,9 @@ export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabPro
 
             {dev.parking_estimate && (
               <Card label="Parking Estimate" defaultOpen>
-                <Row label="Est. units" value={dev.parking_estimate.estimated_units} />
+                <Row label="Est. units" value={ev("development_potential.parking_estimate.estimated_units", estUnits, estUnits.value as number | null)} />
                 <Row label="Residential spaces" value={dev.parking_estimate.residential_spaces} sub={dev.parking_estimate.residential_note} />
-                <Row label="Visitor spaces" value={dev.parking_estimate.visitor_spaces} sub={dev.parking_estimate.visitor_note} />
+                <Row label="Visitor spaces" value={ev("development_potential.parking_estimate.visitor_spaces", visitorSpaces, visitorSpaces.value as number | null)} sub={dev.parking_estimate.visitor_note} />
               </Card>
             )}
           </div>
@@ -172,7 +210,9 @@ export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabPro
           {eff.parking?.visitor_parking && (
             <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
               <p className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-stone-400">Visitor Parking Formula</p>
-              <p className="font-mono text-[14px] font-medium text-stone-700">{eff.parking.visitor_parking.formula}</p>
+              <EditableField {...ep("effective_standards.parking.visitor_parking.formula", visitorFormula)}>
+                <p className="font-mono text-[14px] font-medium text-stone-700">{visitorFormula.value as string}</p>
+              </EditableField>
               <p className="mt-1 text-[11px] text-stone-400">
                 Rate type: {eff.parking.visitor_parking.rate_type} · Parking Zone {eff.parking.visitor_parking.parking_zone}
               </p>
@@ -220,7 +260,9 @@ export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabPro
               <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">Parking Maximum</p>
               <div className="grid gap-3 sm:grid-cols-2 mb-3">
                 <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                  <p className="text-[22px] font-bold text-stone-900">{dev.parking_maximum.max_spaces_permitted}</p>
+                  <EditableField {...ep("development_potential.parking_maximum.max_spaces_permitted", maxSpacesPerm)}>
+                    <p className="text-[22px] font-bold text-stone-900">{maxSpacesPerm.value as number}</p>
+                  </EditableField>
                   <p className="text-[12px] text-stone-500">Max spaces permitted</p>
                 </div>
                 <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
@@ -269,8 +311,8 @@ export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabPro
             <Card label="Bicycle Parking Requirements" defaultOpen>
               <Row label="Bicycle zone" value={`Zone ${dev.bicycle_parking.bicycle_zone}`} />
               <Row label="Est. dwelling units" value={dev.bicycle_parking.estimated_units} />
-              <Row label="Long-term spaces" value={dev.bicycle_parking.long_term} sub={`${dev.bicycle_parking.rate_long_per_unit} per unit`} />
-              <Row label="Short-term spaces" value={dev.bicycle_parking.short_term} sub={`${dev.bicycle_parking.rate_short_per_unit} per unit`} />
+              <Row label="Long-term spaces" value={ev("development_potential.bicycle_parking.long_term", longTermBike, longTermBike.value as number | null)} sub={`${dev.bicycle_parking.rate_long_per_unit} per unit`} />
+              <Row label="Short-term spaces" value={ev("development_potential.bicycle_parking.short_term", shortTermBike, shortTermBike.value as number | null)} sub={`${dev.bicycle_parking.rate_short_per_unit} per unit`} />
               <Row label="Total bicycle spaces" value={dev.bicycle_parking.total} />
               {dev.bicycle_parking.shower_change_sets > 0 && (
                 <Row label="Shower/change facilities" value={`${dev.bicycle_parking.shower_change_sets} set(s) per gender`} />
@@ -354,9 +396,9 @@ export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabPro
             <Card label="Amenity Space Requirements" defaultOpen>
               <Row label="Est. dwelling units" value={dev.amenity_space.estimated_units} />
               <Row label="Threshold" value={`≥ ${dev.amenity_space.threshold_units} units`} />
-              <Row label="Total required" value={`${dev.amenity_space.total_required_sqm} m²`} />
-              <Row label="Indoor required" value={`${dev.amenity_space.indoor_required_sqm} m²`} />
-              <Row label="Outdoor required" value={`${dev.amenity_space.outdoor_required_sqm} m²`} sub={`Min ${dev.amenity_space.outdoor_min_sqm} m²`} />
+              <Row label="Total required" value={ev("development_potential.amenity_space.total_required_sqm", totalAmenity, totalAmenity.value != null ? `${totalAmenity.value} m²` : null)} />
+              <Row label="Indoor required" value={ev("development_potential.amenity_space.indoor_required_sqm", indoorAmenity, indoorAmenity.value != null ? `${indoorAmenity.value} m²` : null)} />
+              <Row label="Outdoor required" value={ev("development_potential.amenity_space.outdoor_required_sqm", outdoorAmenity, outdoorAmenity.value != null ? `${outdoorAmenity.value} m²` : null)} sub={`Min ${dev.amenity_space.outdoor_min_sqm} m²`} />
               <Row label="Green roof allowance" value={`Up to ${dev.amenity_space.green_roof_max_sqm} m² (${dev.amenity_space.green_roof_max_pct}%)`} />
               {dev.amenity_space.bylaw_ref && (
                 <Row label="By-law reference" value={
@@ -394,16 +436,16 @@ export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabPro
               {dev.inclusionary_zoning.phase_increase_pct > 0 && (
                 <Row label="Phasing increase" value={`+${dev.inclusionary_zoning.phase_increase_pct}%`} />
               )}
-              <Row label="Effective rate" value={`${dev.inclusionary_zoning.effective_rate_pct}%`} />
+              <Row label="Effective rate" value={ev("development_potential.inclusionary_zoning.effective_rate_pct", izRate, izRate.value != null ? `${izRate.value}%` : null)} />
               {dev.inclusionary_zoning.exempt ? (
                 <Row label="Status" value={<span className="text-green-600 font-medium">Exempt</span>} sub={dev.inclusionary_zoning.exempt_reason} />
               ) : (
                 <>
-                  {dev.inclusionary_zoning.required_affordable_gfa_sqm != null && (
-                    <Row label="Required affordable GFA" value={`${dev.inclusionary_zoning.required_affordable_gfa_sqm.toLocaleString()} m²`} />
+                  {(dev.inclusionary_zoning.required_affordable_gfa_sqm != null || izGfa.isEdited) && (
+                    <Row label="Required affordable GFA" value={ev("development_potential.inclusionary_zoning.required_affordable_gfa_sqm", izGfa, izGfa.value != null ? `${(izGfa.value as number).toLocaleString()} m²` : null)} />
                   )}
-                  {dev.inclusionary_zoning.required_affordable_units != null && (
-                    <Row label="Est. affordable units" value={dev.inclusionary_zoning.required_affordable_units} />
+                  {(dev.inclusionary_zoning.required_affordable_units != null || izUnits.isEdited) && (
+                    <Row label="Est. affordable units" value={ev("development_potential.inclusionary_zoning.required_affordable_units", izUnits, izUnits.value as number | null)} />
                   )}
                 </>
               )}
@@ -423,6 +465,14 @@ export default function UsesParkingTab({ data, onAnalyzeUse }: UsesParkingTabPro
           )}
         </>
       )}
+
+      {/* ── Section Note ── */}
+      <SectionNoteEditor
+        sectionId="uses_parking"
+        note={sectionNotes?.uses_parking || ""}
+        onNoteChange={onEditNote || (() => {})}
+        editMode={!!editMode}
+      />
     </div>
   );
 }

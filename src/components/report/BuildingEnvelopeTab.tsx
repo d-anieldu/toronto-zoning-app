@@ -13,10 +13,20 @@
 import { Card, Row, Badge, SetbackDiagram, Tag } from "./primitives";
 import { RefLink } from "../ReferencePanel";
 import LandscapingCard from "./LandscapingCard";
+import EditableField from "./EditableField";
+import SectionNoteEditor from "./SectionNoteEditor";
+import { getFieldValue } from "@/lib/report-edits";
 
 interface BuildingEnvelopeTabProps {
   data: Record<string, any>;
   onAnalyzeUse?: (use: string) => void;
+  editMode?: boolean;
+  userEdits?: Record<string, { value: unknown; note?: string; edited_at: string }>;
+  sectionNotes?: Record<string, string>;
+  onEditField?: (path: string, value: unknown, note?: string) => void;
+  onRevertField?: (path: string) => void;
+  onEditNote?: (sectionId: string, note: string) => void;
+  reportId?: string;
 }
 
 function fmt(n: number | undefined | null, decimals = 0) {
@@ -27,12 +37,44 @@ function fmt(n: number | undefined | null, decimals = 0) {
   });
 }
 
-export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnvelopeTabProps) {
+export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote, reportId }: BuildingEnvelopeTabProps) {
   const eff = data.effective_standards || {};
   const dev = data.development_potential || {};
   const hasEffError = eff.error;
   const hasDevError = dev.error;
   const addr = data.address || "";
+
+  /* ── resolve editable fields through user-edit overlay ── */
+  const rv = (p: string, fallback?: unknown) => getFieldValue(data, userEdits, p, fallback);
+  type FV = ReturnType<typeof rv>;
+  const ep = (path: string, field: FV) => ({
+    fieldPath: path, value: field.value, isEdited: field.isEdited,
+    original: field.original, editNote: field.editNote,
+    onEdit: onEditField || (() => {}), onRevert: onRevertField, editMode: !!editMode,
+  });
+  /** Wrap a Row value with EditableField in edit mode; pass-through otherwise. */
+  const ev = (path: string, field: FV, display: string | null) => {
+    if (!editMode) return display;
+    if (display === null && !field.isEdited) return null;
+    return (<EditableField {...ep(path, field)}><span>{display ?? "\u2014"}</span></EditableField>);
+  };
+
+  const baseDefaultH = rv("effective_standards.height.base_default_m");
+  const overlayH = rv("effective_standards.height.overlay_m");
+  const commercialFsi = rv("effective_standards.fsi.commercial_max", eff.fsi?.fsi_commercial_max);
+  const residentialFsi = rv("effective_standards.fsi.residential_max", eff.fsi?.fsi_residential_max);
+  const overlayCovPct = rv("effective_standards.lot_coverage.overlay_pct");
+  const minFrontage = rv("effective_standards.lot_dimensions.min_frontage_m");
+  const minArea = rv("effective_standards.lot_dimensions.min_area_sqm");
+  const maxUnitsField = rv("effective_standards.zone_label.max_units", eff.zone_label?.max_units || data.layers?.zoning_area?.[0]?.UNITS);
+  const angularAngle = rv("development_potential.angular_plane.angle_degrees");
+  const parkDistance = rv("development_potential.shadow_analysis.nearest_park_distance_m");
+  const towerSepField = rv("development_potential.separation_distances.tower_separation.min_distance_m");
+  const podiumMaxH = rv("effective_standards.stepback_rules.podium_max_height_m");
+  const towerFloorplate = rv("effective_standards.stepback_rules.tower_floorplate_max_sqm");
+  const towerSepRule = rv("effective_standards.stepback_rules.tower_separation_m");
+  const floorPlateMax = rv("development_potential.floor_plate.max_sqm");
+  const devHeightMax = rv("development_potential.height.max_m");
 
   return (
     <div className="space-y-5">
@@ -74,7 +116,9 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
               )}
               {dev.height && (
                 <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-                  <p className="text-[20px] font-bold text-stone-900">{dev.height.max_m != null ? `${dev.height.max_m} m` : "—"}</p>
+                  <EditableField {...ep("development_potential.height.max_m", devHeightMax)}>
+                    <p className="text-[20px] font-bold text-stone-900">{devHeightMax.value != null ? `${devHeightMax.value} m` : "\u2014"}</p>
+                  </EditableField>
                   <p className="text-[12px] text-stone-500">Max Height</p>
                   {dev.height.max_storeys && (
                     <p className="text-[11px] text-stone-400">~{dev.height.max_storeys} storeys est.</p>
@@ -90,7 +134,9 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
               )}
               {dev.floor_plate && (
                 <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-                  <p className="text-[20px] font-bold text-stone-900">{fmt(dev.floor_plate.max_sqm)} m²</p>
+                  <EditableField {...ep("development_potential.floor_plate.max_sqm", floorPlateMax)}>
+                    <p className="text-[20px] font-bold text-stone-900">{fmt(floorPlateMax.value as number)} m²</p>
+                  </EditableField>
                   <p className="text-[12px] text-stone-500">Floor Plate</p>
                   <p className="text-[11px] text-stone-400">by {dev.floor_plate.limiting_factor || "—"}</p>
                 </div>
@@ -188,19 +234,19 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
           <div className="grid gap-4 md:grid-cols-2">
             {/* Height & Density */}
             <Card label="Height & Density">
-              <Row label="Effective height" value={eff.height?.effective_m ? `${eff.height.effective_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.height.effective_m" flagTabName="building_envelope" />
-              <Row label="Max storeys" value={eff.height?.effective_storeys ?? (eff.height?.storeys_unlimited ? "Unlimited" : null)} flagAddress={addr} flagFieldPath="effective_standards.height.effective_storeys" flagTabName="building_envelope" />
+              <Row label="Effective height" value={eff.height?.effective_m ? `${eff.height.effective_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.height.effective_m" flagTabName="building_envelope" reportId={reportId} />
+              <Row label="Max storeys" value={eff.height?.effective_storeys ?? (eff.height?.storeys_unlimited ? "Unlimited" : null)} flagAddress={addr} flagFieldPath="effective_standards.height.effective_storeys" flagTabName="building_envelope" reportId={reportId} />
               <Row label="Height source" value={eff.height?.effective_source} />
-              <Row label="Base default" value={eff.height?.base_default_m ? `${eff.height.base_default_m} m` : null} sub={eff.height?.source_base} />
-              <Row label="Overlay height" value={eff.height?.overlay_m ? `${eff.height.overlay_m} m` : null} />
+              <Row label="Base default" value={ev("effective_standards.height.base_default_m", baseDefaultH, baseDefaultH.value != null ? `${baseDefaultH.value} m` : null)} sub={eff.height?.source_base} />
+              <Row label="Overlay height" value={ev("effective_standards.height.overlay_m", overlayH, overlayH.value != null ? `${overlayH.value} m` : null)} />
               <Row label="Overlay storeys" value={eff.height?.overlay_storeys} />
               <div className="my-2 border-t border-stone-100" />
-              <Row label="FSI" value={eff.fsi?.effective_total} flagAddress={addr} flagFieldPath="effective_standards.fsi.effective_total" flagTabName="building_envelope" />
+              <Row label="FSI" value={eff.fsi?.effective_total} flagAddress={addr} flagFieldPath="effective_standards.fsi.effective_total" flagTabName="building_envelope" reportId={reportId} />
               <Row label="FSI source" value={eff.fsi?.effective_source} />
               {eff.fsi?.is_compound && (
                 <>
-                  <Row label="Commercial FSI" value={eff.fsi.fsi_commercial_max} />
-                  <Row label="Residential FSI" value={eff.fsi.fsi_residential_max} />
+                  <Row label="Commercial FSI" value={ev("effective_standards.fsi.commercial_max", commercialFsi, commercialFsi.value != null ? String(commercialFsi.value) : null)} />
+                  <Row label="Residential FSI" value={ev("effective_standards.fsi.residential_max", residentialFsi, residentialFsi.value != null ? String(residentialFsi.value) : null)} />
                   <Row label="Compound note" value={eff.fsi.compound_note} />
                 </>
               )}
@@ -208,9 +254,9 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
 
             {/* Setbacks */}
             <Card label="Setbacks">
-              <Row label="Front" value={eff.setbacks?.effective_front_m ? `${eff.setbacks.effective_front_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_front_m" flagTabName="building_envelope" />
-              <Row label="Rear" value={eff.setbacks?.effective_rear_m ? `${eff.setbacks.effective_rear_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_rear_m" flagTabName="building_envelope" />
-              <Row label="Side" value={eff.setbacks?.effective_side_m ? `${eff.setbacks.effective_side_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_side_m" flagTabName="building_envelope" />
+              <Row label="Front" value={eff.setbacks?.effective_front_m ? `${eff.setbacks.effective_front_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_front_m" flagTabName="building_envelope" reportId={reportId} />
+              <Row label="Rear" value={eff.setbacks?.effective_rear_m ? `${eff.setbacks.effective_rear_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_rear_m" flagTabName="building_envelope" reportId={reportId} />
+              <Row label="Side" value={eff.setbacks?.effective_side_m ? `${eff.setbacks.effective_side_m} m` : null} flagAddress={addr} flagFieldPath="effective_standards.setbacks.effective_side_m" flagTabName="building_envelope" reportId={reportId} />
               {eff.setbacks?.exception_side_m && (
                 <Row label="Side (exception)" value={`${eff.setbacks.exception_side_m} m`} />
               )}
@@ -259,9 +305,9 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
 
             {/* Lot Dimensions */}
             <Card label="Lot Dimensions">
-              <Row label="Min frontage" value={eff.lot_dimensions?.min_frontage_m ? `${fmt(eff.lot_dimensions.min_frontage_m, 1)} m` : null} sub={eff.lot_dimensions?.frontage_source} />
-              <Row label="Min lot area" value={eff.lot_dimensions?.min_area_sqm ? `${fmt(eff.lot_dimensions.min_area_sqm)} m²` : null} sub={eff.lot_dimensions?.area_source} />
-              <Row label="Max units" value={eff.zone_label?.max_units || data.layers?.zoning_area?.[0]?.UNITS || (Array.isArray(data.layers?.zoning_area) ? undefined : data.layers?.zoning_area?.UNITS)} />
+              <Row label="Min frontage" value={ev("effective_standards.lot_dimensions.min_frontage_m", minFrontage, minFrontage.value != null ? `${fmt(minFrontage.value as number, 1)} m` : null)} sub={eff.lot_dimensions?.frontage_source} />
+              <Row label="Min lot area" value={ev("effective_standards.lot_dimensions.min_area_sqm", minArea, minArea.value != null ? `${fmt(minArea.value as number)} m²` : null)} sub={eff.lot_dimensions?.area_source} />
+              <Row label="Max units" value={ev("effective_standards.zone_label.max_units", maxUnitsField, maxUnitsField.value != null ? String(maxUnitsField.value) : null)} />
               {dev.lot && (
                 <>
                   <div className="my-2 border-t border-stone-100" />
@@ -276,7 +322,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
             <Card label="Lot Coverage">
               <Row label="Effective coverage" value={eff.lot_coverage?.effective_pct != null ? `${eff.lot_coverage.effective_pct}%` : "Not determined"} />
               <Row label="Source" value={eff.lot_coverage?.effective_source} />
-              <Row label="Overlay %" value={eff.lot_coverage?.overlay_pct ? `${eff.lot_coverage.overlay_pct}%` : null} />
+              <Row label="Overlay %" value={ev("effective_standards.lot_coverage.overlay_pct", overlayCovPct, overlayCovPct.value != null ? `${overlayCovPct.value}%` : null)} />
               <Row label="Uses overlay map" value={eff.lot_coverage?.uses_overlay_map ? "Yes" : null} />
               <Row label="No limit if no overlay" value={eff.lot_coverage?.no_limit_if_no_overlay ? "Yes" : null} />
             </Card>
@@ -298,7 +344,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
 
           <div className="grid gap-4 md:grid-cols-2">
             <Card label="Angular Plane Analysis" defaultOpen>
-              <Row label="Angle" value={`${dev.angular_plane.angle_degrees}°`} />
+              <Row label="Angle" value={ev("development_potential.angular_plane.angle_degrees", angularAngle, angularAngle.value != null ? `${angularAngle.value}°` : "\u2014")} />
               {dev.angular_plane.zone_section && (
                 <Row
                   label="By-law section"
@@ -410,7 +456,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
 
             {dev.separation_distances.tower_separation?.applies && (
               <Card label="Tower Separation" defaultOpen>
-                <Row label="Min distance" value={`${dev.separation_distances.tower_separation.min_distance_m}m`} />
+                <Row label="Min distance" value={ev("development_potential.separation_distances.tower_separation.min_distance_m", towerSepField, towerSepField.value != null ? `${towerSepField.value}m` : "\u2014")} />
                 <Row label="Height threshold" value={`${dev.separation_distances.tower_separation.threshold_height_m}m`} />
                 <Row label="Source" value={dev.separation_distances.tower_separation.source} />
                 {dev.separation_distances.tower_separation.note && (
@@ -440,7 +486,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
           <div className="grid gap-4 md:grid-cols-2">
             <Card label="Nearest Park Shadow Impact" defaultOpen>
               <Row label="Nearest park" value={dev.shadow_analysis.nearest_park_name} />
-              <Row label="Distance" value={dev.shadow_analysis.nearest_park_distance_m != null ? `${dev.shadow_analysis.nearest_park_distance_m}m` : "—"} />
+              <Row label="Distance" value={ev("development_potential.shadow_analysis.nearest_park_distance_m", parkDistance, parkDistance.value != null ? `${parkDistance.value}m` : "\u2014")} />
               {dev.shadow_analysis.nearest_park_class && (
                 <Row label="Park class" value={dev.shadow_analysis.nearest_park_class} />
               )}
@@ -575,21 +621,27 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
                     <p className="text-[12px] text-stone-500">Podium Transition Height</p>
                   </div>
                 )}
-                {eff.stepback_rules.podium_max_height_m && (
+                {(eff.stepback_rules.podium_max_height_m || podiumMaxH.isEdited) && (
                   <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                    <p className="text-[18px] font-bold text-stone-900">{eff.stepback_rules.podium_max_height_m} m</p>
+                    <EditableField {...ep("effective_standards.stepback_rules.podium_max_height_m", podiumMaxH)}>
+                      <p className="text-[18px] font-bold text-stone-900">{podiumMaxH.value as number} m</p>
+                    </EditableField>
                     <p className="text-[12px] text-stone-500">Max Podium Height</p>
                   </div>
                 )}
-                {eff.stepback_rules.tower_floorplate_max_sqm && (
+                {(eff.stepback_rules.tower_floorplate_max_sqm || towerFloorplate.isEdited) && (
                   <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                    <p className="text-[18px] font-bold text-stone-900">{fmt(eff.stepback_rules.tower_floorplate_max_sqm)} m²</p>
+                    <EditableField {...ep("effective_standards.stepback_rules.tower_floorplate_max_sqm", towerFloorplate)}>
+                      <p className="text-[18px] font-bold text-stone-900">{fmt(towerFloorplate.value as number)} m²</p>
+                    </EditableField>
                     <p className="text-[12px] text-stone-500">Max Tower Floor Plate</p>
                   </div>
                 )}
-                {eff.stepback_rules.tower_separation_m && (
+                {(eff.stepback_rules.tower_separation_m || towerSepRule.isEdited) && (
                   <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                    <p className="text-[18px] font-bold text-stone-900">{eff.stepback_rules.tower_separation_m} m</p>
+                    <EditableField {...ep("effective_standards.stepback_rules.tower_separation_m", towerSepRule)}>
+                      <p className="text-[18px] font-bold text-stone-900">{towerSepRule.value as number} m</p>
+                    </EditableField>
                     <p className="text-[12px] text-stone-500">Min Tower Separation</p>
                   </div>
                 )}
@@ -610,6 +662,14 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse }: BuildingEnve
           <span className="font-semibold">Development Potential Error:</span> {dev.error}
         </div>
       )}
+
+      {/* ── Section Note ── */}
+      <SectionNoteEditor
+        sectionId="building_envelope"
+        note={sectionNotes?.building_envelope || ""}
+        onNoteChange={onEditNote || (() => {})}
+        editMode={!!editMode}
+      />
     </div>
   );
 }

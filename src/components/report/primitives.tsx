@@ -164,6 +164,7 @@ export function Row({
   flagAddress,
   flagFieldPath,
   flagTabName,
+  reportId,
 }: {
   label: string;
   value: any;
@@ -172,6 +173,7 @@ export function Row({
   flagAddress?: string;
   flagFieldPath?: string;
   flagTabName?: string;
+  reportId?: string;
 }) {
   if (value === null || value === undefined || value === "" || value === "not specified")
     return null;
@@ -193,6 +195,7 @@ export function Row({
             fieldLabel={label}
             currentValue={displayStr}
             tabName={flagTabName || ""}
+            reportId={reportId}
           />
         )}
         {sub && <p className="text-[11px] text-stone-400">{sub}</p>}

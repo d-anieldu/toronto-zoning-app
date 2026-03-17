@@ -10,6 +10,7 @@ interface FlagButtonProps {
   currentValue: string;
   tabName: string;
   reportData?: Record<string, unknown>;
+  reportId?: string;
 }
 
 export default function FlagButton({
@@ -19,6 +20,7 @@ export default function FlagButton({
   currentValue,
   tabName,
   reportData,
+  reportId,
 }: FlagButtonProps) {
   const [open, setOpen] = useState(false);
   const [suggested, setSuggested] = useState("");
@@ -51,6 +53,7 @@ export default function FlagButton({
         source_url: source || null,
         reason,
         report_data: reportData ?? null,
+        report_id: reportId ?? null,
       });
 
     setLoading(false);

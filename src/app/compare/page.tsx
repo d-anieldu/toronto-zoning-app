@@ -108,10 +108,10 @@ export default function ComparePage() {
               ← Back to Lookup
             </Link>
             <Link
-              href="/projects"
+              href="/reports"
               className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50"
             >
-              Projects
+              My Reports
             </Link>
             <UserNav />
           </div>

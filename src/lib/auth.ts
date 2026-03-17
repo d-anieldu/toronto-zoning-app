@@ -1,10 +1,26 @@
 import { createServerSupabase } from "./supabase-server";
+import { NextResponse } from "next/server";
 
 export async function getUser() {
   const supabase = await createServerSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  return user;
+}
+
+/**
+ * For API route handlers. Returns the authenticated user or a 401 Response.
+ * Usage:
+ *   const auth = await requireAuth();
+ *   if (auth instanceof NextResponse) return auth;
+ *   const user = auth;
+ */
+export async function requireAuth() {
+  const user = await getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   return user;
 }
 
