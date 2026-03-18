@@ -443,6 +443,7 @@ export default function MapPanel({
           <MapContainer
             center={[latitude, longitude]}
             zoom={17}
+            maxZoom={22}
             scrollWheelZoom={true}
             className="h-full w-full"
             style={{ height: "100%" }}
@@ -451,6 +452,8 @@ export default function MapPanel({
               key={basemap}
               attribution={BASEMAPS[basemap].attribution}
               url={BASEMAPS[basemap].url}
+              maxNativeZoom={basemap === "satellite" ? 19 : 20}
+              maxZoom={22}
             />
             <FlyTo lat={latitude} lng={longitude} />
 
