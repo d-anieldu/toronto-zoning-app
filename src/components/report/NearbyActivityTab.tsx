@@ -1055,6 +1055,8 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
                 ? `$${(p.est_cost / 1_000).toFixed(0)}K`
                 : `$${p.est_cost}`
             : undefined,
+        lat: p.lat,
+        lng: p.lng,
       });
     }
     // Dev applications → map-compatible shape
@@ -1067,6 +1069,8 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
         _description: a.description || a.app_type,
         _status: a.status,
         url: a.app_url || undefined,
+        lat: a.lat,
+        lng: a.lng,
       });
     }
     const total = merged.length;
