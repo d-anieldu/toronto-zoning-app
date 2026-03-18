@@ -83,6 +83,8 @@ interface NearbyData {
       est_cost: number | null;
       dwelling_units_created: number;
       dwelling_units_lost: number;
+      lat?: number;
+      lng?: number;
     }[];
     by_status: Record<string, number>;
     by_work_type: { type: string; count: number }[];
@@ -108,6 +110,8 @@ interface NearbyData {
       reference_file: string | null;
       community_meeting_date: string;
       community_meeting_location: string;
+      lat?: number;
+      lng?: number;
     }[];
     by_status: Record<string, number>;
     by_type: { type: string; count: number }[];
