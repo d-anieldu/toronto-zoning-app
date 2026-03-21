@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { FileText, CheckCircle, Shield } from "lucide-react";
+import { FileText, CheckCircle, Shield, Users } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 export default function UserNav() {
@@ -120,6 +120,15 @@ export default function UserNav() {
                 className="flex items-center gap-2 px-4 py-2 text-[12px] text-amber-700 hover:bg-amber-50"
               >
                 <Shield className="h-3.5 w-3.5" /> Admin Dashboard
+              </Link>
+            )}
+            {isAdmin && (
+              <Link
+                href="/admin/users"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-[12px] text-amber-700 hover:bg-amber-50"
+              >
+                <Users className="h-3.5 w-3.5" /> Users
               </Link>
             )}
           </div>

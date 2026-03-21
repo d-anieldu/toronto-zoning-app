@@ -195,12 +195,20 @@ export default function AdminFeedbackPage() {
               Admin
             </span>
           </div>
-          <Link
-            href="/dashboard"
-            className="text-[12px] text-stone-500 hover:text-stone-900"
-          >
-            ← Back to lookup
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin/users"
+              className="text-[12px] text-stone-500 hover:text-stone-900"
+            >
+              Users
+            </Link>
+            <Link
+              href="/dashboard"
+              className="text-[12px] text-stone-500 hover:text-stone-900"
+            >
+              ← Back to lookup
+            </Link>
+          </div>
         </div>
       </header>
 
