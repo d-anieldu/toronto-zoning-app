@@ -10,7 +10,7 @@
  * Essentially the "deep regulatory intelligence" tab.
  */
 
-import { Card, Row, Badge, Icons, SectionHeading } from "./primitives";
+import { Card, Row, Badge, Icons, SectionHeading, FlagProvider } from "./primitives";
 import { RefLink } from "../ReferencePanel";
 import ExceptionDetail from "../ExceptionDetail";
 import EditableField from "./EditableField";
@@ -75,10 +75,11 @@ interface ConstraintsContextTabProps {
   reportId?: string;
 }
 
-export default function ConstraintsContextTab({ data, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote }: ConstraintsContextTabProps) {
+export default function ConstraintsContextTab({ data, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote, reportId }: ConstraintsContextTabProps) {
   const eff = data.effective_standards || {};
   const dev = data.development_potential || {};
   const layers = data.layers || {};
+  const addr = data.address || "";
 
   /* ── Edit helpers ──────────────────────────────── */
   const rv = (path: string) => getFieldValue(data, userEdits ?? {}, path);
@@ -116,6 +117,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
   const zoneCode = eff.zone_code || eff.zone_label?.zone_code || "";
 
   return (
+    <FlagProvider address={addr} tabName="constraints_context" reportId={reportId}>
     <div className="space-y-5">
       {/* ============================================================ */}
       {/*  OVERLAYS & LAYERS                                            */}
@@ -1298,5 +1300,6 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
         </pre>
       </details>
     </div>
+    </FlagProvider>
   );
 }

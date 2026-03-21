@@ -4,18 +4,25 @@ import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { FileText, CheckCircle } from "lucide-react";
+import { FileText, CheckCircle, Shield } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 export default function UserNav() {
   const supabase = createClient();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user) {
+        supabase.from("profiles").select("role").eq("id", user.id).single()
+          .then(({ data }) => setIsAdmin(data?.role === "admin"));
+      }
+    });
 
     const {
       data: { subscription },
@@ -106,6 +113,15 @@ export default function UserNav() {
             >
               <CheckCircle className="h-3.5 w-3.5" /> Corrections Log
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin/feedback"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-[12px] text-amber-700 hover:bg-amber-50"
+              >
+                <Shield className="h-3.5 w-3.5" /> Admin Dashboard
+              </Link>
+            )}
           </div>
 
           <div className="border-t border-stone-100 pt-1">

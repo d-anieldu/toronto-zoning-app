@@ -7,8 +7,24 @@
  * Extracted from the original ZoningReport monolith for reuse.
  */
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
 import FlagButton from "../FlagButton";
+
+/* ================================================================== */
+/*  FLAG CONTEXT — lets tabs provide address/tabName/reportId once     */
+/* ================================================================== */
+
+interface FlagContextValue {
+  address: string;
+  tabName: string;
+  reportId?: string;
+}
+
+const FlagCtx = createContext<FlagContextValue | null>(null);
+
+export function FlagProvider({ address, tabName, reportId, children }: FlagContextValue & { children: ReactNode }) {
+  return <FlagCtx.Provider value={{ address, tabName, reportId }}>{children}</FlagCtx.Provider>;
+}
 
 /* ================================================================== */
 /*  PRIMITIVES                                                         */
@@ -175,10 +191,18 @@ export function Row({
   flagTabName?: string;
   reportId?: string;
 }) {
+  const ctx = useContext(FlagCtx);
   if (value === null || value === undefined || value === "" || value === "not specified")
     return null;
   const display = typeof value === "object" && !("props" in value) ? JSON.stringify(value) : value;
   const displayStr = typeof display === "string" ? display : String(display);
+
+  // Resolve flag props: explicit props > context > nothing
+  const fAddr = flagAddress || ctx?.address;
+  const fTab = flagTabName || ctx?.tabName;
+  const fReport = reportId || ctx?.reportId;
+  const fPath = flagFieldPath || (ctx ? label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") : undefined);
+
   return (
     <div className="group flex items-baseline justify-between gap-4 border-b border-stone-50 py-2.5 last:border-0">
       <span className="shrink-0 text-[13px] text-stone-400">{label}</span>
@@ -188,14 +212,14 @@ export function Row({
         >
           {display}
         </span>
-        {flagAddress && flagFieldPath && (
+        {fAddr && fPath && (
           <FlagButton
-            address={flagAddress}
-            fieldPath={flagFieldPath}
+            address={fAddr}
+            fieldPath={fPath}
             fieldLabel={label}
             currentValue={displayStr}
-            tabName={flagTabName || ""}
-            reportId={reportId}
+            tabName={fTab || ""}
+            reportId={fReport}
           />
         )}
         {sub && <p className="text-[11px] text-stone-400">{sub}</p>}

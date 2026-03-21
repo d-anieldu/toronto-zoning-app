@@ -7,7 +7,7 @@
  * bicycle parking, loading space, amenity space, inclusionary zoning.
  */
 
-import { Card, Row, Badge, Icons, Tag, SectionHeading } from "./primitives";
+import { Card, Row, Badge, Icons, Tag, SectionHeading, FlagProvider } from "./primitives";
 import { RefLink } from "../ReferencePanel";
 import EditableField from "./EditableField";
 import SectionNoteEditor from "./SectionNoteEditor";
@@ -25,9 +25,10 @@ interface UsesParkingTabProps {
   reportId?: string;
 }
 
-export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote }: UsesParkingTabProps) {
+export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote, reportId }: UsesParkingTabProps) {
   const eff = data.effective_standards || {};
   const dev = data.development_potential || {};
+  const addr = data.address || "";
 
   /* ── resolve editable fields through user-edit overlay ── */
   const rv = (p: string) => getFieldValue(data, userEdits, p);
@@ -58,6 +59,7 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
   const visitorFormula = rv("effective_standards.parking.visitor_parking.formula");
 
   return (
+    <FlagProvider address={addr} tabName="uses_parking" reportId={reportId}>
     <div className="space-y-5">
       {/* ============================================================ */}
       {/*  PERMITTED USES                                               */}
@@ -474,5 +476,6 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
         editMode={!!editMode}
       />
     </div>
+    </FlagProvider>
   );
 }

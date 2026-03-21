@@ -10,7 +10,7 @@
  * "Angular Plane" + "Shadow" sections, consolidated into one tab.
  */
 
-import { Card, Row, Badge, SetbackDiagram, Tag } from "./primitives";
+import { Card, Row, Badge, SetbackDiagram, Tag, FlagProvider } from "./primitives";
 import { RefLink } from "../ReferencePanel";
 import LandscapingCard from "./LandscapingCard";
 import EditableField from "./EditableField";
@@ -77,10 +77,8 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
   const devHeightMax = rv("development_potential.height.max_m");
 
   return (
+    <FlagProvider address={addr} tabName="building_envelope" reportId={reportId}>
     <div className="space-y-5">
-      {/* ============================================================ */}
-      {/*  BUILDING ENVELOPE — setback diagram + key metrics            */}
-      {/* ============================================================ */}
       {dev && !hasDevError && (
         <>
           <div className="grid gap-4 md:grid-cols-5">
@@ -671,5 +669,6 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
         editMode={!!editMode}
       />
     </div>
+    </FlagProvider>
   );
 }
