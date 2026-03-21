@@ -10,7 +10,7 @@
  * in the /lookup response — zero backend changes needed.
  */
 
-import { Badge, severityColor, severityIcon } from "./primitives";
+import { Badge, severityColor, severityIcon, severityDotColor } from "./primitives";
 import FlagButton from "../FlagButton";
 import DevChargesCalculator from "../DevChargesCalculator";
 import ZoningStatisticsTable from "./ZoningStatisticsTable";
@@ -832,8 +832,8 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                           : "border-stone-200 bg-stone-50/50"
                   }`}
                 >
-                  <span className="mt-0.5 shrink-0 text-[14px]" aria-hidden="true">
-                    {severityIcon[c.severity] || "🔵"}
+                  <span className={`mt-0.5 shrink-0 text-[14px] ${severityDotColor[c.severity] || "text-sky-500"}`} aria-hidden="true">
+                    {severityIcon[c.severity] || "●"}
                   </span>
                   <div className="min-w-0">
                     <p className="text-[13px] font-medium text-stone-800">

@@ -45,7 +45,7 @@ export function SectionHeading({
     <div id={id} className="scroll-mt-28 pt-2">
       <div className="flex items-center gap-2.5 pb-3">
         {icon && <span className="text-stone-400" aria-hidden="true">{icon}</span>}
-        <h3 className="text-[15px] font-semibold tracking-tight text-stone-900">
+        <h3 className="font-heading text-[15px] font-semibold tracking-tight text-stone-900">
           {title}
         </h3>
         {count != null && (
@@ -89,7 +89,7 @@ export function Card({
         aria-expanded={open}
         aria-label={`${open ? "Collapse" : "Expand"} ${label}`}
       >
-        <h4 className="text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+        <h4 className="font-heading text-[13px] font-semibold uppercase tracking-wide text-stone-400">
           {label}
         </h4>
         <svg
@@ -121,12 +121,14 @@ export function StatCard({
   label,
   sub,
   accent,
+  hero,
 }: {
   value: string | number;
   unit?: string;
   label: string;
   sub?: string;
   accent?: boolean;
+  hero?: boolean;
 }) {
   return (
     <div
@@ -137,7 +139,9 @@ export function StatCard({
       }`}
     >
       <p
-        className={`text-[24px] font-bold tracking-tight leading-tight ${
+        className={`font-heading font-bold tracking-tight leading-tight ${
+          hero ? "text-[28px]" : "text-[22px]"
+        } ${
           accent ? "text-white" : "text-stone-900"
         }`}
       >
@@ -233,11 +237,12 @@ export function Badge({
   variant = "default",
 }: {
   children: ReactNode;
-  variant?: "default" | "active" | "warning" | "danger" | "success" | "info";
+  variant?: "default" | "active" | "accent" | "warning" | "danger" | "success" | "info";
 }) {
   const styles = {
     default: "border-stone-200 bg-stone-50 text-stone-600",
     active: "border-stone-300 bg-stone-100 text-stone-700",
+    accent: "border-emerald-300 bg-emerald-50 text-emerald-800",
     warning: "border-amber-200 bg-amber-50 text-amber-700",
     danger: "border-red-200 bg-red-50 text-red-700",
     success: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -463,8 +468,15 @@ export const severityColor: Record<string, "danger" | "warning" | "default" | "i
 };
 
 export const severityIcon: Record<string, string> = {
-  high: "🔴",
-  medium: "🟡",
-  low: "🔵",
-  info: "🚇",
+  high: "●",
+  medium: "●",
+  low: "●",
+  info: "●",
+};
+
+export const severityDotColor: Record<string, string> = {
+  high: "text-red-500",
+  medium: "text-amber-500",
+  low: "text-sky-500",
+  info: "text-sky-500",
 };
