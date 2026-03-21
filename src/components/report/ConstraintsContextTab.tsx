@@ -15,6 +15,7 @@ import { RefLink } from "../ReferencePanel";
 import ExceptionDetail from "../ExceptionDetail";
 import EditableField from "./EditableField";
 import SectionNoteEditor from "./SectionNoteEditor";
+import FlagButton from "../FlagButton";
 import { getFieldValue } from "@/lib/report-edits";
 
 /* ── Overlay definition helper ────────────────────────────────────── */
@@ -138,8 +139,18 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                 return (
                   <div key={o.key} className="flex items-start gap-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
                     <span className="mt-0.5 text-[16px]" aria-hidden="true">{o.icon}</span>
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-medium text-stone-700">{o.label}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <p className="text-[13px] font-medium text-stone-700">{o.label}</p>
+                        <FlagButton
+                          address={addr}
+                          fieldPath={`overlays.${o.key}`}
+                          fieldLabel={o.label}
+                          currentValue={detail || "Active"}
+                          tabName="constraints_context"
+                          reportId={reportId}
+                        />
+                      </div>
                       {detail && oe && editMode ? (
                         <EditableField {...ep(oe.field, ov!.value, ov!.isEdited, ov!.original, ov!.editNote)}>
                           <p className="font-mono text-[12px] text-emerald-600">{detail}</p>
@@ -201,18 +212,48 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                   <div className="grid gap-3 sm:grid-cols-2 mb-3">
                     <div className="rounded-lg border border-stone-200 bg-white p-3">
                       <p className="text-[22px] font-bold text-stone-900">{h.setback_m}m</p>
-                      <p className="text-[12px] text-stone-500">setback {h.setback_label}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-[12px] text-stone-500">setback {h.setback_label}</p>
+                        <FlagButton
+                          address={addr}
+                          fieldPath={`natural_hazards.${i}.setback_m`}
+                          fieldLabel={`${h.label} setback`}
+                          currentValue={`${h.setback_m}m`}
+                          tabName="constraints_context"
+                          reportId={reportId}
+                        />
+                      </div>
                     </div>
                     {h.tree_protection_m && (
                       <div className="rounded-lg border border-stone-200 bg-white p-3">
                         <p className="text-[22px] font-bold text-stone-900">{h.tree_protection_m}m</p>
-                        <p className="text-[12px] text-stone-500">tree protection zone</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-[12px] text-stone-500">tree protection zone</p>
+                          <FlagButton
+                            address={addr}
+                            fieldPath={`natural_hazards.${i}.tree_protection_m`}
+                            fieldLabel={`${h.label} tree protection`}
+                            currentValue={`${h.tree_protection_m}m`}
+                            tabName="constraints_context"
+                            reportId={reportId}
+                          />
+                        </div>
                       </div>
                     )}
                     {h.reduced_setback_m && (
                       <div className="rounded-lg border border-stone-200 bg-white p-3">
                         <p className="text-[22px] font-bold text-amber-600">{h.reduced_setback_m}m</p>
-                        <p className="text-[12px] text-stone-500">reduced setback (urban area)</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-[12px] text-stone-500">reduced setback (urban area)</p>
+                          <FlagButton
+                            address={addr}
+                            fieldPath={`natural_hazards.${i}.reduced_setback_m`}
+                            fieldLabel={`${h.label} reduced setback`}
+                            currentValue={`${h.reduced_setback_m}m`}
+                            tabName="constraints_context"
+                            reportId={reportId}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -255,7 +296,15 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                     {eff.natural_hazards.permits_required.map((p: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
                         <span className="mt-0.5 text-red-500" aria-hidden="true">📋</span>
-                        <span>{p}</span>
+                        <span className="flex-1">{p}</span>
+                        <FlagButton
+                          address={addr}
+                          fieldPath={`natural_hazards.permits_required.${i}`}
+                          fieldLabel={`Permit: ${p}`}
+                          currentValue={p}
+                          tabName="constraints_context"
+                          reportId={reportId}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -268,7 +317,15 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                     {eff.natural_hazards.studies_required.map((s: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
                         <span className="mt-0.5 text-amber-500" aria-hidden="true">📄</span>
-                        <span>{s}</span>
+                        <span className="flex-1">{s}</span>
+                        <FlagButton
+                          address={addr}
+                          fieldPath={`natural_hazards.studies_required.${i}`}
+                          fieldLabel={`Study: ${s}`}
+                          currentValue={s}
+                          tabName="constraints_context"
+                          reportId={reportId}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -567,6 +624,14 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                       {opDesignation.confidence} confidence
                     </span>
                   )}
+                  <FlagButton
+                    address={addr}
+                    fieldPath="op_context.op_designation"
+                    fieldLabel="OP Designation"
+                    currentValue={opDesignationName.value as string}
+                    tabName="constraints_context"
+                    reportId={reportId}
+                  />
                 </div>
                 <EditableField {...ep("effective_standards.op_context.op_designation.designation", opDesignationName.value, opDesignationName.isEdited, opDesignationName.original, opDesignationName.editNote)}>
                   <h4 className="mt-2 text-[17px] font-bold text-stone-900">{opDesignationName.value as string}</h4>
@@ -597,7 +662,15 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                     {opDesignation.policy_highlights.map((h: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-sky-700">
                         <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-sky-400" />
-                        <span>{h}</span>
+                        <span className="flex-1">{h}</span>
+                        <FlagButton
+                          address={addr}
+                          fieldPath={`op_context.policy_highlights.${i}`}
+                          fieldLabel={`OP Policy: ${h.slice(0, 50)}`}
+                          currentValue={h}
+                          tabName="constraints_context"
+                          reportId={reportId}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -632,11 +705,21 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
               <div className="space-y-3">
                 {saspPolicies.map((sasp: any, i: number) => (
                   <div key={i} className="rounded-lg border border-amber-100 bg-amber-50/50 p-4">
-                    <p className="text-[13px] font-semibold text-stone-800">
-                      <RefLink type="sasp" id={String(sasp.sasp_number)} label={`SASP #${sasp.sasp_number}`}>
-                        SASP #{sasp.sasp_number}
-                      </RefLink>
-                    </p>
+                    <div className="flex items-center gap-1">
+                      <p className="text-[13px] font-semibold text-stone-800">
+                        <RefLink type="sasp" id={String(sasp.sasp_number)} label={`SASP #${sasp.sasp_number}`}>
+                          SASP #{sasp.sasp_number}
+                        </RefLink>
+                      </p>
+                      <FlagButton
+                        address={addr}
+                        fieldPath={`sasp.${sasp.sasp_number}`}
+                        fieldLabel={`SASP #${sasp.sasp_number}`}
+                        currentValue={sasp.title || `SASP #${sasp.sasp_number}`}
+                        tabName="constraints_context"
+                        reportId={reportId}
+                      />
+                    </div>
                     {sasp.title && <p className="mt-0.5 text-[12px] font-medium text-stone-600">{sasp.title}</p>}
                     {sasp.content && <p className="mt-2 text-[12px] leading-relaxed text-stone-500">{sasp.content}</p>}
                   </div>
@@ -664,6 +747,14 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="warning">{src.type?.toUpperCase()}</Badge>
                   <span className="text-[14px] font-semibold text-stone-800">{src.source}</span>
+                  <FlagButton
+                    address={addr}
+                    fieldPath={`noise_vibration.source.${i}`}
+                    fieldLabel={`Noise source: ${src.source}`}
+                    currentValue={src.source}
+                    tabName="constraints_context"
+                    reportId={reportId}
+                  />
                 </div>
                 {src.npc_class && <Row label="NPC-300 class" value={src.npc_class} />}
                 {src.buffer_m && <Row label="Buffer distance" value={`${src.buffer_m}m`} />}
@@ -679,7 +770,16 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                   <ul className="space-y-2">
                     {dev.noise_vibration.studies_required.map((s: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
-                        <span className="mt-0.5 text-amber-500" aria-hidden="true">📄</span><span>{s}</span>
+                        <span className="mt-0.5 text-amber-500" aria-hidden="true">📄</span>
+                        <span className="flex-1">{s}</span>
+                        <FlagButton
+                          address={addr}
+                          fieldPath={`noise_vibration.studies_required.${i}`}
+                          fieldLabel={`Noise study: ${s}`}
+                          currentValue={s}
+                          tabName="constraints_context"
+                          reportId={reportId}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -691,7 +791,16 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                   <ul className="space-y-2">
                     {dev.noise_vibration.typical_mitigation.map((m: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
-                        <span className="mt-0.5 text-stone-400" aria-hidden="true">🔇</span><span>{m}</span>
+                        <span className="mt-0.5 text-stone-400" aria-hidden="true">🔇</span>
+                        <span className="flex-1">{m}</span>
+                        <FlagButton
+                          address={addr}
+                          fieldPath={`noise_vibration.typical_mitigation.${i}`}
+                          fieldLabel={`Mitigation: ${m}`}
+                          currentValue={m}
+                          tabName="constraints_context"
+                          reportId={reportId}
+                        />
                       </li>
                     ))}
                   </ul>

@@ -11,6 +11,7 @@
  */
 
 import { Badge, severityColor, severityIcon } from "./primitives";
+import FlagButton from "../FlagButton";
 import DevChargesCalculator from "../DevChargesCalculator";
 import ZoningStatisticsTable from "./ZoningStatisticsTable";
 import EditableField from "./EditableField";
@@ -411,6 +412,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           accent={isFormerBylaw ? "amber" : undefined}
           editFieldProps={ep("effective_standards.height.effective_m", heightM)}
           editSubProps={heightSt.value != null ? ep("effective_standards.height.effective_storeys", heightSt) : undefined}
+          address={data.address}
+          fieldPath="effective_standards.height.effective_m"
+          reportId={reportId}
         />
 
         {/* FSI */}
@@ -420,6 +424,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           value={fsiField.value != null ? `${fsiField.value}` : "—"}
           sub={eff.fsi?.effective_source}
           editFieldProps={ep("effective_standards.fsi.effective_total", fsiField)}
+          address={data.address}
+          fieldPath="effective_standards.fsi.effective_total"
+          reportId={reportId}
         />
 
         {/* GFA */}
@@ -430,6 +437,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           sub={dev.max_gfa?.limiting_factor ? `by ${dev.max_gfa.limiting_factor}` : undefined}
           accent="emerald"
           editFieldProps={ep("development_potential.max_gfa.sqm", maxGfaField)}
+          address={data.address}
+          fieldPath="development_potential.max_gfa.sqm"
+          reportId={reportId}
         />
 
         {/* Lot Coverage */}
@@ -453,6 +463,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           accent={isFormerBylaw && dev.lot_coverage?.max_pct != null ? "amber" : undefined}
           editFieldProps={ep("effective_standards.lot_coverage.effective_pct", lotCovPct)}
           editSubProps={maxFootprintField.value != null ? ep("development_potential.coverage.max_footprint_sqm", maxFootprintField) : undefined}
+          address={data.address}
+          fieldPath="effective_standards.lot_coverage.effective_pct"
+          reportId={reportId}
         />
 
         {/* Min Lot Area */}
@@ -462,6 +475,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           value={minLotAreaField2.value != null ? `${fmt(minLotAreaField2.value as number)} m²` : "—"}
           sub={eff.lot_dimensions?.area_source}
           editFieldProps={ep("effective_standards.lot_dimensions.min_area_sqm", minLotAreaField2)}
+          address={data.address}
+          fieldPath="effective_standards.lot_dimensions.min_area_sqm"
+          reportId={reportId}
         />
 
         {/* Parcel Size */}
@@ -471,6 +487,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           value={parcelAreaField2.value != null ? `${fmt(parcelAreaField2.value as number)} m²` : "—"}
           sub={dev.lot?.area_source}
           editFieldProps={ep("development_potential.lot.area_sqm", parcelAreaField2)}
+          address={data.address}
+          fieldPath="development_potential.lot.area_sqm"
+          reportId={reportId}
         />
 
         {/* Parking Zone */}
@@ -485,6 +504,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           }
           editFieldProps={ep("effective_standards.parking.parking_zone", parkingZoneField)}
           editSubProps={parkingSpacesField.value != null ? ep("development_potential.parking_estimate.residential_spaces", parkingSpacesField) : undefined}
+          address={data.address}
+          fieldPath="effective_standards.parking.parking_zone"
+          reportId={reportId}
         />
       </div>
 
@@ -497,9 +519,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             Setbacks
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <SetbackChip label="Front" value={frontSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_front_m", frontSetback)} />
-            <SetbackChip label="Rear" value={rearSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_rear_m", rearSetback)} />
-            <SetbackChip label="Side" value={sideSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_side_m", sideSetback)} />
+            <SetbackChip label="Front" value={frontSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_front_m", frontSetback)} address={data.address} fieldPath="effective_standards.setbacks.effective_front_m" reportId={reportId} />
+            <SetbackChip label="Rear" value={rearSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_rear_m", rearSetback)} address={data.address} fieldPath="effective_standards.setbacks.effective_rear_m" reportId={reportId} />
+            <SetbackChip label="Side" value={sideSetback.value as number | undefined} editFieldProps={ep("effective_standards.setbacks.effective_side_m", sideSetback)} address={data.address} fieldPath="effective_standards.setbacks.effective_side_m" reportId={reportId} />
             {(buildableAreaField.value != null || buildableAreaField.isEdited) && (
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
                 <EditableField
@@ -516,7 +538,17 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                     {fmt(buildableAreaField.value as number)} m²
                   </p>
                 </EditableField>
-                <p className="text-[11px] text-emerald-600">Buildable Area</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-[11px] text-emerald-600">Buildable Area</p>
+                  <FlagButton
+                    address={data.address}
+                    fieldPath="development_potential.setbacks.buildable_area_sqm"
+                    fieldLabel="Buildable Area"
+                    currentValue={buildableAreaField.value != null ? `${fmt(buildableAreaField.value as number)} m²` : "—"}
+                    tabName="summary"
+                    reportId={reportId}
+                  />
+                </div>
                 {(buildableWidthField.value != null && buildableDepthField.value != null) && (
                   <div className="flex items-center gap-1 text-[10px] font-mono text-emerald-500">
                     <EditableField
@@ -573,6 +605,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                 ? `Heritage: ${eff.heritage_impact.combined_impact}`
                 : eff.heritage_impact ? "No Heritage designation" : "Heritage data not loaded"
             }
+            address={data.address}
+            fieldPath="quick_flags.heritage"
+            reportId={reportId}
           />
 
           {/* Natural Hazards */}
@@ -583,12 +618,18 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                 ? `${eff.natural_hazards.hazard_count} Natural Hazard${eff.natural_hazards.hazard_count > 1 ? "s" : ""}`
                 : eff.natural_hazards ? "No Natural Hazard constraints" : "Hazard data not loaded"
             }
+            address={data.address}
+            fieldPath="quick_flags.natural_hazards"
+            reportId={reportId}
           />
 
           {/* Holding */}
           <FlagItem
             status={holdingProvision ? "bad" : "good"}
             label={holdingProvision ? "Holding (H) provision active" : "No Holding provision"}
+            address={data.address}
+            fieldPath="quick_flags.holding"
+            reportId={reportId}
           />
 
           {/* Exception */}
@@ -599,6 +640,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                 ? `Exception #${exceptionNum} modifies standards`
                 : "No zoning exception"
             }
+            address={data.address}
+            fieldPath="quick_flags.exception"
+            reportId={reportId}
           />
 
           {/* Site Plan Control */}
@@ -617,6 +661,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                   ? "Site Plan Control not required"
                   : "Site Plan Control — check with City"
             }
+            address={data.address}
+            fieldPath="quick_flags.site_plan_control"
+            reportId={reportId}
           />
 
           {/* SASP */}
@@ -624,6 +671,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="warn"
               label={`${eff.op_context.sasp_policies.length} SASP polic${eff.op_context.sasp_policies.length > 1 ? "ies" : "y"} apply`}
+              address={data.address}
+              fieldPath="quick_flags.sasp"
+              reportId={reportId}
             />
           )}
 
@@ -632,6 +682,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="info"
               label={`PMTSA: ${dev.constraints.pmtsa_advisory.station_name} Station`}
+              address={data.address}
+              fieldPath="quick_flags.pmtsa"
+              reportId={reportId}
             />
           )}
 
@@ -639,6 +692,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           <FlagItem
             status={activeOverlayCount > 0 ? "neutral" : "good"}
             label={`${activeOverlayCount} active overlay${activeOverlayCount !== 1 ? "s" : ""}`}
+            address={data.address}
+            fieldPath="quick_flags.active_overlays"
+            reportId={reportId}
           />
 
           {/* Inclusionary Zoning */}
@@ -646,6 +702,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="warn"
               label={`Inclusionary Zoning: ${dev.inclusionary_zoning.effective_rate_pct}% affordable`}
+              address={data.address}
+              fieldPath="quick_flags.inclusionary_zoning"
+              reportId={reportId}
             />
           )}
 
@@ -658,6 +717,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                   : "good"
               }
               label={`OP Designation: ${eff.op_context.op_designation.confidence} confidence${eff.op_context.op_designation.caveat ? " ⚠" : ""}`}
+              address={data.address}
+              fieldPath="quick_flags.op_confidence"
+              reportId={reportId}
             />
           )}
 
@@ -666,6 +728,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="warn"
               label={`${dev.noise_vibration.source_count} Noise/Vibration source${dev.noise_vibration.source_count !== 1 ? "s" : ""} nearby`}
+              address={data.address}
+              fieldPath="quick_flags.noise_vibration"
+              reportId={reportId}
             />
           )}
 
@@ -674,6 +739,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="bad"
               label={`Holding (H): ${dev.holding_detail.condition_count || dev.holding_detail.conditions.length} removal condition${(dev.holding_detail.condition_count || dev.holding_detail.conditions.length) !== 1 ? "s" : ""}`}
+              address={data.address}
+              fieldPath="quick_flags.holding_detail"
+              reportId={reportId}
             />
           )}
 
@@ -682,6 +750,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="warn"
               label={`Rental Replacement: ${dev.rental_replacement.confidence === "high" ? "likely applies" : "may apply"}`}
+              address={data.address}
+              fieldPath="quick_flags.rental_replacement"
+              reportId={reportId}
             />
           )}
 
@@ -690,6 +761,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="warn"
               label={`Parking exceeds maximum: ${dev.parking_maximum.max_spaces_permitted} max permitted`}
+              address={data.address}
+              fieldPath="quick_flags.parking_maximum"
+              reportId={reportId}
             />
           )}
 
@@ -698,6 +772,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="warn"
               label={`Shadow impacts ${dev.shadow_analysis.impacted_parks?.length || 1} park${(dev.shadow_analysis.impacted_parks?.length || 1) !== 1 ? "s" : ""} (${dev.shadow_analysis.hours_impacting_park} hrs)`}
+              address={data.address}
+              fieldPath="quick_flags.shadow_impact"
+              reportId={reportId}
             />
           )}
 
@@ -706,6 +783,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             <FlagItem
               status="neutral"
               label="Separation distance rules apply"
+              address={data.address}
+              fieldPath="quick_flags.separation_distances"
+              reportId={reportId}
             />
           )}
         </div>
@@ -930,6 +1010,9 @@ function MetricCard({
   accent,
   editFieldProps,
   editSubProps,
+  address,
+  fieldPath,
+  reportId,
 }: {
   icon: string;
   label: string;
@@ -938,6 +1021,9 @@ function MetricCard({
   accent?: "emerald" | "amber" | "red";
   editFieldProps?: EditFieldInfo;
   editSubProps?: EditFieldInfo;
+  address?: string;
+  fieldPath?: string;
+  reportId?: string;
 }) {
   const isEmpty = value === "—" || value === "\u2014";
   const accentStyles = {
@@ -978,6 +1064,16 @@ function MetricCard({
         <span className="text-[10px] font-medium uppercase tracking-wide text-stone-400">
           {label}
         </span>
+        {address && fieldPath && (
+          <FlagButton
+            address={address}
+            fieldPath={fieldPath}
+            fieldLabel={label}
+            currentValue={value}
+            tabName="summary"
+            reportId={reportId}
+          />
+        )}
       </div>
       {editFieldProps ? (
         <EditableField {...editFieldProps}>{valueEl}</EditableField>
@@ -997,10 +1093,16 @@ function SetbackChip({
   label,
   value,
   editFieldProps,
+  address,
+  fieldPath,
+  reportId,
 }: {
   label: string;
   value: number | null | undefined;
   editFieldProps?: EditFieldInfo;
+  address?: string;
+  fieldPath?: string;
+  reportId?: string;
 }) {
   if (value == null && !editFieldProps?.isEdited) return null;
   const valueEl = (
@@ -1015,7 +1117,19 @@ function SetbackChip({
       ) : (
         valueEl
       )}
-      <p className="text-[11px] text-stone-500">{label}</p>
+      <div className="flex items-center gap-1">
+        <p className="text-[11px] text-stone-500">{label}</p>
+        {address && fieldPath && (
+          <FlagButton
+            address={address}
+            fieldPath={fieldPath}
+            fieldLabel={`${label} Setback`}
+            currentValue={value != null ? `${value}m` : "—"}
+            tabName="summary"
+            reportId={reportId}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -1023,9 +1137,15 @@ function SetbackChip({
 function FlagItem({
   status,
   label,
+  address,
+  fieldPath,
+  reportId,
 }: {
   status: "good" | "warn" | "bad" | "neutral" | "info";
   label: string;
+  address?: string;
+  fieldPath?: string;
+  reportId?: string;
 }) {
   const statusConfig = {
     good: { icon: "✅", bg: "" },
@@ -1038,7 +1158,17 @@ function FlagItem({
   return (
     <div className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${cfg.bg}`}>
       <span className="text-[14px] shrink-0" aria-hidden="true">{cfg.icon}</span>
-      <span className="text-[13px] text-stone-700">{label}</span>
+      <span className="flex-1 text-[13px] text-stone-700">{label}</span>
+      {address && fieldPath && (
+        <FlagButton
+          address={address}
+          fieldPath={fieldPath}
+          fieldLabel={label}
+          currentValue={label}
+          tabName="summary"
+          reportId={reportId}
+        />
+      )}
     </div>
   );
 }
