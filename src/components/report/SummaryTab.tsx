@@ -10,6 +10,11 @@
  * in the /lookup response — zero backend changes needed.
  */
 
+import {
+  Ruler, BarChart3, Building2, Maximize2, MapPin, Square, Car,
+  Info, AlertTriangle, Train, Landmark, CheckCircle2, XCircle,
+  type LucideIcon,
+} from "lucide-react";
 import { Badge, severityColor, severityIcon, severityDotColor } from "./primitives";
 import FlagButton from "../FlagButton";
 import DevChargesCalculator from "../DevChargesCalculator";
@@ -142,10 +147,10 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
   const opc = oppColors[opportunity.color as keyof typeof oppColors];
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm overflow-hidden">
       {/* ── Part A: What it is today ── */}
       <div className="p-5 border-b border-stone-100">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+        <p className="mb-3 font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
           Property As-Is
         </p>
         <div className="flex flex-wrap items-start gap-4">
@@ -162,23 +167,23 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
               </span>
             )}
             <EditableField {...efp("effective_standards.zone_code", zoneCodeField)}>
-              <p className="text-[17px] font-bold tracking-tight text-stone-900 leading-snug">
+              <p className="font-heading text-[17px] font-bold tracking-tight text-[var(--text-primary)] leading-snug">
                 {zoneMeta?.label || zoneCode || "—"}
               </p>
             </EditableField>
             {zoneMeta && (
-              <p className="text-[13px] text-stone-500 leading-snug">
-                Currently used for: <span className="font-medium text-stone-700">{zoneMeta.use}</span>
+              <p className="text-[13px] text-[var(--text-secondary)] leading-snug">
+                Currently used for: <span className="font-medium text-[var(--text-primary)]">{zoneMeta.use}</span>
               </p>
             )}
             {hasPMTSA && (
-              <p className="text-[12px] text-sky-600 font-medium">
-                📍 Within {pmtsaStation} Station transit area — growth prioritized
+              <p className="flex items-center gap-1.5 text-[12px] text-sky-600 font-medium">
+                <Train className="h-3.5 w-3.5" aria-hidden="true" /> Within {pmtsaStation} Station transit area — growth prioritized
               </p>
             )}
             {hasHeritage && (
-              <p className="text-[12px] text-amber-700 font-medium">
-                🏛 Heritage designation — additional approvals required
+              <p className="flex items-center gap-1.5 text-[12px] text-amber-700 font-medium">
+                <Landmark className="h-3.5 w-3.5" aria-hidden="true" /> Heritage designation — additional approvals required
               </p>
             )}
           </div>
@@ -187,36 +192,36 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
           <div className="ml-auto flex gap-5 shrink-0">
             {minLotArea != null && (
               <div>
-                <p className="text-[22px] font-bold tracking-tight text-stone-900">{fmt(minLotArea)} m²</p>
-                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Min Lot Area</p>
+                <p className="text-[22px] font-bold tracking-tight text-[var(--text-primary)]">{fmt(minLotArea)} m²</p>
+                <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wide">Min Lot Area</p>
               </div>
             )}
             {parcelArea != null && (
               <div>
-                <p className="text-[22px] font-bold tracking-tight text-stone-900">{fmt(parcelArea)} m²</p>
-                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Parcel Size</p>
+                <p className="text-[22px] font-bold tracking-tight text-[var(--text-primary)]">{fmt(parcelArea)} m²</p>
+                <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wide">Parcel Size</p>
               </div>
             )}
             {(frontage != null || frontageField.isEdited) && (
               <div>
                 <EditableField {...efp("development_potential.lot.frontage_m", frontageField)}>
-                  <p className="text-[22px] font-bold tracking-tight text-stone-900">{frontage}m</p>
+                  <p className="text-[22px] font-bold tracking-tight text-[var(--text-primary)]">{frontage}m</p>
                 </EditableField>
-                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Frontage</p>
+                <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wide">Frontage</p>
               </div>
             )}
             {(depth != null || depthField.isEdited) && (
               <div>
                 <EditableField {...efp("development_potential.lot.depth_m", depthField)}>
-                  <p className="text-[22px] font-bold tracking-tight text-stone-900">{depth}m</p>
+                  <p className="text-[22px] font-bold tracking-tight text-[var(--text-primary)]">{depth}m</p>
                 </EditableField>
-                <p className="text-[11px] text-stone-400 uppercase tracking-wide">Depth</p>
+                <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wide">Depth</p>
               </div>
             )}
             {opDesignation && (
               <div>
-                <p className="text-[13px] font-semibold text-stone-800 leading-snug">{opDesignation}</p>
-                <p className="text-[11px] text-stone-400 uppercase tracking-wide">OP Designation</p>
+                <p className="text-[13px] font-semibold text-[var(--text-primary)] leading-snug">{opDesignation}</p>
+                <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wide">OP Designation</p>
               </div>
             )}
           </div>
@@ -225,7 +230,7 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
 
       {/* ── Part B: Development opportunity ── */}
       <div className={`p-5 ${opc.bg} ${opc.border} border-t-0`}>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+        <p className="mb-3 font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
           Development Opportunity
         </p>
         <div className="flex flex-wrap items-center gap-4">
@@ -236,23 +241,23 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
               {opportunity.grade}
             </span>
           </div>
-          <p className="text-[13px] text-stone-600 flex-1 min-w-0">
+          <p className="text-[13px] text-[var(--text-secondary)] flex-1 min-w-0">
             {opportunity.summary}
           </p>
           {/* Key numbers */}
           <div className="flex gap-4 shrink-0 ml-auto">
             {maxGFA != null && (
               <div className="text-right">
-                <p className="text-[16px] font-bold text-stone-900">{fmt(maxGFA)} m²</p>
-                <p className="text-[10px] uppercase tracking-wide text-stone-400">Max GFA</p>
+                <p className="text-[16px] font-bold text-[var(--text-primary)]">{fmt(maxGFA)} m²</p>
+                <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Max GFA</p>
               </div>
             )}
             {maxHeight != null && (
               <div className="text-right">
-                <p className="text-[16px] font-bold text-stone-900">
+                <p className="text-[16px] font-bold text-[var(--text-primary)]">
                   {maxHeight}m{maxHeightSt ? ` / ${maxHeightSt}st` : ""}
                 </p>
-                <p className="text-[10px] uppercase tracking-wide text-stone-400">Max Height</p>
+                <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Max Height</p>
               </div>
             )}
           </div>
@@ -391,7 +396,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
         {/* Height */}
         <MetricCard
-          icon="📏"
+          Icon={Ruler}
           label="Max Height"
           value={
             heightM.value != null
@@ -419,7 +424,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
 
         {/* FSI */}
         <MetricCard
-          icon="📊"
+          Icon={BarChart3}
           label="Max FSI"
           value={fsiField.value != null ? `${fsiField.value}` : "—"}
           sub={eff.fsi?.effective_source}
@@ -431,7 +436,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
 
         {/* GFA */}
         <MetricCard
-          icon="🏗️"
+          Icon={Building2}
           label="Max GFA"
           value={maxGfaField.value != null ? `${fmt(maxGfaField.value as number)} m²` : "—"}
           sub={dev.max_gfa?.limiting_factor ? `by ${dev.max_gfa.limiting_factor}` : undefined}
@@ -444,7 +449,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
 
         {/* Lot Coverage */}
         <MetricCard
-          icon="📐"
+          Icon={Maximize2}
           label="Lot Coverage"
           value={
             lotCovPct.value != null
@@ -470,7 +475,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
 
         {/* Min Lot Area */}
         <MetricCard
-          icon="📍"
+          Icon={MapPin}
           label="Min Lot Area"
           value={minLotAreaField2.value != null ? `${fmt(minLotAreaField2.value as number)} m²` : "—"}
           sub={eff.lot_dimensions?.area_source}
@@ -482,7 +487,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
 
         {/* Parcel Size */}
         <MetricCard
-          icon="📐"
+          Icon={Square}
           label="Parcel Size"
           value={parcelAreaField2.value != null ? `${fmt(parcelAreaField2.value as number)} m²` : "—"}
           sub={dev.lot?.area_source}
@@ -494,7 +499,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
 
         {/* Parking Zone */}
         <MetricCard
-          icon="🅿️"
+          Icon={Car}
           label="Parking Zone"
           value={(parkingZoneField.value as string) || eff.parking_zone || "—"}
           sub={
@@ -514,8 +519,8 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/*  SETBACKS — compact bar                                       */}
       {/* ============================================================ */}
       {eff.setbacks && (
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+          <p className="mb-3 font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             Setbacks
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -592,8 +597,8 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/* ============================================================ */}
       {/*  QUICK FLAGS — constraint / overlay / heritage / confidence    */}
       {/* ============================================================ */}
-      <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-        <p className="mb-4 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+        <p className="mb-4 font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
           Quick Flags
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -795,9 +800,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/*  DEVELOPMENT CONSTRAINTS — severity-sorted                    */}
       {/* ============================================================ */}
       {constraints.length > 0 && (
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+            <p className="font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
               Development Constraints
             </p>
             <div className="flex items-center gap-2">
@@ -836,11 +841,11 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                     {severityIcon[c.severity] || "●"}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-stone-800">
+                    <p className="text-[13px] font-medium text-[var(--text-primary)]">
                       {c.label || c.layer || c.tag || "Constraint"}
                     </p>
                     {(c.detail || c.impact) && (
-                      <p className="mt-0.5 text-[12px] text-stone-500">
+                      <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">
                         {c.detail || c.impact}
                       </p>
                     )}
@@ -858,32 +863,32 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/*  COA PRECEDENTS — compact                                     */}
       {/* ============================================================ */}
       {dev.coa_precedents?.total_matches > 0 && (
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+          <p className="mb-3 font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             Committee of Adjustment Precedents
           </p>
           <div className="flex items-center gap-6">
             <div>
-              <p className="text-[28px] font-bold tracking-tight text-stone-900">
+              <p className="text-[28px] font-bold tracking-tight text-[var(--text-primary)]">
                 {dev.coa_precedents.approval_rate}%
               </p>
-              <p className="text-[12px] text-stone-500">Approval Rate</p>
+              <p className="text-[12px] text-[var(--text-secondary)]">Approval Rate</p>
             </div>
-            <div className="h-10 w-px bg-stone-200" />
+            <div className="h-10 w-px bg-[var(--border)]" />
             <div>
-              <p className="text-[20px] font-bold tracking-tight text-stone-900">
+              <p className="text-[20px] font-bold tracking-tight text-[var(--text-primary)]">
                 {dev.coa_precedents.total_matches}
               </p>
-              <p className="text-[12px] text-stone-500">Applications</p>
+              <p className="text-[12px] text-[var(--text-secondary)]">Applications</p>
             </div>
             {dev.coa_precedents.same_zone_count > 0 && (
               <>
-                <div className="h-10 w-px bg-stone-200" />
+                <div className="h-10 w-px bg-[var(--border)]" />
                 <div>
-                  <p className="text-[20px] font-bold tracking-tight text-stone-900">
+                  <p className="text-[20px] font-bold tracking-tight text-[var(--text-primary)]">
                     {dev.coa_precedents.same_zone_approval_rate ?? dev.coa_precedents.approval_rate}%
                   </p>
-                  <p className="text-[12px] text-stone-500">Same Zone ({dev.coa_precedents.same_zone_count})</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Same Zone ({dev.coa_precedents.same_zone_count})</p>
                 </div>
               </>
             )}
@@ -895,7 +900,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/*  CONFIDENCE SCORE — compact                                   */}
       {/* ============================================================ */}
       {confidence && (
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
           <div className="flex items-center gap-4">
             <div
               className={`flex h-14 w-14 items-center justify-center rounded-full border-4 ${
@@ -912,21 +917,21 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p className="text-[14px] font-bold text-stone-900">
+                <p className="font-heading text-[14px] font-bold text-[var(--text-primary)]">
                   {confidence.label || (confLevel ? `${confLevel.toUpperCase()} Confidence` : "Confidence")}
                 </p>
                 {confidence.section_count != null && (
-                  <span className="text-[11px] text-stone-400">
+                  <span className="text-[11px] text-[var(--text-muted)]">
                     {confidence.high_confidence_count}/{confidence.section_count} sections high
                   </span>
                 )}
                 {confScore != null && confGrade && (
-                  <span className="text-[11px] text-stone-400">
+                  <span className="text-[11px] text-[var(--text-muted)]">
                     Score: {confScore}/100
                   </span>
                 )}
               </div>
-              <p className="mt-0.5 text-[12px] text-stone-500 line-clamp-2">
+              <p className="mt-0.5 text-[12px] text-[var(--text-secondary)] line-clamp-2">
                 {confidence.summary}
               </p>
             </div>
@@ -938,17 +943,17 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/*  DEVELOPMENT CHARGES — compact                                */}
       {/* ============================================================ */}
       {dev.development_charges?.total_estimated && (
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
           <div className="flex items-baseline justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+            <p className="font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
               Estimated Development Charges
             </p>
-            <p className="font-mono text-[22px] font-bold tracking-tight text-stone-900">
+            <p className="font-mono text-[22px] font-bold tracking-tight text-[var(--text-primary)]">
               ${fmt(dev.development_charges.total_estimated)}
             </p>
           </div>
           {dev.development_charges.note && (
-            <p className="mt-2 text-[11px] text-stone-400">
+            <p className="mt-2 text-[11px] text-[var(--text-muted)]">
               {dev.development_charges.note}
             </p>
           )}
@@ -962,14 +967,14 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       <DevChargesCalculator address={data.address} />
 
       {data.planning_contact && (
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-stone-400">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+          <p className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             Planning Contact
           </p>
-          <p className="text-[14px] font-semibold text-stone-900">
+          <p className="text-[14px] font-semibold text-[var(--text-primary)]">
             {data.planning_contact.MANAGER}
           </p>
-          <p className="text-[12px] text-stone-500">
+          <p className="text-[12px] text-[var(--text-secondary)]">
             {data.planning_contact.SECTION} · {data.planning_contact.DISTRICT}
             {data.planning_contact.PHONE && ` · ${data.planning_contact.PHONE}`}
           </p>
@@ -1003,7 +1008,7 @@ type EditFieldInfo = {
 };
 
 function MetricCard({
-  icon,
+  Icon,
   label,
   value,
   sub,
@@ -1014,7 +1019,7 @@ function MetricCard({
   fieldPath,
   reportId,
 }: {
-  icon: string;
+  Icon: LucideIcon;
   label: string;
   value: string;
   sub?: string;
@@ -1038,12 +1043,12 @@ function MetricCard({
   };
   const borderBg = !isEmpty && accent
     ? accentStyles[accent]
-    : "border-stone-200 bg-white shadow-sm";
+    : "border-[var(--border)] bg-[var(--card)] shadow-sm";
   const textColor = isEmpty
     ? "text-stone-300"
     : accent
       ? accentText[accent]
-      : "text-stone-900";
+      : "text-[var(--text-primary)]";
 
   // Filter out internal source labels that look unprofessional
   const cleanSub = sub && !/^(not specified|not available|not determined)$/i.test(sub) ? sub : undefined;
@@ -1054,14 +1059,14 @@ function MetricCard({
     </p>
   );
   const subEl = cleanSub ? (
-    <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-1">{cleanSub}</p>
+    <p className="mt-0.5 text-[11px] text-[var(--text-muted)] line-clamp-1">{cleanSub}</p>
   ) : null;
 
   return (
     <div className={`rounded-xl border px-4 py-3.5 ${borderBg}`}>
       <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="text-[14px]" aria-hidden="true">{icon}</span>
-        <span className="text-[10px] font-medium uppercase tracking-wide text-stone-400">
+        <Icon className="h-3.5 w-3.5 text-[var(--text-muted)]" aria-hidden="true" />
+        <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
           {label}
         </span>
         {address && fieldPath && (
@@ -1106,19 +1111,19 @@ function SetbackChip({
 }) {
   if (value == null && !editFieldProps?.isEdited) return null;
   const valueEl = (
-    <p className="text-[18px] font-bold tracking-tight text-stone-800">
+    <p className="text-[18px] font-bold tracking-tight text-[var(--text-primary)]">
       {value}m
     </p>
   );
   return (
-    <div className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5">
+    <div className="rounded-lg border border-[var(--border)] bg-stone-50 px-3 py-2.5">
       {editFieldProps ? (
         <EditableField {...editFieldProps}>{valueEl}</EditableField>
       ) : (
         valueEl
       )}
       <div className="flex items-center gap-1">
-        <p className="text-[11px] text-stone-500">{label}</p>
+        <p className="text-[11px] text-[var(--text-secondary)]">{label}</p>
         {address && fieldPath && (
           <FlagButton
             address={address}
@@ -1147,18 +1152,18 @@ function FlagItem({
   fieldPath?: string;
   reportId?: string;
 }) {
-  const statusConfig = {
-    good: { icon: "✅", bg: "" },
-    warn: { icon: "⚠️", bg: "" },
-    bad: { icon: "🚫", bg: "bg-red-50/50" },
-    neutral: { icon: "📋", bg: "" },
-    info: { icon: "🚇", bg: "" },
+  const statusConfig: Record<string, { Icon: LucideIcon; color: string; bg: string }> = {
+    good:    { Icon: CheckCircle2,  color: "text-emerald-500", bg: "" },
+    warn:    { Icon: AlertTriangle, color: "text-amber-500",   bg: "" },
+    bad:     { Icon: XCircle,       color: "text-red-500",     bg: "bg-red-50/50" },
+    neutral: { Icon: Info,          color: "text-[var(--text-muted)]", bg: "" },
+    info:    { Icon: Train,         color: "text-sky-500",     bg: "" },
   };
   const cfg = statusConfig[status];
   return (
     <div className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${cfg.bg}`}>
-      <span className="text-[14px] shrink-0" aria-hidden="true">{cfg.icon}</span>
-      <span className="flex-1 text-[13px] text-stone-700">{label}</span>
+      <cfg.Icon className={`h-4 w-4 shrink-0 ${cfg.color}`} aria-hidden="true" />
+      <span className="flex-1 text-[13px] text-[var(--text-primary)]">{label}</span>
       {address && fieldPath && (
         <FlagButton
           address={address}
