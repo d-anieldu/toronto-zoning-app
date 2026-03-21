@@ -32,7 +32,7 @@ import NearbyActivityTab from "./report/NearbyActivityTab";
 import PolicyConformityTab from "./report/PolicyConformityTab";
 
 /* ── Primitives (shared across shell + tabs) ─────────────────────── */
-import { Badge, Icons, SectionHeading } from "./report/primitives";
+import { Badge } from "./report/primitives";
 import type { UserEdits, SectionNotes } from "@/types/reports";
 
 const MapPanel = dynamic(() => import("./MapPanel"), { ssr: false });
@@ -192,20 +192,20 @@ export default function ZoningReport({
       {/*  ZONE IDENTITY HEADER                                         */}
       {/* ============================================================ */}
       <div id="zone" className="scroll-mt-28">
-        <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             {/* Left: address & coords */}
             <div>
-              <h2 className="text-[22px] font-bold tracking-tight text-stone-900">
+              <h2 className="font-heading text-[22px] font-bold tracking-tight text-[var(--text-primary)]">
                 {data.address}
               </h2>
-              <p className="mt-1.5 font-mono text-[12px] text-stone-400">
+              <p className="mt-1.5 font-mono text-[12px] text-[var(--text-muted)]">
                 {coords.latitude != null && coords.longitude != null
                   ? `${coords.latitude.toFixed(6)}°N, ${Math.abs(coords.longitude).toFixed(6)}°W`
                   : "—"}
               </p>
               {(bylawChapter || bylawSection) && (
-                <p className="mt-1 text-[12px] text-stone-400">
+                <p className="mt-1 text-[12px] text-[var(--text-muted)]">
                   By-law 569-2013 · Chapter {bylawChapter} ·{" "}
                   <RefLink type="bylaw-section" id={bylawSection || bylawChapter} label={`s. ${bylawSection}`}>
                     s.{bylawSection}
@@ -218,7 +218,7 @@ export default function ZoningReport({
             <div className="flex flex-wrap items-center gap-2">
               {zoneCode ? (
                 <RefLink type="zone-info" id={zoneCode} label={zoneCode}>
-                  <span className="rounded-lg bg-stone-900 px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
+                  <span className="rounded-lg bg-[var(--text-primary)] px-3 py-1.5 text-[13px] font-bold tracking-wide text-white">
                     {zoneCode}
                   </span>
                 </RefLink>
@@ -228,7 +228,7 @@ export default function ZoningReport({
                 </span>
               ) : null}
               {zoneString && (
-                <span className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-1.5 font-mono text-[12px] text-stone-600">
+                <span className="rounded-lg border border-[var(--border)] bg-stone-50 px-3 py-1.5 font-mono text-[12px] text-stone-600">
                   {zoneString}
                 </span>
               )}
@@ -243,7 +243,7 @@ export default function ZoningReport({
               <button
                 type="button"
                 onClick={handleCopyReport}
-                className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow"
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-secondary)] shadow-sm transition-all hover:bg-stone-50 hover:shadow"
               >
                 {showCopied
                   ? <><Check className="h-3.5 w-3.5 text-emerald-500" /> Copied!</>
@@ -252,7 +252,7 @@ export default function ZoningReport({
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow"
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-secondary)] shadow-sm transition-all hover:bg-stone-50 hover:shadow"
               >
                 <Printer className="h-3.5 w-3.5" /> Print
               </button>
@@ -413,164 +413,165 @@ export default function ZoningReport({
       )}
 
       {/* ============================================================ */}
-      {/*  GIS LAYER MAP                                                */}
+      {/*  SIDEBAR + CONTENT LAYOUT                                     */}
       {/* ============================================================ */}
-      {coords.latitude && coords.longitude && (
-        <>
-          <SectionHeading id="map" title="GIS Layer Map" icon={Icons.map} />
-          <MapPanel
-            latitude={coords.latitude}
-            longitude={coords.longitude}
-            activeSiteLayers={layers}
-            zoneCode={zoneCode}
-            zoneString={zoneString}
-            lotArea={dev.lot?.area_sqm}
-            frontage={dev.lot?.frontage_m}
-          />
-        </>
-      )}
+      <div className="flex gap-6 lg:flex-row flex-col">
+        {/* ── Sidebar ── */}
+        <aside className="w-full shrink-0 lg:sticky lg:top-4 lg:w-[240px] lg:self-start print:hidden">
+          <nav className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 shadow-sm" aria-label="Report tabs">
+            <div className="space-y-0.5">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? "bg-stone-100 text-[var(--text-primary)]"
+                      : "text-[var(--text-muted)] hover:bg-stone-50 hover:text-[var(--text-secondary)]"
+                  }`}
+                >
+                  <tab.Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{tab.label}</span>
+                  {tab.id === "conformity" && conformityScore !== null && (
+                    <span className="ml-auto rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                      {conformityScore}%
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </nav>
 
-      {/* ============================================================ */}
-      {/*  SITE PLAN CONTROL                                            */}
-      {/* ============================================================ */}
-      {dev.site_plan_control && (
-        <div
-          id="site-plan"
-          className={`scroll-mt-28 rounded-xl border p-5 shadow-sm ${
-            dev.site_plan_control.required
-              ? dev.site_plan_control.confidence === "high"
-                ? "border-red-200 bg-red-50/60"
-                : "border-amber-200 bg-amber-50/60"
-              : "border-emerald-200 bg-emerald-50/60"
-          }`}
-        >
-          <div className="flex items-center gap-2.5 pb-3">
-            {dev.site_plan_control.required
-              ? <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
-              : <CheckCircle2 className="h-5 w-5 text-emerald-500" aria-hidden="true" />}
-            <h3 className="text-[15px] font-semibold tracking-tight text-stone-900">Site Plan Control</h3>
-            <Badge variant={dev.site_plan_control.required ? (dev.site_plan_control.confidence === "high" ? "danger" : "warning") : "success"}>
-              {dev.site_plan_control.required ? "Required" : "Likely Exempt"}
-            </Badge>
-            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
-              {dev.site_plan_control.confidence} confidence
-            </span>
-          </div>
-          <p className="text-[13px] leading-relaxed text-stone-600">{dev.site_plan_control.summary}</p>
-
-          {dev.site_plan_control.triggers?.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-stone-400">
-                Triggers ({dev.site_plan_control.trigger_count})
-              </p>
-              <div className="space-y-2">
-                {dev.site_plan_control.triggers.map((t: any, i: number) => (
-                  <div key={i} className="flex items-start gap-2.5 rounded-lg border border-red-100 bg-white/80 px-3 py-2.5">
-                    <span className="mt-0.5 text-[12px]" aria-hidden="true">{t.severity === "definite" ? "🔴" : "🟡"}</span>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[12px] font-semibold text-stone-700">
-                          {t.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                        </span>
-                        <span className="text-[10px] text-stone-400">{t.rule}</span>
-                      </div>
-                      <p className="mt-0.5 text-[12px] leading-relaxed text-stone-500">{t.reason}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* Mini-map in sidebar */}
+          {coords.latitude && coords.longitude && (
+            <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] shadow-sm">
+              <MapPanel
+                latitude={coords.latitude}
+                longitude={coords.longitude}
+                activeSiteLayers={layers}
+                zoneCode={zoneCode}
+                zoneString={zoneString}
+                lotArea={dev.lot?.area_sqm}
+                frontage={dev.lot?.frontage_m}
+              />
             </div>
           )}
+        </aside>
 
-          {dev.site_plan_control.exemptions?.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-stone-400">
-                Potential Exemptions ({dev.site_plan_control.exemption_count})
-              </p>
-              <div className="space-y-2">
-                {dev.site_plan_control.exemptions.map((e: any, i: number) => (
-                  <div key={i} className={`rounded-lg border px-3 py-2.5 ${e.overridden ? "border-stone-200 bg-stone-100 opacity-60" : "border-emerald-100 bg-white/80"}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[12px]" aria-hidden="true">{e.overridden ? "❌" : "✅"}</span>
-                      <span className="text-[12px] font-semibold text-stone-700">
-                        {e.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                      </span>
-                      {e.overridden && <Badge variant="danger">Overridden</Badge>}
-                    </div>
-                    <p className="mt-0.5 text-[12px] leading-relaxed text-stone-500">{e.reason}</p>
-                    {e.overridden && e.override_reason && (
-                      <p className="mt-1 text-[11px] italic text-red-500">{e.override_reason}</p>
-                    )}
-                    {!e.overridden && e.conditions?.length > 0 && (
-                      <ul className="mt-1.5 space-y-0.5">
-                        {e.conditions.map((cond: string, ci: number) => (
-                          <li key={ci} className="text-[11px] text-stone-400">• {cond}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4 rounded-lg border border-sky-100 bg-sky-50 p-3">
-            <p className="text-[12px] font-semibold text-sky-700">Recommendation</p>
-            <p className="mt-1 text-[12px] leading-relaxed text-sky-600">{dev.site_plan_control.recommendation}</p>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/*  TAB BAR                                                      */}
-      {/* ============================================================ */}
-      <div className="sticky top-0 z-30 -mx-1 bg-white/80 backdrop-blur-md border-b border-stone-200 print:hidden">
-        <nav className="flex gap-1 px-1 pt-1" aria-label="Report tabs">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative flex items-center gap-1.5 rounded-t-lg px-4 py-2.5 text-[13px] font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "bg-white text-stone-900 shadow-sm border border-b-0 border-stone-200"
-                  : "text-stone-500 hover:text-stone-700 hover:bg-stone-50"
+        {/* ── Main content ── */}
+        <div className="min-w-0 flex-1 space-y-5">
+          {/* Site plan control */}
+          {dev.site_plan_control && (
+            <div
+              id="site-plan"
+              className={`scroll-mt-28 rounded-xl border p-5 shadow-sm ${
+                dev.site_plan_control.required
+                  ? dev.site_plan_control.confidence === "high"
+                    ? "border-red-200 bg-red-50/60"
+                    : "border-amber-200 bg-amber-50/60"
+                  : "border-emerald-200 bg-emerald-50/60"
               }`}
             >
-              <tab.Icon className="h-3.5 w-3.5" aria-hidden="true" />
-              {tab.label}
-              {tab.id === "conformity" && conformityScore !== null && (
-                <span className="ml-1.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                  {conformityScore}%
+              <div className="flex items-center gap-2.5 pb-3">
+                {dev.site_plan_control.required
+                  ? <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+                  : <CheckCircle2 className="h-5 w-5 text-emerald-500" aria-hidden="true" />}
+                <h3 className="font-heading text-[15px] font-semibold tracking-tight text-[var(--text-primary)]">Site Plan Control</h3>
+                <Badge variant={dev.site_plan_control.required ? (dev.site_plan_control.confidence === "high" ? "danger" : "warning") : "success"}>
+                  {dev.site_plan_control.required ? "Required" : "Likely Exempt"}
+                </Badge>
+                <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]">
+                  {dev.site_plan_control.confidence} confidence
                 </span>
-              )}
-            </button>
-          ))}
-        </nav>
-      </div>
+              </div>
+              <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{dev.site_plan_control.summary}</p>
 
-      {/* ============================================================ */}
-      {/*  TAB CONTENT                                                  */}
-      {/* ============================================================ */}
-      <div className="min-h-[400px]">
-        {activeTab === "summary" && (
-          <SummaryTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
-        )}
-        {activeTab === "envelope" && (
-          <BuildingEnvelopeTab data={data} onAnalyzeUse={setAnalyzeUse} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
-        )}
-        {activeTab === "uses" && (
-          <UsesParkingTab data={data} onAnalyzeUse={setAnalyzeUse} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
-        )}
-        {activeTab === "context" && (
-          <ConstraintsContextTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
-        )}
-        {activeTab === "nearby" && (
-          <NearbyActivityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
-        )}
-        {activeTab === "conformity" && (
-          <PolicyConformityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
-        )}
+              {dev.site_plan_control.triggers?.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    Triggers ({dev.site_plan_control.trigger_count})
+                  </p>
+                  <div className="space-y-2">
+                    {dev.site_plan_control.triggers.map((t: any, i: number) => (
+                      <div key={i} className="flex items-start gap-2.5 rounded-lg border border-red-100 bg-white/80 px-3 py-2.5">
+                        <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${t.severity === "definite" ? "bg-red-500" : "bg-amber-500"}`} aria-hidden="true" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[12px] font-semibold text-[var(--text-primary)]">
+                              {t.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                            </span>
+                            <span className="text-[10px] text-[var(--text-muted)]">{t.rule}</span>
+                          </div>
+                          <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--text-secondary)]">{t.reason}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {dev.site_plan_control.exemptions?.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    Potential Exemptions ({dev.site_plan_control.exemption_count})
+                  </p>
+                  <div className="space-y-2">
+                    {dev.site_plan_control.exemptions.map((e: any, i: number) => (
+                      <div key={i} className={`rounded-lg border px-3 py-2.5 ${e.overridden ? "border-[var(--border)] bg-stone-100 opacity-60" : "border-emerald-100 bg-white/80"}`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${e.overridden ? "bg-red-500" : "bg-emerald-500"}`} aria-hidden="true" />
+                          <span className="text-[12px] font-semibold text-[var(--text-primary)]">
+                            {e.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                          </span>
+                          {e.overridden && <Badge variant="danger">Overridden</Badge>}
+                        </div>
+                        <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--text-secondary)]">{e.reason}</p>
+                        {e.overridden && e.override_reason && (
+                          <p className="mt-1 text-[11px] italic text-red-500">{e.override_reason}</p>
+                        )}
+                        {!e.overridden && e.conditions?.length > 0 && (
+                          <ul className="mt-1.5 space-y-0.5">
+                            {e.conditions.map((cond: string, ci: number) => (
+                              <li key={ci} className="text-[11px] text-[var(--text-muted)]">• {cond}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 rounded-lg border border-sky-100 bg-sky-50 p-3">
+                <p className="text-[12px] font-semibold text-sky-700">Recommendation</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-sky-600">{dev.site_plan_control.recommendation}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Tab content */}
+          <div className="min-h-[400px]">
+            {activeTab === "summary" && (
+              <SummaryTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
+            )}
+            {activeTab === "envelope" && (
+              <BuildingEnvelopeTab data={data} onAnalyzeUse={setAnalyzeUse} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
+            )}
+            {activeTab === "uses" && (
+              <UsesParkingTab data={data} onAnalyzeUse={setAnalyzeUse} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
+            )}
+            {activeTab === "context" && (
+              <ConstraintsContextTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
+            )}
+            {activeTab === "nearby" && (
+              <NearbyActivityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
+            )}
+            {activeTab === "conformity" && (
+              <PolicyConformityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
+            )}
+          </div>
+        </div>
       </div>
     </div>
 
