@@ -12,6 +12,7 @@
 
 import { Card, Row, Badge, SetbackDiagram, Tag, FlagProvider } from "./primitives";
 import { RefLink } from "../ReferencePanel";
+import { Check, AlertTriangle } from "lucide-react";
 import LandscapingCard from "./LandscapingCard";
 import EditableField from "./EditableField";
 import SectionNoteEditor from "./SectionNoteEditor";
@@ -84,8 +85,8 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
           <div className="grid gap-4 md:grid-cols-5">
             {/* Setback diagram */}
             {dev.setbacks && (
-              <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm md:col-span-2">
-                <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm md:col-span-2">
+                <p className="mb-3 font-heading text-[13px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                   Building Envelope
                 </p>
                 <SetbackDiagram
@@ -113,37 +114,37 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                 </div>
               )}
               {dev.height && (
-                <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
                   <EditableField {...ep("development_potential.height.max_m", devHeightMax)}>
-                    <p className="text-[20px] font-bold text-stone-900">{devHeightMax.value != null ? `${devHeightMax.value} m` : "\u2014"}</p>
+                    <p className="text-[20px] font-bold text-[var(--text-primary)]">{devHeightMax.value != null ? `${devHeightMax.value} m` : "\u2014"}</p>
                   </EditableField>
-                  <p className="text-[12px] text-stone-500">Max Height</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Max Height</p>
                   {dev.height.max_storeys && (
-                    <p className="text-[11px] text-stone-400">~{dev.height.max_storeys} storeys est.</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">~{dev.height.max_storeys} storeys est.</p>
                   )}
                 </div>
               )}
               {dev.coverage?.max_footprint_sqm != null && (
-                <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-                  <p className="text-[20px] font-bold text-stone-900">{fmt(dev.coverage.max_footprint_sqm)} m²</p>
-                  <p className="text-[12px] text-stone-500">Max Footprint</p>
-                  <p className="text-[11px] text-stone-400">{dev.coverage.max_pct != null ? `${dev.coverage.max_pct}% coverage` : ""}</p>
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+                  <p className="text-[20px] font-bold text-[var(--text-primary)]">{fmt(dev.coverage.max_footprint_sqm)} m²</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Max Footprint</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">{dev.coverage.max_pct != null ? `${dev.coverage.max_pct}% coverage` : ""}</p>
                 </div>
               )}
               {dev.floor_plate?.max_sqm != null && (
-                <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
                   <EditableField {...ep("development_potential.floor_plate.max_sqm", floorPlateMax)}>
-                    <p className="text-[20px] font-bold text-stone-900">{fmt(floorPlateMax.value as number)} m²</p>
+                    <p className="text-[20px] font-bold text-[var(--text-primary)]">{fmt(floorPlateMax.value as number)} m²</p>
                   </EditableField>
-                  <p className="text-[12px] text-stone-500">Floor Plate</p>
-                  <p className="text-[11px] text-stone-400">by {dev.floor_plate.limiting_factor || "—"}</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Floor Plate</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">by {dev.floor_plate.limiting_factor || "—"}</p>
                 </div>
               )}
               {dev.setbacks?.buildable_area_sqm != null && (
-                <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-                  <p className="text-[20px] font-bold text-stone-900">{fmt(dev.setbacks.buildable_area_sqm)} m²</p>
-                  <p className="text-[12px] text-stone-500">Buildable Area</p>
-                  <p className="text-[11px] text-stone-400">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+                  <p className="text-[20px] font-bold text-[var(--text-primary)]">{fmt(dev.setbacks.buildable_area_sqm)} m²</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Buildable Area</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">
                     {dev.setbacks.buildable_width_m != null && dev.setbacks.buildable_depth_m != null ? `${dev.setbacks.buildable_width_m}m × ${dev.setbacks.buildable_depth_m}m` : "—"}
                   </p>
                 </div>
@@ -153,8 +154,8 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
 
           {/* GFA constraints breakdown */}
           {dev.max_gfa?.all_limits && (
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-              <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+              <p className="mb-3 font-heading text-[13px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                 GFA Constraints Breakdown
               </p>
               <div className="space-y-3">
@@ -166,11 +167,11 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                     return (
                       <div key={factor}>
                         <div className="flex items-baseline justify-between">
-                          <span className={`text-[13px] ${isControlling ? "font-semibold text-stone-900" : "text-stone-500"}`}>
+                          <span className={`text-[13px] ${isControlling ? "font-semibold text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
                             {factor}{" "}
                             {isControlling && <span className="text-emerald-600">◀ controls</span>}
                           </span>
-                          <span className="font-mono text-[13px] font-semibold text-stone-900">
+                          <span className="font-mono text-[13px] font-semibold text-[var(--text-primary)]">
                             {fmt(Number(val))} m²
                           </span>
                         </div>
@@ -190,27 +191,27 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
 
           {/* Building types */}
           {dev.building_types && (
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-              <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+              <p className="mb-3 font-heading text-[13px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                 Building Types
               </p>
               <div className="flex flex-wrap gap-2">
                 {(dev.building_types.permitted || []).map((t: string) => (
-                  <Tag key={t} active icon="✓" onClick={() => onAnalyzeUse?.(t)}>
+                  <Tag key={t} active icon={<Check className="h-3.5 w-3.5" />} onClick={() => onAnalyzeUse?.(t)}>
                     {t}
                   </Tag>
                 ))}
               </div>
               {dev.building_types.feasible?.length > 0 &&
                 dev.building_types.feasible.some((f: any) => f.notes?.length > 0) && (
-                  <div className="mt-4 border-t border-stone-100 pt-3">
-                    <p className="mb-2 text-[12px] font-medium text-stone-500">Feasibility Notes</p>
+                  <div className="mt-4 border-t border-[var(--border)] pt-3">
+                    <p className="mb-2 text-[12px] font-medium text-[var(--text-secondary)]">Feasibility Notes</p>
                     {dev.building_types.feasible
                       .filter((f: any) => f.notes?.length > 0)
                       .map((f: any) => (
                         <div key={f.type} className="py-1">
-                          <span className="text-[13px] font-medium text-stone-700">{f.type}</span>
-                          <p className="text-[12px] text-stone-400">{f.notes.join("; ")}</p>
+                          <span className="text-[13px] font-medium text-[var(--text-primary)]">{f.type}</span>
+                          <p className="text-[12px] text-[var(--text-muted)]">{f.notes.join("; ")}</p>
                         </div>
                       ))}
                   </div>
@@ -225,7 +226,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
       {/* ============================================================ */}
       {!hasEffError && (
         <>
-          <p className="text-[15px] font-semibold tracking-tight text-stone-900 pt-2">
+          <p className="font-heading text-[15px] font-semibold tracking-tight text-[var(--text-primary)] pt-2">
             Zoning Standards
           </p>
 
@@ -238,7 +239,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
               <Row label="Base default" value={ev("effective_standards.height.base_default_m", baseDefaultH, baseDefaultH.value != null ? `${baseDefaultH.value} m` : null)} sub={eff.height?.source_base} />
               <Row label="Overlay height" value={ev("effective_standards.height.overlay_m", overlayH, overlayH.value != null ? `${overlayH.value} m` : null)} />
               <Row label="Overlay storeys" value={eff.height?.overlay_storeys} />
-              <div className="my-2 border-t border-stone-100" />
+              <div className="my-2 border-t border-[var(--border)]" />
               <Row label="FSI" value={eff.fsi?.effective_total} flagAddress={addr} flagFieldPath="effective_standards.fsi.effective_total" flagTabName="building_envelope" reportId={reportId} />
               <Row label="FSI source" value={eff.fsi?.effective_source} />
               {eff.fsi?.is_compound && (
@@ -266,34 +267,34 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                 />
               )}
               {eff.setbacks?.standard_set && (
-                <div className="mt-3 border-t border-stone-100 pt-3">
+                <div className="mt-3 border-t border-[var(--border)] pt-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="info">{eff.setbacks.standard_set}</Badge>
                     {eff.setbacks.standard_set_name && (
-                      <span className="text-[12px] font-medium text-stone-600">{eff.setbacks.standard_set_name}</span>
+                      <span className="text-[12px] font-medium text-[var(--text-secondary)]">{eff.setbacks.standard_set_name}</span>
                     )}
                   </div>
                   {eff.setbacks.ss_rules?.notes?.length > 0 && (
                     <ul className="space-y-1">
                       {eff.setbacks.ss_rules.notes.map((note: string, i: number) => (
-                        <li key={i} className="text-[11px] leading-relaxed text-stone-500">• {note}</li>
+                        <li key={i} className="text-[11px] leading-relaxed text-[var(--text-secondary)]">• {note}</li>
                       ))}
                     </ul>
                   )}
                 </div>
               )}
               {eff.setbacks?.base_side_tiers?.length > 0 && (
-                <div className="mt-3 border-t border-stone-100 pt-3">
-                  <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-stone-400">
+                <div className="mt-3 border-t border-[var(--border)] pt-3">
+                  <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
                     Side Setback Tiers
                   </p>
                   <div className="space-y-1">
                     {eff.setbacks.base_side_tiers.map((tier: any, i: number) => (
                       <div key={i} className="flex items-baseline justify-between text-[12px]">
-                        <span className="text-stone-400">
+                        <span className="text-[var(--text-muted)]">
                           Frontage {tier.frontage_from_m}m{tier.frontage_to_m ? `–${tier.frontage_to_m}m` : "+"}
                         </span>
-                        <span className="font-mono font-medium text-stone-700">{tier.setback_m}m</span>
+                        <span className="font-mono font-medium text-[var(--text-primary)]">{tier.setback_m}m</span>
                       </div>
                     ))}
                   </div>
@@ -308,7 +309,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
               <Row label="Max units" value={ev("effective_standards.zone_label.max_units", maxUnitsField, maxUnitsField.value != null ? String(maxUnitsField.value) : null)} />
               {dev.lot && (
                 <>
-                  <div className="my-2 border-t border-stone-100" />
+                  <div className="my-2 border-t border-[var(--border)]" />
                   <Row label="Est. lot area" value={dev.lot.area_sqm ? `${fmt(dev.lot.area_sqm)} m²` : null} sub={dev.lot.area_source} />
                   <Row label="Est. frontage" value={dev.lot.frontage_m ? `${fmt(dev.lot.frontage_m, 1)} m` : null} sub={dev.lot.frontage_source} />
                   <Row label="Est. depth" value={dev.lot.depth_m ? `${fmt(dev.lot.depth_m, 1)} m` : null} sub={dev.lot.depth_source} />
@@ -336,7 +337,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
       {/* ============================================================ */}
       {dev.angular_plane?.applies && (
         <>
-          <p className="text-[15px] font-semibold tracking-tight text-stone-900 pt-2">
+          <p className="font-heading text-[15px] font-semibold tracking-tight text-[var(--text-primary)] pt-2">
             Angular Plane
           </p>
 
@@ -380,18 +381,18 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
             <Card label="Angular Plane Rules" defaultOpen={false}>
               {dev.angular_plane.rules.map((rule: any, i: number) => (
                 <div key={i} className="mb-3 last:mb-0">
-                  <p className="text-[12px] font-medium text-stone-700">
+                  <p className="text-[12px] font-medium text-[var(--text-primary)]">
                     {rule.type?.replace(/_/g, " ")}
                     {rule.lot_class ? ` (${rule.lot_class} lot)` : ""}
                   </p>
                   {rule.start_height_m != null && (
-                    <p className="text-[12px] text-stone-500">
+                    <p className="text-[12px] text-[var(--text-secondary)]">
                       Starts at {rule.start_height_m}m
                       {rule.height_at_rear_setback_m ? `, max ${rule.height_at_rear_setback_m}m at rear setback` : ""}
                       {rule.height_at_front_setback_m ? `, max ${rule.height_at_front_setback_m}m at front setback` : ""}
                     </p>
                   )}
-                  {rule.note && <p className="mt-1 text-[11px] italic text-stone-400">{rule.note}</p>}
+                  {rule.note && <p className="mt-1 text-[11px] italic text-[var(--text-muted)]">{rule.note}</p>}
                 </div>
               ))}
             </Card>
@@ -399,7 +400,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
 
           {dev.angular_plane.rear_assumed && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
-              <span aria-hidden="true">⚠</span> Assumed lot abuts residential/open-space zone (conservative default).
+              <AlertTriangle className="mr-1 inline h-3.5 w-3.5" /> Assumed lot abuts residential/open-space zone (conservative default).
             </div>
           )}
         </>
@@ -410,7 +411,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
       {/* ============================================================ */}
       {dev.separation_distances?.applies && (
         <>
-          <p className="text-[15px] font-semibold tracking-tight text-stone-900 pt-2">
+          <p className="font-heading text-[15px] font-semibold tracking-tight text-[var(--text-primary)] pt-2">
             Separation Distances
           </p>
 
@@ -429,18 +430,18 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                   {dev.separation_distances.base_rules.map((rule: any, i: number) => (
                     <div key={i} className="rounded-lg bg-stone-50 px-3 py-2">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[12px] text-stone-500">
+                        <span className="text-[12px] text-[var(--text-secondary)]">
                           {rule.max_height_m ? `Up to ${rule.max_height_m}m height` : "All heights"}
                         </span>
                       </div>
                       <div className="mt-1 flex gap-4">
                         <div>
-                          <span className="text-[11px] text-stone-400">With openings: </span>
-                          <span className="text-[12px] font-medium text-stone-700">{typeof rule.with_openings_m === "number" ? `${rule.with_openings_m}m` : rule.with_openings_m}</span>
+                          <span className="text-[11px] text-[var(--text-muted)]">With openings: </span>
+                          <span className="text-[12px] font-medium text-[var(--text-primary)]">{typeof rule.with_openings_m === "number" ? `${rule.with_openings_m}m` : rule.with_openings_m}</span>
                         </div>
                         <div>
-                          <span className="text-[11px] text-stone-400">Without: </span>
-                          <span className="text-[12px] font-medium text-stone-700">{typeof rule.without_openings_m === "number" ? `${rule.without_openings_m}m` : rule.without_openings_m}</span>
+                          <span className="text-[11px] text-[var(--text-muted)]">Without: </span>
+                          <span className="text-[12px] font-medium text-[var(--text-primary)]">{typeof rule.without_openings_m === "number" ? `${rule.without_openings_m}m` : rule.without_openings_m}</span>
                         </div>
                       </div>
                     </div>
@@ -448,7 +449,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                 </div>
               )}
               {dev.separation_distances.note && (
-                <p className="mt-2 text-[11px] italic text-stone-400">{dev.separation_distances.note}</p>
+                <p className="mt-2 text-[11px] italic text-[var(--text-muted)]">{dev.separation_distances.note}</p>
               )}
             </Card>
 
@@ -458,7 +459,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                 <Row label="Height threshold" value={`${dev.separation_distances.tower_separation.threshold_height_m}m`} />
                 <Row label="Source" value={dev.separation_distances.tower_separation.source} />
                 {dev.separation_distances.tower_separation.note && (
-                  <p className="mt-2 text-[11px] italic text-stone-400">{dev.separation_distances.tower_separation.note}</p>
+                  <p className="mt-2 text-[11px] italic text-[var(--text-muted)]">{dev.separation_distances.tower_separation.note}</p>
                 )}
               </Card>
             )}
@@ -466,7 +467,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
 
           {dev.separation_distances.exception_override && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
-              ⚠ Exception override: {dev.separation_distances.exception_override.separation_m}m separation ({dev.separation_distances.exception_override.source})
+              <AlertTriangle className="mr-1 inline h-3.5 w-3.5" /> Exception override: {dev.separation_distances.exception_override.separation_m}m separation ({dev.separation_distances.exception_override.source})
             </div>
           )}
         </>
@@ -477,7 +478,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
       {/* ============================================================ */}
       {dev.shadow_analysis?.nearest_park_name && (
         <>
-          <p className="text-[15px] font-semibold tracking-tight text-stone-900 pt-2">
+          <p className="font-heading text-[15px] font-semibold tracking-tight text-[var(--text-primary)] pt-2">
             Shadow Analysis
           </p>
 
@@ -539,30 +540,30 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                 <div className="overflow-x-auto">
                   <table className="w-full text-[11px]">
                     <thead>
-                      <tr className="border-b border-stone-200 text-left">
-                        <th className="px-2 py-1.5 font-semibold text-stone-500">Time</th>
-                        <th className="px-2 py-1.5 font-semibold text-stone-500">Shadow</th>
-                        <th className="px-2 py-1.5 font-semibold text-stone-500">Direction</th>
-                        <th className="px-2 py-1.5 font-semibold text-stone-500">Park Impact</th>
+                      <tr className="border-b border-[var(--border)] text-left">
+                        <th className="px-2 py-1.5 font-semibold text-[var(--text-secondary)]">Time</th>
+                        <th className="px-2 py-1.5 font-semibold text-[var(--text-secondary)]">Shadow</th>
+                        <th className="px-2 py-1.5 font-semibold text-[var(--text-secondary)]">Direction</th>
+                        <th className="px-2 py-1.5 font-semibold text-[var(--text-secondary)]">Park Impact</th>
                       </tr>
                     </thead>
                     <tbody>
                       {dev.shadow_analysis.hourly_sweep.map((h: any, i: number) => (
-                        <tr key={i} className="border-b border-stone-100">
-                          <td className="px-2 py-1.5 font-medium text-stone-700">{h.time_edt}</td>
+                        <tr key={i} className="border-b border-[var(--border)]">
+                          <td className="px-2 py-1.5 font-medium text-[var(--text-primary)]">{h.time_edt}</td>
                           {h.sun_below_horizon ? (
                             <>
-                              <td colSpan={3} className="px-2 py-1.5 text-stone-400 italic">Sun below horizon</td>
+                              <td colSpan={3} className="px-2 py-1.5 text-[var(--text-muted)] italic">Sun below horizon</td>
                             </>
                           ) : (
                             <>
-                              <td className="px-2 py-1.5 text-stone-600">{h.shadow_length_m != null ? `${Math.round(h.shadow_length_m)}m` : "—"}</td>
-                              <td className="px-2 py-1.5 text-stone-600">{h.shadow_direction_deg != null ? `${Math.round(h.shadow_direction_deg)}°` : "—"}</td>
+                              <td className="px-2 py-1.5 text-[var(--text-secondary)]">{h.shadow_length_m != null ? `${Math.round(h.shadow_length_m)}m` : "—"}</td>
+                              <td className="px-2 py-1.5 text-[var(--text-secondary)]">{h.shadow_direction_deg != null ? `${Math.round(h.shadow_direction_deg)}°` : "—"}</td>
                               <td className="px-2 py-1.5">
                                 {h.reaches_park ? (
-                                  <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700">⚠ Yes</span>
+                                  <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700"><AlertTriangle className="mr-0.5 inline h-3 w-3" />Yes</span>
                                 ) : (
-                                  <span className="text-stone-400">No</span>
+                                  <span className="text-[var(--text-muted)]">No</span>
                                 )}
                               </td>
                             </>
@@ -577,7 +578,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
           </div>
 
           {dev.shadow_analysis.summary_text && (
-            <p className="text-[11px] italic text-stone-400">{dev.shadow_analysis.summary_text}</p>
+            <p className="text-[11px] italic text-[var(--text-muted)]">{dev.shadow_analysis.summary_text}</p>
           )}
         </>
       )}
@@ -587,25 +588,25 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
       {/* ============================================================ */}
       {eff.stepback_rules && (
         <>
-          <p className="text-[15px] font-semibold tracking-tight text-stone-900 pt-2">
+          <p className="font-heading text-[15px] font-semibold tracking-tight text-[var(--text-primary)] pt-2">
             Stepback & Tower Rules
           </p>
 
-          <div className="rounded-xl border border-violet-200 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-violet-200 bg-[var(--card)] p-5 shadow-sm">
             <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-violet-400">
               From Exception Text
             </p>
             <div className="space-y-3">
               {eff.stepback_rules.stepbacks?.length > 0 && (
                 <div>
-                  <p className="mb-2 text-[12px] font-medium text-stone-600">Required Stepbacks</p>
+                  <p className="mb-2 text-[12px] font-medium text-[var(--text-secondary)]">Required Stepbacks</p>
                   <div className="space-y-2">
                     {eff.stepback_rules.stepbacks.map((sb: any, i: number) => (
                       <div key={i} className="flex items-center gap-3 rounded-lg bg-violet-50 px-3 py-2">
                         <span className="text-[18px] font-bold text-violet-600">{sb.depth_m}m</span>
                         <div>
-                          <p className="text-[12px] font-medium text-stone-700">Stepback depth</p>
-                          <p className="text-[11px] text-stone-400">Above {sb.above_height_m} m height</p>
+                          <p className="text-[12px] font-medium text-[var(--text-primary)]">Stepback depth</p>
+                          <p className="text-[11px] text-[var(--text-muted)]">Above {sb.above_height_m} m height</p>
                         </div>
                       </div>
                     ))}
@@ -614,33 +615,33 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
               )}
               <div className="grid gap-3 sm:grid-cols-2">
                 {eff.stepback_rules.podium_transition_height_m && (
-                  <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                    <p className="text-[18px] font-bold text-stone-900">{eff.stepback_rules.podium_transition_height_m} m</p>
-                    <p className="text-[12px] text-stone-500">Podium Transition Height</p>
+                  <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
+                    <p className="text-[18px] font-bold text-[var(--text-primary)]">{eff.stepback_rules.podium_transition_height_m} m</p>
+                    <p className="text-[12px] text-[var(--text-secondary)]">Podium Transition Height</p>
                   </div>
                 )}
                 {(eff.stepback_rules.podium_max_height_m || podiumMaxH.isEdited) && (
-                  <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                  <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
                     <EditableField {...ep("effective_standards.stepback_rules.podium_max_height_m", podiumMaxH)}>
-                      <p className="text-[18px] font-bold text-stone-900">{podiumMaxH.value as number} m</p>
+                      <p className="text-[18px] font-bold text-[var(--text-primary)]">{podiumMaxH.value as number} m</p>
                     </EditableField>
-                    <p className="text-[12px] text-stone-500">Max Podium Height</p>
+                    <p className="text-[12px] text-[var(--text-secondary)]">Max Podium Height</p>
                   </div>
                 )}
                 {(eff.stepback_rules.tower_floorplate_max_sqm || towerFloorplate.isEdited) && (
-                  <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                  <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
                     <EditableField {...ep("effective_standards.stepback_rules.tower_floorplate_max_sqm", towerFloorplate)}>
-                      <p className="text-[18px] font-bold text-stone-900">{fmt(towerFloorplate.value as number)} m²</p>
+                      <p className="text-[18px] font-bold text-[var(--text-primary)]">{fmt(towerFloorplate.value as number)} m²</p>
                     </EditableField>
-                    <p className="text-[12px] text-stone-500">Max Tower Floor Plate</p>
+                    <p className="text-[12px] text-[var(--text-secondary)]">Max Tower Floor Plate</p>
                   </div>
                 )}
                 {(eff.stepback_rules.tower_separation_m || towerSepRule.isEdited) && (
-                  <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                  <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
                     <EditableField {...ep("effective_standards.stepback_rules.tower_separation_m", towerSepRule)}>
-                      <p className="text-[18px] font-bold text-stone-900">{towerSepRule.value as number} m</p>
+                      <p className="text-[18px] font-bold text-[var(--text-primary)]">{towerSepRule.value as number} m</p>
                     </EditableField>
-                    <p className="text-[12px] text-stone-500">Min Tower Separation</p>
+                    <p className="text-[12px] text-[var(--text-secondary)]">Min Tower Separation</p>
                   </div>
                 )}
               </div>

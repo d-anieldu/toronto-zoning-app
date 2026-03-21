@@ -265,7 +265,7 @@ export function Tag({
 }: {
   children: ReactNode;
   active?: boolean;
-  icon?: string;
+  icon?: ReactNode;
   onClick?: () => void;
 }) {
   const clickable = !!onClick;
@@ -278,7 +278,7 @@ export function Tag({
       className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-medium ${
         active
           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-stone-200 bg-stone-50 text-stone-600"
+          : "border-[var(--border)] bg-stone-50 text-[var(--text-secondary)]"
       }${clickable ? " cursor-pointer transition-shadow hover:shadow-md hover:ring-1 hover:ring-indigo-300" : ""}`}
     >
       {icon && <span aria-hidden="true">{icon}</span>}
