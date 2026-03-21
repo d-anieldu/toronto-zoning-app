@@ -939,6 +939,7 @@ function MetricCard({
   editFieldProps?: EditFieldInfo;
   editSubProps?: EditFieldInfo;
 }) {
+  const isEmpty = value === "—" || value === "\u2014";
   const accentStyles = {
     emerald: "border-emerald-200 bg-emerald-50",
     amber: "border-amber-200 bg-amber-50",
@@ -949,18 +950,25 @@ function MetricCard({
     amber: "text-amber-900",
     red: "text-red-900",
   };
-  const borderBg = accent
+  const borderBg = !isEmpty && accent
     ? accentStyles[accent]
     : "border-stone-200 bg-white shadow-sm";
-  const textColor = accent ? accentText[accent] : "text-stone-900";
+  const textColor = isEmpty
+    ? "text-stone-300"
+    : accent
+      ? accentText[accent]
+      : "text-stone-900";
+
+  // Filter out internal source labels that look unprofessional
+  const cleanSub = sub && !/^(not specified|not available|not determined)$/i.test(sub) ? sub : undefined;
 
   const valueEl = (
-    <p className={`text-[20px] font-bold tracking-tight leading-tight ${textColor}`}>
+    <p className={`text-[20px] ${isEmpty ? "font-medium" : "font-bold"} tracking-tight leading-tight ${textColor}`}>
       {value}
     </p>
   );
-  const subEl = sub ? (
-    <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-1">{sub}</p>
+  const subEl = cleanSub ? (
+    <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-1">{cleanSub}</p>
   ) : null;
 
   return (

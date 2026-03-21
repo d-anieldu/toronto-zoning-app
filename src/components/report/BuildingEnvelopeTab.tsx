@@ -101,7 +101,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
 
             {/* Development metrics */}
             <div className={`grid gap-3 ${dev.setbacks ? "md:col-span-3" : "md:col-span-5"} grid-cols-2 content-start`}>
-              {dev.max_gfa && (
+              {dev.max_gfa?.sqm != null && (
                 <div className="col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                   <p className="text-[28px] font-bold tracking-tight text-emerald-900">
                     {fmt(dev.max_gfa.sqm)} m²
@@ -123,14 +123,14 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                   )}
                 </div>
               )}
-              {dev.coverage && (
+              {dev.coverage?.max_footprint_sqm != null && (
                 <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
                   <p className="text-[20px] font-bold text-stone-900">{fmt(dev.coverage.max_footprint_sqm)} m²</p>
                   <p className="text-[12px] text-stone-500">Max Footprint</p>
-                  <p className="text-[11px] text-stone-400">{dev.coverage.max_pct}% coverage</p>
+                  <p className="text-[11px] text-stone-400">{dev.coverage.max_pct != null ? `${dev.coverage.max_pct}% coverage` : ""}</p>
                 </div>
               )}
-              {dev.floor_plate && (
+              {dev.floor_plate?.max_sqm != null && (
                 <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
                   <EditableField {...ep("development_potential.floor_plate.max_sqm", floorPlateMax)}>
                     <p className="text-[20px] font-bold text-stone-900">{fmt(floorPlateMax.value as number)} m²</p>
@@ -139,7 +139,7 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                   <p className="text-[11px] text-stone-400">by {dev.floor_plate.limiting_factor || "—"}</p>
                 </div>
               )}
-              {dev.setbacks && (
+              {dev.setbacks?.buildable_area_sqm != null && (
                 <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
                   <p className="text-[20px] font-bold text-stone-900">{fmt(dev.setbacks.buildable_area_sqm)} m²</p>
                   <p className="text-[12px] text-stone-500">Buildable Area</p>
