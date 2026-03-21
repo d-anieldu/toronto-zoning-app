@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { Search, MapPin, Layers, FileText, Ruler, Car, RefreshCw, AlertCircle } from "lucide-react";
 import ZoningReport from "./ZoningReport";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -192,19 +193,7 @@ export default function SearchForm() {
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <svg
-              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-              />
-            </svg>
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               ref={inputRef}
               type="text"
@@ -215,7 +204,7 @@ export default function SearchForm() {
                 if (suggestions.length > 0) setShowSuggestions(true);
               }}
               placeholder="Enter a Toronto address — e.g. 226 Viewmount Ave"
-              className="w-full rounded-xl border border-stone-300 bg-white py-3 pl-10 pr-4 text-[14px] text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/10"
+              className="w-full rounded-xl border border-stone-300 bg-[var(--card)] py-3.5 pl-10 pr-4 text-[15px] text-[var(--text-primary)] shadow-sm placeholder:text-[var(--text-muted)] focus:border-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-stone-900/10"
               disabled={loading}
               autoComplete="off"
               role="combobox"
@@ -250,24 +239,7 @@ export default function SearchForm() {
                           : "hover:bg-stone-50"
                       } ${i > 0 ? "border-t border-stone-100" : ""}`}
                     >
-                      <svg
-                        className="h-4 w-4 shrink-0 text-stone-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                        />
-                      </svg>
+                      <MapPin className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />
                       <span className="min-w-0 flex-1">
                         <span className="text-[13px] font-medium text-stone-900">
                           {street}
@@ -309,7 +281,7 @@ export default function SearchForm() {
           <button
             type="submit"
             disabled={loading || !address.trim()}
-            className="rounded-xl bg-stone-900 px-6 py-3 text-[13px] font-semibold text-white shadow-sm hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl bg-[var(--text-primary)] px-6 py-3.5 text-[14px] font-semibold text-white shadow-sm hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -340,7 +312,7 @@ export default function SearchForm() {
         {/* Quick-fill examples */}
         {!data && !loading && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-stone-400">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
               Try:
             </span>
             {exampleAddresses.map((addr) => (
@@ -348,7 +320,7 @@ export default function SearchForm() {
                 key={addr}
                 type="button"
                 onClick={() => handleQuickFill(addr)}
-                className="rounded-lg border border-stone-200 bg-white px-2.5 py-1 text-[12px] text-stone-500 transition-colors hover:border-stone-400 hover:text-stone-700"
+                className="rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1 text-[12px] text-[var(--text-secondary)] transition-colors hover:border-stone-400 hover:text-[var(--text-primary)]"
               >
                 {addr}
               </button>
@@ -356,12 +328,10 @@ export default function SearchForm() {
             <button
               type="button"
               onClick={() => setRefreshKey((k) => k + 1)}
-              className="rounded-lg border border-stone-200 bg-white px-1.5 py-1 text-[12px] text-stone-400 transition-colors hover:border-stone-400 hover:text-stone-600"
+              className="rounded-full border border-[var(--border)] bg-[var(--card)] px-1.5 py-1 text-[12px] text-[var(--text-muted)] transition-colors hover:border-stone-400 hover:text-[var(--text-secondary)]"
               title="Shuffle addresses"
             >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0 3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M21.016 5.176v4.993" />
-              </svg>
+              <RefreshCw className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
@@ -369,16 +339,16 @@ export default function SearchForm() {
 
       {/* Loading state — educational, shows what's happening */}
       {loading && (
-        <div className="mt-10 rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
+        <div className="mt-10 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
           <div className="flex flex-col items-center justify-center">
             <div className="relative">
-              <div className="h-14 w-14 rounded-full border-2 border-stone-200" />
-              <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-2 border-transparent border-t-stone-900" />
+              <div className="h-14 w-14 rounded-full border-2 border-[var(--border)]" />
+              <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-2 border-transparent border-t-[var(--text-primary)]" />
             </div>
-            <p className="mt-5 text-[16px] font-semibold text-stone-800">
+            <p className="font-heading mt-5 text-[16px] font-semibold text-[var(--text-primary)]">
               Resolving zoning profile…
             </p>
-            <p className="mt-1 text-[13px] text-stone-400">
+            <p className="mt-1 text-[13px] text-[var(--text-muted)]">
               This typically takes 3–8 seconds
             </p>
           </div>
@@ -386,19 +356,19 @@ export default function SearchForm() {
           {/* Step-by-step progress visualization */}
           <div className="mt-8 space-y-3">
             {[
-              { label: "Geocoding address & identifying parcel", icon: "📍" },
-              { label: "Querying 19 GIS overlay layers", icon: "🗺️" },
-              { label: "Resolving exception overrides from 6,063 entries", icon: "📋" },
-              { label: "Computing effective standards & development potential", icon: "📐" },
-              { label: "Generating parking, loading, and amenity requirements", icon: "🅿️" },
+              { label: "Geocoding address & identifying parcel", Icon: MapPin },
+              { label: "Querying 19 GIS overlay layers", Icon: Layers },
+              { label: "Resolving exception overrides from 6,063 entries", Icon: FileText },
+              { label: "Computing effective standards & development potential", Icon: Ruler },
+              { label: "Generating parking, loading, and amenity requirements", Icon: Car },
             ].map((step, i) => (
               <div
                 key={step.label}
                 className="flex items-center gap-3 rounded-lg bg-stone-50 px-4 py-2.5 animate-pulse"
                 style={{ animationDelay: `${i * 0.3}s` }}
               >
-                <span className="text-[16px]">{step.icon}</span>
-                <span className="text-[12px] font-medium text-stone-500">{step.label}</span>
+                <step.Icon className="h-4 w-4 text-[var(--text-muted)]" />
+                <span className="text-[12px] font-medium text-[var(--text-secondary)]">{step.label}</span>
               </div>
             ))}
           </div>
@@ -409,11 +379,7 @@ export default function SearchForm() {
       {error && (
         <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
           <div className="flex items-start gap-3">
-            <span className="mt-0.5 text-red-500">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-              </svg>
-            </span>
+            <AlertCircle className="mt-0.5 h-4 w-4 text-red-500" />
             <div>
               <p className="text-[13px] font-semibold text-red-700">
                 Lookup failed
