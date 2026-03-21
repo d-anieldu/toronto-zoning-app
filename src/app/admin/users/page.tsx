@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase";
 
 interface UserRow {
@@ -235,7 +236,7 @@ export default function AdminUsersPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {u.avatar_url ? (
-                            <img src={u.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover border border-stone-200" />
+                            <Image src={u.avatar_url} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover border border-stone-200" unoptimized />
                           ) : (
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-[12px] font-bold text-stone-500 border border-stone-200">
                               {(u.full_name || u.email || "?")[0].toUpperCase()}

@@ -44,7 +44,7 @@ export default function ReportEditor({ initialReport }: ReportEditorProps) {
 
       if (res.status === 409) {
         // Concurrency conflict — re-fetch and merge
-        const conflict = await res.json();
+        await res.json();
         const refetch = await fetch(`/api/reports/${report.id}`);
         if (refetch.ok) {
           const fresh: UserReport = await refetch.json();
