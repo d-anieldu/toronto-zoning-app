@@ -12,6 +12,7 @@
  */
 
 import { useState } from "react";
+import FlagButton from "../FlagButton";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -84,8 +85,12 @@ const CATEGORY_EMOJI: Record<string, string> = {
 
 export default function ZoningStatisticsTable({
   data,
+  address,
+  reportId,
 }: {
   data: ZoningStatisticsData | null | undefined;
+  address?: string;
+  reportId?: string;
 }) {
   const [expanded, setExpanded] = useState(true);
 
@@ -231,17 +236,29 @@ export default function ZoningStatisticsTable({
                     </div>
 
                     {/* Required / Zoning Limit */}
-                    <span
-                      className={`text-[13px] font-semibold text-right ${
-                        isLandscaping
-                          ? "text-emerald-800"
-                          : isParking
-                            ? "text-blue-800"
-                            : "text-stone-900"
-                      } ${row.required.length > 30 ? "whitespace-normal text-[12px]" : "whitespace-nowrap"}`}
-                    >
-                      {row.required}
-                    </span>
+                    <div className="flex items-center justify-end gap-1">
+                      <span
+                        className={`text-[13px] font-semibold text-right ${
+                          isLandscaping
+                            ? "text-emerald-800"
+                            : isParking
+                              ? "text-blue-800"
+                              : "text-stone-900"
+                        } ${row.required.length > 30 ? "whitespace-normal text-[12px]" : "whitespace-nowrap"}`}
+                      >
+                        {row.required}
+                      </span>
+                      {address && (
+                        <FlagButton
+                          address={address}
+                          fieldPath={`zoning_statistics.${row.label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")}`}
+                          fieldLabel={row.label}
+                          currentValue={row.required}
+                          tabName="summary"
+                          reportId={reportId}
+                        />
+                      )}
+                    </div>
 
                     {/* Existing (conditional) */}
                     {showExisting && (

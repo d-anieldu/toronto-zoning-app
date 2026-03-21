@@ -82,7 +82,7 @@ export default function FlagButton({
     <>
       <button
         onClick={() => setOpen(!open)}
-        className="text-[10px] text-stone-300 hover:text-red-500 ml-1 opacity-40 group-hover:opacity-100 transition-opacity"
+        className="inline-flex items-center justify-center h-4 w-4 rounded text-[11px] text-stone-400 hover:text-red-500 hover:bg-red-50 ml-1 transition-colors shrink-0"
         title="Flag this value as incorrect"
       >
         ⚑

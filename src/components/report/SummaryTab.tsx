@@ -281,7 +281,7 @@ function fmt(n: number | undefined | null, decimals = 0) {
   });
 }
 
-export default function SummaryTab({ data, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote }: SummaryTabProps) {
+export default function SummaryTab({ data, editMode, userEdits, sectionNotes, onEditField, onRevertField, onEditNote, reportId }: SummaryTabProps) {
   const eff = data.effective_standards || {};
   const dev = data.development_potential || {};
   const layers = data.layers || {};
@@ -555,7 +555,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/* ============================================================ */}
       {/*  ZONING STATISTICS TABLE                                      */}
       {/* ============================================================ */}
-      <ZoningStatisticsTable data={data.zoning_statistics_table} />
+      <ZoningStatisticsTable data={data.zoning_statistics_table} address={data.address} reportId={reportId} />
 
       {/* ============================================================ */}
       {/*  QUICK FLAGS — constraint / overlay / heritage / confidence    */}
