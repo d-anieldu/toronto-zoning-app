@@ -89,7 +89,7 @@ export default async function Home() {
           {/* Mock report preview */}
           <div className="relative">
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-xl shadow-stone-200/50">
-              <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
+              <div className="flex items-center gap-3 pb-4 border-b border-[var(--border)]">
                 <div className="h-2.5 w-2.5 rounded-full bg-red-300" />
                 <div className="h-2.5 w-2.5 rounded-full bg-amber-300" />
                 <div className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
@@ -103,7 +103,7 @@ export default async function Home() {
 
               <div className="mt-3 flex items-center gap-2">
                 <span className="rounded-lg bg-[var(--text-primary)] px-2.5 py-1 text-[11px] font-bold text-white">RD</span>
-                <span className="rounded-lg border border-[var(--border)] bg-stone-50 px-2.5 py-1 font-mono text-[11px] text-stone-600">
+                <span className="rounded-lg border border-[var(--border)] bg-stone-50 px-2.5 py-1 font-mono text-[11px] text-[var(--text-secondary)]">
                   RD (f12.0; a325) (x123)
                 </span>
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
@@ -130,10 +130,10 @@ export default async function Home() {
                 <div className="flex items-center justify-between">
                   <div className="text-center">
                     <p className="text-[10px] text-[var(--text-muted)]">FRONT</p>
-                    <p className="font-mono text-[13px] font-semibold text-stone-700">6.0m</p>
+                    <p className="font-mono text-[13px] font-semibold text-[var(--text-primary)]">6.0m</p>
                   </div>
                   <div className="relative mx-4 flex-1">
-                    <div className="aspect-[4/3] rounded-md border-2 border-dashed border-stone-300 bg-white">
+                    <div className="aspect-[4/3] rounded-md border-2 border-dashed border-stone-300 bg-[var(--card)]">
                       <div className="absolute inset-3 rounded bg-emerald-100 border border-emerald-300 flex items-center justify-center">
                         <span className="text-[11px] font-semibold text-emerald-700">195 m² buildable</span>
                       </div>
@@ -141,7 +141,7 @@ export default async function Home() {
                   </div>
                   <div className="text-center">
                     <p className="text-[10px] text-[var(--text-muted)]">REAR</p>
-                    <p className="font-mono text-[13px] font-semibold text-stone-700">7.5m</p>
+                    <p className="font-mono text-[13px] font-semibold text-[var(--text-primary)]">7.5m</p>
                   </div>
                 </div>
               </div>
@@ -318,12 +318,12 @@ export default async function Home() {
           <h2 className="font-heading text-[24px] font-bold text-white">
             Stop spending hours on manual zoning research
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-[15px] text-stone-400">
+          <p className="mx-auto mt-3 max-w-md text-[15px] text-[var(--text-muted)]">
             Get the same data a planning consultant would compile — in seconds, not days.
           </p>
           <Link
             href="/dashboard"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-[14px] font-semibold text-[var(--text-primary)] shadow-lg transition-all hover:bg-stone-50 hover:shadow-xl"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[var(--card)] px-8 py-3.5 text-[14px] font-semibold text-[var(--text-primary)] shadow-lg transition-all hover:bg-stone-50 hover:shadow-xl"
           >
             Start your first lookup
             <ArrowRight className="h-4 w-4" />
@@ -337,7 +337,7 @@ export default async function Home() {
             Data sourced from the City of Toronto Open Data Portal. Not legal advice.
           </p>
           <div className="flex items-center gap-4">
-            <span className="text-[12px] text-stone-300">By-law 569-2013</span>
+            <span className="text-[12px] text-[var(--text-muted)]">By-law 569-2013</span>
           </div>
         </div>
       </footer>

@@ -73,20 +73,20 @@ function FloatingActions({ onCopy, copied }: { onCopy: () => void; copied: boole
       <button
         type="button"
         onClick={onCopy}
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
         title={copied ? "Copied!" : "Copy summary"}
       >
         {copied
           ? <Check className="h-4 w-4 text-emerald-500" />
-          : <Copy className="h-4 w-4 text-stone-500" />}
+          : <Copy className="h-4 w-4 text-[var(--text-secondary)]" />}
       </button>
       <button
         type="button"
         onClick={() => window.print()}
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
         title="Print report"
       >
-        <Printer className="h-4 w-4 text-stone-500" />
+        <Printer className="h-4 w-4 text-[var(--text-secondary)]" />
       </button>
       <button
         type="button"
@@ -228,7 +228,7 @@ export default function ZoningReport({
                 </span>
               ) : null}
               {zoneString && (
-                <span className="rounded-lg border border-[var(--border)] bg-stone-50 px-3 py-1.5 font-mono text-[12px] text-stone-600">
+                <span className="rounded-lg border border-[var(--border)] bg-stone-50 px-3 py-1.5 font-mono text-[12px] text-[var(--text-secondary)]">
                   {zoneString}
                 </span>
               )}
@@ -333,13 +333,13 @@ export default function ZoningReport({
 
           {/* Secondary zones (resolved data) */}
           {eff.secondary_zones?.length > 0 && (
-            <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
-              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-stone-400">Secondary Zones on This Lot</p>
+            <div className="mt-4 rounded-lg border border-[var(--border)] bg-stone-50 p-4">
+              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Secondary Zones on This Lot</p>
               <div className="space-y-1">
                 {eff.secondary_zones.map((sz: any, i: number) => (
                   <div key={i} className="flex items-center gap-2 text-[12px]">
-                    <span className="rounded bg-stone-200 px-1.5 py-0.5 font-mono text-[11px] font-medium text-stone-700">{sz.zone}</span>
-                    <span className="text-stone-500">{sz.zone_string}</span>
+                    <span className="rounded bg-stone-200 px-1.5 py-0.5 font-mono text-[11px] font-medium text-[var(--text-primary)]">{sz.zone}</span>
+                    <span className="text-[var(--text-secondary)]">{sz.zone_string}</span>
                     {sz.exception_number && Number(sz.exception_number) > 0 && (
                       <RefLink type="exception" id={String(sz.exception_number)} zone_code={sz.zone} label={`Exception #${sz.exception_number}`}>
                         <Badge variant="warning">Exc #{sz.exception_number}</Badge>

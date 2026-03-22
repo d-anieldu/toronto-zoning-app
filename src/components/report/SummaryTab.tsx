@@ -50,13 +50,13 @@ const ZONE_META: Record<string, { label: string; use: string; category: string; 
 };
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
-  Residential:   { bg: "bg-stone-100",   text: "text-stone-700",  ring: "ring-stone-200"  },
+  Residential:   { bg: "bg-stone-100",   text: "text-[var(--text-primary)]",  ring: "ring-[var(--border)]"  },
   "Mixed-Use":   { bg: "bg-violet-100",  text: "text-violet-700", ring: "ring-violet-200" },
   Commercial:    { bg: "bg-amber-100",   text: "text-amber-700",  ring: "ring-amber-200"  },
   Employment:    { bg: "bg-orange-100",  text: "text-orange-700", ring: "ring-orange-200" },
   Institutional: { bg: "bg-sky-100",     text: "text-sky-700",    ring: "ring-sky-200"    },
   "Open Space":  { bg: "bg-emerald-100", text: "text-emerald-700",ring: "ring-emerald-200"},
-  Utility:       { bg: "bg-stone-100",   text: "text-stone-600",  ring: "ring-stone-200"  },
+  Utility:       { bg: "bg-stone-100",   text: "text-[var(--text-secondary)]",  ring: "ring-[var(--border)]"  },
 };
 
 function resolveZoneMeta(zoneCode: string) {
@@ -149,7 +149,7 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm overflow-hidden">
       {/* ── Part A: What it is today ── */}
-      <div className="p-5 border-b border-stone-100">
+      <div className="p-5 border-b border-[var(--border)]">
         <p className="mb-3 font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
           Property As-Is
         </p>
@@ -162,7 +162,7 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
                 {zoneMeta.category}
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-stone-100 px-3 py-1 text-[12px] font-medium text-stone-600 ring-1 ring-stone-200">
+              <span className="inline-flex items-center rounded-full bg-stone-100 px-3 py-1 text-[12px] font-medium text-[var(--text-secondary)] ring-1 ring-[var(--border)]">
                 Unknown Zone Type
               </span>
             )}
@@ -834,7 +834,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                         ? "border-amber-200 bg-amber-50/50"
                         : c.severity === "info"
                           ? "border-sky-200 bg-sky-50/50"
-                          : "border-stone-200 bg-stone-50/50"
+                          : "border-[var(--border)] bg-stone-50/50"
                   }`}
                 >
                   <span className={`mt-0.5 shrink-0 text-[14px] ${severityDotColor[c.severity] || "text-sky-500"}`} aria-hidden="true">
@@ -910,7 +910,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                     ? "border-emerald-400 text-emerald-600"
                     : confLevel === "medium"
                       ? "border-amber-400 text-amber-600"
-                      : "border-stone-300 text-stone-500"
+                      : "border-[var(--border)] text-[var(--text-secondary)]"
               }`}
             >
               <span className="text-[18px] font-bold">{confGrade || confScore}</span>
@@ -1045,7 +1045,7 @@ function MetricCard({
     ? accentStyles[accent]
     : "border-[var(--border)] bg-[var(--card)] shadow-sm";
   const textColor = isEmpty
-    ? "text-stone-300"
+    ? "text-[var(--text-muted)]"
     : accent
       ? accentText[accent]
       : "text-[var(--text-primary)]";

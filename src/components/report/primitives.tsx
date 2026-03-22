@@ -44,12 +44,12 @@ export function SectionHeading({
   return (
     <div id={id} className="scroll-mt-28 pt-2">
       <div className="flex items-center gap-2.5 pb-3">
-        {icon && <span className="text-stone-400" aria-hidden="true">{icon}</span>}
-        <h3 className="font-heading text-[15px] font-semibold tracking-tight text-stone-900">
+        {icon && <span className="text-[var(--text-muted)]" aria-hidden="true">{icon}</span>}
+        <h3 className="font-heading text-[15px] font-semibold tracking-tight text-[var(--text-primary)]">
           {title}
         </h3>
         {count != null && (
-          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
+          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]">
             {count}
           </span>
         )}
@@ -79,7 +79,7 @@ export function Card({
   }, [defaultOpen]);
   return (
     <section
-      className={`rounded-xl border border-stone-200 bg-white shadow-sm ${className}`}
+      className={`rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm ${className}`}
       {...rest}
     >
       <button
@@ -89,11 +89,11 @@ export function Card({
         aria-expanded={open}
         aria-label={`${open ? "Collapse" : "Expand"} ${label}`}
       >
-        <h4 className="font-heading text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+        <h4 className="font-heading text-[13px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
           {label}
         </h4>
         <svg
-          className={`h-4 w-4 text-stone-300 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 text-[var(--text-muted)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={2}
@@ -109,7 +109,7 @@ export function Card({
       <div
         className={`overflow-hidden transition-all duration-200 ${open ? "max-h-[5000px] opacity-100" : "max-h-0 opacity-0"}`}
       >
-        <div className="border-t border-stone-100 px-5 py-4">{children}</div>
+        <div className="border-t border-[var(--border)] px-5 py-4">{children}</div>
       </div>
     </section>
   );
@@ -135,21 +135,21 @@ export function StatCard({
       className={`rounded-xl border px-4 py-3.5 ${
         accent
           ? "border-stone-800 bg-stone-900 text-white"
-          : "border-stone-200 bg-white shadow-sm"
+          : "border-[var(--border)] bg-[var(--card)] shadow-sm"
       }`}
     >
       <p
         className={`font-heading font-bold tracking-tight leading-tight ${
           hero ? "text-[28px]" : "text-[22px]"
         } ${
-          accent ? "text-white" : "text-stone-900"
+          accent ? "text-white" : "text-[var(--text-primary)]"
         }`}
       >
         {value}
         {unit && (
           <span
             className={`ml-0.5 text-[13px] font-normal ${
-              accent ? "text-stone-400" : "text-stone-400"
+              accent ? "text-stone-400" : "text-[var(--text-muted)]"
             }`}
           >
             {unit}
@@ -158,7 +158,7 @@ export function StatCard({
       </p>
       <p
         className={`mt-1 text-[12px] font-medium ${
-          accent ? "text-stone-400" : "text-stone-500"
+          accent ? "text-stone-400" : "text-[var(--text-secondary)]"
         }`}
       >
         {label}
@@ -166,7 +166,7 @@ export function StatCard({
       {sub && (
         <p
           className={`mt-0.5 text-[11px] ${
-            accent ? "text-stone-500" : "text-stone-400"
+            accent ? "text-stone-500" : "text-[var(--text-muted)]"
           }`}
         >
           {sub}
@@ -209,10 +209,10 @@ export function Row({
 
   return (
     <div className="group flex items-baseline justify-between gap-4 border-b border-stone-50 py-2.5 last:border-0">
-      <span className="shrink-0 text-[13px] text-stone-400">{label}</span>
+      <span className="shrink-0 text-[13px] text-[var(--text-muted)]">{label}</span>
       <div className="flex items-center gap-1 text-right">
         <span
-          className={`text-[13px] font-medium text-stone-900 ${mono ? "font-mono" : ""}`}
+          className={`text-[13px] font-medium text-[var(--text-primary)] ${mono ? "font-mono" : ""}`}
         >
           {display}
         </span>
@@ -226,7 +226,7 @@ export function Row({
             reportId={fReport}
           />
         )}
-        {sub && <p className="text-[11px] text-stone-400">{sub}</p>}
+        {sub && <p className="text-[11px] text-[var(--text-muted)]">{sub}</p>}
       </div>
     </div>
   );
@@ -240,8 +240,8 @@ export function Badge({
   variant?: "default" | "active" | "accent" | "warning" | "danger" | "success" | "info";
 }) {
   const styles = {
-    default: "border-stone-200 bg-stone-50 text-stone-600",
-    active: "border-stone-300 bg-stone-100 text-stone-700",
+    default: "border-[var(--border)] bg-stone-50 text-[var(--text-secondary)]",
+    active: "border-stone-300 bg-stone-100 text-[var(--text-primary)]",
     accent: "border-emerald-300 bg-emerald-50 text-emerald-800",
     warning: "border-amber-200 bg-amber-50 text-amber-700",
     danger: "border-red-200 bg-red-50 text-red-700",
