@@ -44,7 +44,7 @@ function SignIn() {
   }
 
   async function handleLinkedIn() {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const siteUrl = window.location.hostname === "localhost" ? window.location.origin : "https://torontozoning.com";
     await supabase.auth.signInWithOAuth({
       provider: "linkedin_oidc",
       options: {

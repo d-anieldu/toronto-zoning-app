@@ -16,7 +16,7 @@ export default function SignUp() {
   const [confirmSent, setConfirmSent] = useState(false);
 
   async function handleLinkedIn() {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    const siteUrl = window.location.hostname === "localhost" ? window.location.origin : "https://torontozoning.com";
     await supabase.auth.signInWithOAuth({
       provider: "linkedin_oidc",
       options: {
@@ -35,7 +35,7 @@ export default function SignUp() {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.hostname === "localhost" ? window.location.origin : "https://torontozoning.com"}/auth/callback`,
       },
     });
 
