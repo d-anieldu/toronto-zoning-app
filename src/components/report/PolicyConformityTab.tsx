@@ -80,16 +80,16 @@ function SummaryBar({ summary }: { summary: PolicyConformitySummary }) {
     { count: summary.requires_assessment, label: "Assess", color: "text-amber-600" },
     { count: summary.user_input_needed, label: "Input Needed", color: "text-blue-600" },
     { count: summary.potential_conflict, label: "Conflict", color: "text-red-600" },
-    { count: summary.not_applicable ?? 0, label: "N/A", color: "text-stone-400" },
+    { count: summary.not_applicable ?? 0, label: "N/A", color: "text-[var(--text-muted)]" },
   ].filter((item) => item.count > 0);
   return (
-    <div className="flex flex-wrap gap-4 rounded-lg border border-stone-200 bg-stone-50 px-4 py-2.5">
+    <div className="flex flex-wrap gap-4 rounded-lg border border-[var(--border)] bg-stone-50 px-4 py-2.5">
       {items.map((item) => (
         <span key={item.label} className={`text-[13px] font-medium ${item.color}`}>
           {item.count} {item.label}
         </span>
       ))}
-      <span className="text-[13px] text-stone-400">
+      <span className="text-[13px] text-[var(--text-muted)]">
         of {summary.total_items} total
       </span>
     </div>
@@ -152,7 +152,7 @@ function ChecklistSection({
         count={checklist.summary.total_items}
       />
       <div
-        className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm"
+        className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm"
         role="region"
         aria-label={`${title} checklist`}
       >
@@ -210,7 +210,7 @@ function ChecklistSection({
               </span>
             )}
             {(checklist.summary.not_applicable ?? 0) > 0 && (
-              <span className="text-stone-400">
+              <span className="text-[var(--text-muted)]">
                 ⬜ {checklist.summary.not_applicable} N/A
               </span>
             )}
@@ -218,7 +218,7 @@ function ChecklistSection({
           <button
             type="button"
             onClick={onToggleExpandAll}
-            className="text-[11px] font-medium text-stone-400 hover:text-stone-600 transition-colors"
+            className="text-[11px] font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
             aria-label={expandAll ? `Collapse all ${title} items` : `Expand all ${title} items`}
           >
             {expandAll ? "▲ Collapse all" : "▼ Expand all"}
@@ -264,7 +264,7 @@ function ChecklistItem({
           ? "border-red-100 bg-red-50/30"
           : item.status === "user_input_needed"
             ? "border-blue-100 bg-blue-50/30"
-            : "border-stone-100 bg-stone-50/30";
+            : "border-[var(--border)] bg-stone-50/30";
 
   const showNotes =
     item.status === "user_input_needed" || item.status === "requires_assessment";
@@ -279,23 +279,23 @@ function ChecklistItem({
         <div className={`rounded-lg border p-3 transition-all duration-200 ease-in-out ${statusColor}`}>
           <div className="flex items-center gap-2 mb-2">
             <StatusBadge status={item.status} />
-            <span className="text-[11px] text-stone-400" aria-label={`Data source: ${item.data_source}`}>{item.data_source}</span>
+            <span className="text-[11px] text-[var(--text-muted)]" aria-label={`Data source: ${item.data_source}`}>{item.data_source}</span>
           </div>
-          <p className="text-[12px] italic text-stone-500 mb-2">{item.requirement}</p>
-          <p className="text-[13px] leading-relaxed text-stone-700">{item.evidence}</p>
+          <p className="text-[12px] italic text-[var(--text-secondary)] mb-2">{item.requirement}</p>
+          <p className="text-[13px] leading-relaxed text-[var(--text-primary)]">{item.evidence}</p>
 
           {/* User notes for actionable items */}
           {showNotes && (
             <div className="mt-3">
               <label
                 htmlFor={`note-${item.id}`}
-                className="text-[11px] font-semibold uppercase tracking-wide text-blue-500"
+                className="text-[11px] font-heading font-semibold uppercase tracking-wide text-blue-500"
               >
                 📝 Your Notes
               </label>
               <textarea
                 id={`note-${item.id}`}
-                className="mt-1 w-full rounded-lg border border-stone-200 bg-white p-2 text-[12px] leading-relaxed text-stone-700 placeholder:text-stone-300 focus:border-blue-300 focus:outline-none focus:ring-1 focus:ring-blue-200"
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] p-2 text-[12px] leading-relaxed text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-blue-300 focus:outline-none focus:ring-1 focus:ring-blue-200"
                 placeholder="Add project-specific justification or notes..."
                 rows={2}
                 value={note}
@@ -473,8 +473,8 @@ export default function PolicyConformityTab({ data, editMode, sectionNotes, onEd
 
   if (!conformity) {
     return (
-      <div className="rounded-xl border border-stone-200 bg-white p-8 text-center shadow-sm">
-        <p className="text-[14px] text-stone-400">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-8 text-center shadow-sm">
+        <p className="text-[14px] text-[var(--text-muted)]">
           📋 Policy conformity data is not yet available for this property.
         </p>
       </div>
@@ -600,7 +600,7 @@ export default function PolicyConformityTab({ data, editMode, sectionNotes, onEd
         <button
           type="button"
           onClick={handleCopyToClipboard}
-          className="flex items-center gap-2 rounded-lg border border-stone-200 px-4 py-2.5 text-[13px] font-medium text-stone-600 shadow-sm transition-all hover:bg-stone-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-stone-300"
+          className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-4 py-2.5 text-[13px] font-medium text-[var(--text-secondary)] shadow-sm transition-all hover:bg-stone-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-stone-300"
           aria-label="Copy conformity checklist to clipboard as Markdown"
         >
           {showCopied ? (
