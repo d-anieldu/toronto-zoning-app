@@ -15,6 +15,7 @@ import {
   Info, AlertTriangle, Train, Landmark, CheckCircle2, XCircle,
   type LucideIcon,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Badge, severityColor, severityIcon, severityDotColor } from "./primitives";
 import FlagButton from "../FlagButton";
 import DevChargesCalculator from "../DevChargesCalculator";
@@ -22,6 +23,8 @@ import ZoningStatisticsTable from "./ZoningStatisticsTable";
 import EditableField from "./EditableField";
 import SectionNoteEditor from "./SectionNoteEditor";
 import { getFieldValue } from "@/lib/report-edits";
+
+const MapPanel = dynamic(() => import("../MapPanel"), { ssr: false });
 
 /* ── Zone look-up: code → plain-English label + inferred current use ── */
 const ZONE_META: Record<string, { label: string; use: string; category: string; color: string }> = {
@@ -379,6 +382,23 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
 
   return (
     <div className="space-y-5">
+      {/* ============================================================ */}
+      {/*  MAP                                                          */}
+      {/* ============================================================ */}
+      {data.coordinates?.latitude && data.coordinates?.longitude && (
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] shadow-sm" style={{ height: "55vh" }}>
+          <MapPanel
+            latitude={data.coordinates.latitude}
+            longitude={data.coordinates.longitude}
+            activeSiteLayers={layers}
+            zoneCode={eff.zone_code || eff.zone_label?.zone_code || ""}
+            zoneString={eff.zone_string || ""}
+            lotArea={dev.lot?.area_sqm}
+            frontage={dev.lot?.frontage_m}
+          />
+        </div>
+      )}
+
       {/* ============================================================ */}
       {/*  PROPERTY SNAPSHOT — current state + opportunity              */}
       {/* ============================================================ */}
