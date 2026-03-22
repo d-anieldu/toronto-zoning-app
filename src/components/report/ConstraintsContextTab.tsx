@@ -17,6 +17,7 @@ import EditableField from "./EditableField";
 import SectionNoteEditor from "./SectionNoteEditor";
 import FlagButton from "../FlagButton";
 import { getFieldValue } from "@/lib/report-edits";
+import { AlertTriangle } from "lucide-react";
 
 /* ── Overlay definition helper ────────────────────────────────────── */
 
@@ -125,7 +126,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
       {/* ============================================================ */}
       <SectionHeading id="overlays" title="Overlays & Layers" icon={Icons.layers} count={activeOverlays.length} />
 
-      <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
         {activeOverlays.length > 0 && (
           <div className="mb-5">
             <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-emerald-600">
@@ -141,7 +142,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                     <span className="mt-0.5 text-[16px]" aria-hidden="true">{o.icon}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1">
-                        <p className="text-[13px] font-medium text-stone-700">{o.label}</p>
+                        <p className="text-[13px] font-medium text-[var(--text-primary)]">{o.label}</p>
                         <FlagButton
                           address={addr}
                           fieldPath={`overlays.${o.key}`}
@@ -167,12 +168,12 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
         )}
         {inactiveOverlays.length > 0 && (
           <div>
-            <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-stone-400">
+            <p className="mb-3 text-[12px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">
               Not Applicable ({inactiveOverlays.length})
             </p>
             <div className="flex flex-wrap gap-2">
               {inactiveOverlays.map((o) => (
-                <span key={o.key} className="rounded-lg border border-stone-100 bg-stone-50 px-3 py-1.5 text-[12px] text-stone-300">
+                <span key={o.key} className="rounded-lg border border-[var(--border)] bg-stone-50 px-3 py-1.5 text-[12px] text-[var(--text-muted)]">
                   {o.label}
                 </span>
               ))}
@@ -201,19 +202,19 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
 
           <div className="grid gap-4 md:grid-cols-1">
             {(eff.natural_hazards.hazards ?? []).map((h: any, i: number) => {
-              const sevColor = h.severity === "high" ? "border-red-200 bg-red-50/30" : h.severity === "medium" ? "border-amber-200 bg-amber-50/30" : "border-stone-200 bg-stone-50/30";
+              const sevColor = h.severity === "high" ? "border-red-200 bg-red-50/30" : h.severity === "medium" ? "border-amber-200 bg-amber-50/30" : "border-[var(--border)] bg-stone-50/30";
               const sevBadge = h.severity === "high" ? "danger" : h.severity === "medium" ? "warning" : "default";
               return (
                 <div key={i} className={`rounded-xl border p-5 shadow-sm ${sevColor}`}>
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant={sevBadge as any}>{h.severity?.toUpperCase()}</Badge>
-                    <span className="text-[14px] font-semibold text-stone-800">{h.label}</span>
+                    <span className="text-[14px] font-semibold text-[var(--text-primary)]">{h.label}</span>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 mb-3">
-                    <div className="rounded-lg border border-stone-200 bg-white p-3">
-                      <p className="text-[22px] font-bold text-stone-900">{h.setback_m}m</p>
+                    <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-3">
+                      <p className="text-[22px] font-bold text-[var(--text-primary)]">{h.setback_m}m</p>
                       <div className="flex items-center gap-1">
-                        <p className="text-[12px] text-stone-500">setback {h.setback_label}</p>
+                        <p className="text-[12px] text-[var(--text-secondary)]">setback {h.setback_label}</p>
                         <FlagButton
                           address={addr}
                           fieldPath={`natural_hazards.${i}.setback_m`}
@@ -225,10 +226,10 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                       </div>
                     </div>
                     {h.tree_protection_m && (
-                      <div className="rounded-lg border border-stone-200 bg-white p-3">
-                        <p className="text-[22px] font-bold text-stone-900">{h.tree_protection_m}m</p>
+                      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-3">
+                        <p className="text-[22px] font-bold text-[var(--text-primary)]">{h.tree_protection_m}m</p>
                         <div className="flex items-center gap-1">
-                          <p className="text-[12px] text-stone-500">tree protection zone</p>
+                          <p className="text-[12px] text-[var(--text-secondary)]">tree protection zone</p>
                           <FlagButton
                             address={addr}
                             fieldPath={`natural_hazards.${i}.tree_protection_m`}
@@ -241,10 +242,10 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                       </div>
                     )}
                     {h.reduced_setback_m && (
-                      <div className="rounded-lg border border-stone-200 bg-white p-3">
+                      <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-3">
                         <p className="text-[22px] font-bold text-amber-600">{h.reduced_setback_m}m</p>
                         <div className="flex items-center gap-1">
-                          <p className="text-[12px] text-stone-500">reduced setback (urban area)</p>
+                          <p className="text-[12px] text-[var(--text-secondary)]">reduced setback (urban area)</p>
                           <FlagButton
                             address={addr}
                             fieldPath={`natural_hazards.${i}.reduced_setback_m`}
@@ -261,14 +262,14 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                     <Card label="Rules & Restrictions" defaultOpen={false}>
                       <ul className="space-y-1.5">
                         {h.rules.map((r: string, ri: number) => (
-                          <li key={ri} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                          <li key={ri} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                             <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-red-400" />
                             <span>{r}</span>
                           </li>
                         ))}
                       </ul>
                       {h.restrictions?.length > 0 && (
-                        <div className="mt-3 border-t border-stone-100 pt-3">
+                        <div className="mt-3 border-t border-[var(--border)] pt-3">
                           <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-red-500">Restrictions</p>
                           <ul className="space-y-1.5">
                             {h.restrictions.map((r: string, ri: number) => (
@@ -290,11 +291,11 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           {(eff.natural_hazards.permits_required?.length > 0 || eff.natural_hazards.studies_required?.length > 0) && (
             <div className="grid gap-4 md:grid-cols-2">
               {eff.natural_hazards.permits_required?.length > 0 && (
-                <div className="rounded-xl border border-red-100 bg-white p-5 shadow-sm">
+                <div className="rounded-xl border border-red-100 bg-[var(--card)] p-5 shadow-sm">
                   <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-red-500">Permits Required</p>
                   <ul className="space-y-2">
                     {eff.natural_hazards.permits_required.map((p: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                         <span className="mt-0.5 text-red-500" aria-hidden="true">📋</span>
                         <span className="flex-1">{p}</span>
                         <FlagButton
@@ -311,11 +312,11 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                 </div>
               )}
               {eff.natural_hazards.studies_required?.length > 0 && (
-                <div className="rounded-xl border border-amber-100 bg-white p-5 shadow-sm">
+                <div className="rounded-xl border border-amber-100 bg-[var(--card)] p-5 shadow-sm">
                   <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-amber-500">Studies Required</p>
                   <ul className="space-y-2">
                     {eff.natural_hazards.studies_required.map((s: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                         <span className="mt-0.5 text-amber-500" aria-hidden="true">📄</span>
                         <span className="flex-1">{s}</span>
                         <FlagButton
@@ -351,24 +352,24 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
 
           <div className="grid gap-4 md:grid-cols-1">
             {(eff.heritage_impact.items ?? []).map((item: any, i: number) => (
-              <div key={i} className="rounded-xl border border-violet-200 bg-white p-5 shadow-sm">
+              <div key={i} className="rounded-xl border border-violet-200 bg-[var(--card)] p-5 shadow-sm">
                 {item.type === "heritage_register" && (
                   <>
                     <div className="flex items-center gap-2 mb-3">
                       <Badge variant={item.protection_level === "designated" ? "danger" : "warning"}>
                         {item.protection_level === "designated" ? "DESIGNATED" : "LISTED"}
                       </Badge>
-                      <span className="text-[14px] font-semibold text-stone-800">Heritage Register</span>
+                      <span className="text-[14px] font-semibold text-[var(--text-primary)]">Heritage Register</span>
                     </div>
-                    <p className="text-[13px] leading-relaxed text-stone-600 mb-3">{item.level_description}</p>
-                    <p className="text-[12px] leading-relaxed text-stone-500">{item.impact}</p>
+                    <p className="text-[13px] leading-relaxed text-[var(--text-secondary)] mb-3">{item.level_description}</p>
+                    <p className="text-[12px] leading-relaxed text-[var(--text-secondary)]">{item.impact}</p>
                     {item.description && (
                       <div className="mt-3 rounded-lg bg-stone-50 p-3">
-                        <p className="text-[12px] text-stone-500">{item.description}</p>
+                        <p className="text-[12px] text-[var(--text-secondary)]">{item.description}</p>
                       </div>
                     )}
                     {item.construction_date && (
-                      <p className="mt-2 text-[11px] text-stone-400">Construction date: {item.construction_date}</p>
+                      <p className="mt-2 text-[11px] text-[var(--text-muted)]">Construction date: {item.construction_date}</p>
                     )}
                   </>
                 )}
@@ -376,32 +377,32 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                   <>
                     <div className="flex items-center gap-2 mb-3">
                       <Badge variant="info">HCD</Badge>
-                      <span className="text-[14px] font-semibold text-stone-800">{item.hcd_name}</span>
+                      <span className="text-[14px] font-semibold text-[var(--text-primary)]">{item.hcd_name}</span>
                       {item.bylaw && item.plan_url ? (
                         <a href={item.plan_url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-violet-500 underline decoration-dotted underline-offset-2 hover:text-violet-700">
                           By-law {item.bylaw} ↗
                         </a>
                       ) : item.bylaw ? (
-                        <span className="text-[11px] text-stone-400">By-law {item.bylaw}</span>
+                        <span className="text-[11px] text-[var(--text-muted)]">By-law {item.bylaw}</span>
                       ) : null}
                     </div>
                     <p className="mb-2 text-[11px] font-medium text-violet-500">{item.status_note}</p>
                     {item.character_statement && (
-                      <p className="mb-3 text-[12px] italic leading-relaxed text-stone-500">&ldquo;{item.character_statement}&rdquo;</p>
+                      <p className="mb-3 text-[12px] italic leading-relaxed text-[var(--text-secondary)]">&ldquo;{item.character_statement}&rdquo;</p>
                     )}
-                    <p className="text-[12px] leading-relaxed text-stone-500 mb-3">{item.impact}</p>
+                    <p className="text-[12px] leading-relaxed text-[var(--text-secondary)] mb-3">{item.impact}</p>
                     <div className="grid gap-3 sm:grid-cols-3 mb-3">
                       {item.max_storeys_guideline && (
-                        <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                          <p className="text-[18px] font-bold text-stone-900">{item.max_storeys_guideline}</p>
-                          <p className="text-[12px] text-stone-500">max storeys (guideline)</p>
-                          {item.max_storeys_note && <p className="text-[10px] text-stone-400 mt-0.5">{item.max_storeys_note}</p>}
+                        <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
+                          <p className="text-[18px] font-bold text-[var(--text-primary)]">{item.max_storeys_guideline}</p>
+                          <p className="text-[12px] text-[var(--text-secondary)]">max storeys (guideline)</p>
+                          {item.max_storeys_note && <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{item.max_storeys_note}</p>}
                         </div>
                       )}
                       {item.streetwall_height_m && (
-                        <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                          <p className="text-[18px] font-bold text-stone-900">{item.streetwall_height_m}m</p>
-                          <p className="text-[12px] text-stone-500">street wall height</p>
+                        <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
+                          <p className="text-[18px] font-bold text-[var(--text-primary)]">{item.streetwall_height_m}m</p>
+                          <p className="text-[12px] text-[var(--text-secondary)]">street wall height</p>
                         </div>
                       )}
                     </div>
@@ -433,7 +434,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                       <Card label="Design Guidelines" defaultOpen={false}>
                         <ul className="space-y-1.5">
                           {item.design_guidelines.map((g: string, gi: number) => (
-                            <li key={gi} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                            <li key={gi} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                               <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-violet-400" />
                               <span>{g}</span>
                             </li>
@@ -455,11 +456,11 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           {(eff.heritage_impact.permits_required?.length > 0 || eff.heritage_impact.studies_required?.length > 0) && (
             <div className="grid gap-4 md:grid-cols-2">
               {eff.heritage_impact.permits_required?.length > 0 && (
-                <div className="rounded-xl border border-violet-100 bg-white p-5 shadow-sm">
+                <div className="rounded-xl border border-violet-100 bg-[var(--card)] p-5 shadow-sm">
                   <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-violet-500">Heritage Permits Required</p>
                   <ul className="space-y-2">
                     {eff.heritage_impact.permits_required.map((p: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                         <span className="mt-0.5 text-violet-500" aria-hidden="true">📋</span><span>{p}</span>
                       </li>
                     ))}
@@ -467,11 +468,11 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                 </div>
               )}
               {eff.heritage_impact.studies_required?.length > 0 && (
-                <div className="rounded-xl border border-violet-100 bg-white p-5 shadow-sm">
+                <div className="rounded-xl border border-violet-100 bg-[var(--card)] p-5 shadow-sm">
                   <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-violet-500">Studies Required</p>
                   <ul className="space-y-2">
                     {eff.heritage_impact.studies_required.map((s: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                         <span className="mt-0.5 text-violet-500" aria-hidden="true">📄</span><span>{s}</span>
                       </li>
                     ))}
@@ -494,7 +495,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
             {Object.entries(eff.overlay_rules).map(([key, rule]: [string, any]) => {
               if (!rule?.applies) return null;
               return (
-                <div key={key} className="rounded-xl border border-sky-200 bg-white p-5 shadow-sm">
+                <div key={key} className="rounded-xl border border-sky-200 bg-[var(--card)] p-5 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
                     {rule.chapter ? (
                       <RefLink type="bylaw-section" id={rule.chapter.replace(/^Ch\.?\s*/i, "")} label={rule.chapter}>
@@ -503,7 +504,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                     ) : (
                       <Badge variant="info">Ch. 600</Badge>
                     )}
-                    <span className="text-[13px] font-semibold text-stone-800">
+                    <span className="text-[13px] font-semibold text-[var(--text-primary)]">
                       {rule.name || key.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
                     </span>
                   </div>
@@ -578,25 +579,25 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
             <Card label="Recent Applications" defaultOpen={false}>
               <div className="space-y-3">
                 {dev.coa_precedents.samples.map((s: any, i: number) => (
-                  <div key={i} className="rounded-lg border border-stone-100 bg-stone-50 p-3">
+                  <div key={i} className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="text-[12px] font-medium text-stone-700">{s.address}</p>
+                      <p className="text-[12px] font-medium text-[var(--text-primary)]">{s.address}</p>
                       <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
                         s.decision?.toLowerCase().startsWith("approv") ? "bg-green-100 text-green-700"
                           : s.decision?.toLowerCase().startsWith("refus") ? "bg-red-100 text-red-700"
-                          : "bg-stone-100 text-stone-600"
+                          : "bg-stone-100 text-[var(--text-secondary)]"
                       }`}>{s.decision}</span>
                     </div>
-                    {s.reference && <p className="text-[11px] text-stone-400">Ref: {s.reference}{s.hearing_date ? ` · ${s.hearing_date}` : ""}</p>}
-                    {s.sub_type && <p className="text-[11px] text-stone-500">{s.sub_type}{s.work_type ? ` — ${s.work_type}` : ""}</p>}
-                    {s.description && <p className="mt-1 text-[11px] leading-relaxed text-stone-400">{s.description}</p>}
+                    {s.reference && <p className="text-[11px] text-[var(--text-muted)]">Ref: {s.reference}{s.hearing_date ? ` · ${s.hearing_date}` : ""}</p>}
+                    {s.sub_type && <p className="text-[11px] text-[var(--text-secondary)]">{s.sub_type}{s.work_type ? ` — ${s.work_type}` : ""}</p>}
+                    {s.description && <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">{s.description}</p>}
                   </div>
                 ))}
               </div>
             </Card>
           )}
           {dev.coa_precedents.summary_text && (
-            <p className="text-[11px] italic text-stone-400">{dev.coa_precedents.summary_text}</p>
+            <p className="text-[11px] italic text-[var(--text-muted)]">{dev.coa_precedents.summary_text}</p>
           )}
         </>
       )}
@@ -609,7 +610,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           <SectionHeading id="op-context" title="Official Plan Context" icon={Icons.map} />
 
           {opDesignation && (
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <RefLink type="op-designation" id={zoneCode || ""} label={opDesignation.designation}>
@@ -634,25 +635,25 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                   />
                 </div>
                 <EditableField {...ep("effective_standards.op_context.op_designation.designation", opDesignationName.value, opDesignationName.isEdited, opDesignationName.original, opDesignationName.editNote)}>
-                  <h4 className="mt-2 text-[17px] font-bold text-stone-900">{opDesignationName.value as string}</h4>
+                  <h4 className="mt-2 text-[17px] font-bold text-[var(--text-primary)]">{opDesignationName.value as string}</h4>
                 </EditableField>
                 {opDesignation.caveat && (
                   <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
                     <p className="text-[12px] leading-relaxed text-amber-700">
-                      <span className="mr-1" aria-hidden="true">⚠</span>{opDesignation.caveat}
+                      <AlertTriangle className="inline h-3 w-3 mr-1" />{opDesignation.caveat}
                     </p>
                   </div>
                 )}
                 {opDesignation.alternate_designations?.length > 0 && (
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-medium text-stone-400">Possible alternates:</span>
+                    <span className="text-[11px] font-medium text-[var(--text-muted)]">Possible alternates:</span>
                     {opDesignation.alternate_designations.map((alt: string) => (
-                      <span key={alt} className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-600 border border-stone-200">{alt}</span>
+                      <span key={alt} className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] border border-[var(--border)]">{alt}</span>
                     ))}
                   </div>
                 )}
                 {opDesignation.description && (
-                  <p className="mt-2 text-[13px] leading-relaxed text-stone-500">{opDesignation.description}</p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-[var(--text-secondary)]">{opDesignation.description}</p>
                 )}
               </div>
               {opDesignation.policy_highlights?.length > 0 && (
@@ -697,16 +698,16 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           )}
 
           {saspPolicies.length > 0 && (
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-              <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+              <p className="mb-3 text-[13px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                 Site & Area Specific Policies
-                <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">{saspPolicies.length}</span>
+                <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]">{saspPolicies.length}</span>
               </p>
               <div className="space-y-3">
                 {saspPolicies.map((sasp: any, i: number) => (
                   <div key={i} className="rounded-lg border border-amber-100 bg-amber-50/50 p-4">
                     <div className="flex items-center gap-1">
-                      <p className="text-[13px] font-semibold text-stone-800">
+                      <p className="text-[13px] font-semibold text-[var(--text-primary)]">
                         <RefLink type="sasp" id={String(sasp.sasp_number)} label={`SASP #${sasp.sasp_number}`}>
                           SASP #{sasp.sasp_number}
                         </RefLink>
@@ -720,8 +721,8 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                         reportId={reportId}
                       />
                     </div>
-                    {sasp.title && <p className="mt-0.5 text-[12px] font-medium text-stone-600">{sasp.title}</p>}
-                    {sasp.content && <p className="mt-2 text-[12px] leading-relaxed text-stone-500">{sasp.content}</p>}
+                    {sasp.title && <p className="mt-0.5 text-[12px] font-medium text-[var(--text-secondary)]">{sasp.title}</p>}
+                    {sasp.content && <p className="mt-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">{sasp.content}</p>}
                   </div>
                 ))}
               </div>
@@ -743,10 +744,10 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
 
           <div className="grid gap-4 md:grid-cols-2">
             {(dev.noise_vibration.triggered_sources ?? []).map((src: any, i: number) => (
-              <div key={i} className="rounded-xl border border-amber-200 bg-white p-5 shadow-sm">
+              <div key={i} className="rounded-xl border border-amber-200 bg-[var(--card)] p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="warning">{src.type?.toUpperCase()}</Badge>
-                  <span className="text-[14px] font-semibold text-stone-800">{src.source}</span>
+                  <span className="text-[14px] font-semibold text-[var(--text-primary)]">{src.source}</span>
                   <FlagButton
                     address={addr}
                     fieldPath={`noise_vibration.source.${i}`}
@@ -765,11 +766,11 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           {(dev.noise_vibration.studies_required?.length > 0 || dev.noise_vibration.typical_mitigation?.length > 0) && (
             <div className="grid gap-4 md:grid-cols-2">
               {dev.noise_vibration.studies_required?.length > 0 && (
-                <div className="rounded-xl border border-amber-100 bg-white p-5 shadow-sm">
+                <div className="rounded-xl border border-amber-100 bg-[var(--card)] p-5 shadow-sm">
                   <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-amber-500">Studies Required</p>
                   <ul className="space-y-2">
                     {dev.noise_vibration.studies_required.map((s: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                         <span className="mt-0.5 text-amber-500" aria-hidden="true">📄</span>
                         <span className="flex-1">{s}</span>
                         <FlagButton
@@ -786,12 +787,12 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                 </div>
               )}
               {dev.noise_vibration.typical_mitigation?.length > 0 && (
-                <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-                  <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-stone-400">Typical Mitigation</p>
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+                  <p className="mb-3 text-[12px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">Typical Mitigation</p>
                   <ul className="space-y-2">
                     {dev.noise_vibration.typical_mitigation.map((m: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
-                        <span className="mt-0.5 text-stone-400" aria-hidden="true">🔇</span>
+                      <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
+                        <span className="mt-0.5 text-[var(--text-muted)]" aria-hidden="true">🔇</span>
                         <span className="flex-1">{m}</span>
                         <FlagButton
                           address={addr}
@@ -810,7 +811,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           )}
 
           {dev.noise_vibration.guideline_ref && (
-            <p className="text-[11px] italic text-stone-400">{dev.noise_vibration.guideline_ref}</p>
+            <p className="text-[11px] italic text-[var(--text-muted)]">{dev.noise_vibration.guideline_ref}</p>
           )}
         </>
       )}
@@ -827,7 +828,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
 
           {eff.exception.interpreted_prevailing?.length > 0 && (
             <div className="mt-4">
-              <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">
+              <p className="mb-3 text-[13px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                 Prevailing By-law Interpretation
               </p>
               <div className="space-y-4">
@@ -835,9 +836,9 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                   const interp = entry.interpretation || {};
                   if (interp.status === "none_apply") {
                     return (
-                      <div key={idx} className="rounded-lg border border-stone-200 bg-stone-50 p-4">
-                        <p className="text-[13px] font-medium text-stone-500">
-                          {entry.letter && <span className="mr-1 text-stone-400">({entry.letter})</span>}
+                      <div key={idx} className="rounded-lg border border-[var(--border)] bg-stone-50 p-4">
+                        <p className="text-[13px] font-medium text-[var(--text-secondary)]">
+                          {entry.letter && <span className="mr-1 text-[var(--text-muted)]">({entry.letter})</span>}
                           No prevailing by-law provisions override 569-2013 for this property.
                         </p>
                       </div>
@@ -847,12 +848,12 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                     ? `By-law ${entry.prevailing_bylaw.number}${entry.prevailing_bylaw.municipality ? ` (${entry.prevailing_bylaw.municipality})` : ""}`
                     : interp.bylaw_id || "Unknown";
                   return (
-                    <div key={idx} className="rounded-xl border border-sky-200 bg-white p-5 shadow-sm">
+                    <div key={idx} className="rounded-xl border border-sky-200 bg-[var(--card)] p-5 shadow-sm">
                       <div className="flex items-center gap-2 mb-3">
                         {entry.letter && (
                           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-[11px] font-bold text-sky-700">{entry.letter}</span>
                         )}
-                        <span className="text-[14px] font-semibold text-stone-800">{bylawLabel}</span>
+                        <span className="text-[14px] font-semibold text-[var(--text-primary)]">{bylawLabel}</span>
                         {interp.fully_interpreted ? (
                           <Badge variant="success">Fully Interpreted</Badge>
                         ) : interp.interpretations?.some((i: any) => i.interpreted) ? (
@@ -861,25 +862,25 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                           <Badge variant="default">Not Indexed</Badge>
                         )}
                       </div>
-                      {interp.summary && <p className="mb-3 text-[12px] leading-relaxed text-stone-500">{interp.summary}</p>}
+                      {interp.summary && <p className="mb-3 text-[12px] leading-relaxed text-[var(--text-secondary)]">{interp.summary}</p>}
                       {interp.interpretations?.length > 0 && (
                         <Card label={`Section Interpretations (${interp.section_count})`} defaultOpen={false}>
                           <div className="space-y-3">
                             {interp.interpretations.map((si: any, si_idx: number) => (
-                              <div key={si_idx} className={`rounded-lg p-3 ${si.interpreted ? "bg-sky-50 border border-sky-100" : "bg-stone-50 border border-stone-100"}`}>
+                              <div key={si_idx} className={`rounded-lg p-3 ${si.interpreted ? "bg-sky-50 border border-sky-100" : "bg-stone-50 border border-[var(--border)]"}`}>
                                 <div className="flex items-center gap-2 mb-1">
                                   {si.section_ref ? (
                                     <RefLink type="bylaw-section" id={si.section_ref} label={`s. ${si.section_ref}`}>
                                       <span className="text-[12px] font-medium text-sky-700 underline decoration-dotted cursor-pointer hover:text-sky-900 transition-colors">{si.section_ref}</span>
                                     </RefLink>
                                   ) : (
-                                    <span className="text-[12px] font-medium text-stone-700">Section {si_idx + 1}</span>
+                                    <span className="text-[12px] font-medium text-[var(--text-primary)]">Section {si_idx + 1}</span>
                                   )}
                                   {si.interpreted && si.category && <Badge variant="info">{si.category}</Badge>}
                                 </div>
                                 {si.interpreted && si.summary && <p className="text-[12px] leading-relaxed text-sky-700">{si.summary}</p>}
-                                {si.interpreted && si.typical_provisions && <p className="mt-1 text-[11px] text-stone-400">Typical: {si.typical_provisions}</p>}
-                                {!si.interpreted && si.note && <p className="text-[12px] text-stone-400">{si.note}</p>}
+                                {si.interpreted && si.typical_provisions && <p className="mt-1 text-[11px] text-[var(--text-muted)]">Typical: {si.typical_provisions}</p>}
+                                {!si.interpreted && si.note && <p className="text-[12px] text-[var(--text-muted)]">{si.note}</p>}
                               </div>
                             ))}
                           </div>
@@ -916,22 +917,22 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           </div>
 
           {dev.holding_detail.conditions?.length > 0 && (
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
               <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-red-500">
                 Likely Removal Conditions ({dev.holding_detail.condition_count || dev.holding_detail.conditions.length})
               </p>
               <ul className="space-y-2">
                 {dev.holding_detail.conditions.map((c: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                  <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                     <span className="mt-0.5 text-red-500" aria-hidden="true">📋</span><span>{c}</span>
                   </li>
                 ))}
               </ul>
               {dev.holding_detail.process && (
-                <p className="mt-3 text-[11px] leading-relaxed text-stone-400">{dev.holding_detail.process}</p>
+                <p className="mt-3 text-[11px] leading-relaxed text-[var(--text-muted)]">{dev.holding_detail.process}</p>
               )}
               {dev.holding_detail.reference && (
-                <p className="mt-1 text-[10px] text-stone-400">{dev.holding_detail.reference}</p>
+                <p className="mt-1 text-[10px] text-[var(--text-muted)]">{dev.holding_detail.reference}</p>
               )}
             </div>
           )}
@@ -958,16 +959,16 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           </div>
 
           {dev.rental_replacement.requirements?.length > 0 && (
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
               <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-violet-500">Requirements</p>
               <ul className="space-y-2">
                 {dev.rental_replacement.requirements.map((r: string, i: number) => (
-                  <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-stone-600">
+                  <li key={i} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">
                     <span className="mt-0.5 text-violet-500" aria-hidden="true">•</span><span>{r}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex items-center gap-4 text-[11px] text-stone-400">
+              <div className="mt-3 flex items-center gap-4 text-[11px] text-[var(--text-muted)]">
                 {dev.rental_replacement.threshold && <span>Threshold: {dev.rental_replacement.threshold}</span>}
                 {dev.rental_replacement.bylaw_ref && <span>Ref: {dev.rental_replacement.bylaw_ref}</span>}
               </div>
@@ -983,30 +984,30 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
         <>
           <SectionHeading id="charges" title="Development Charges" icon={Icons.dollar} />
 
-          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
             {dev.development_charges.estimates?.length > 0 && (
               <div className="space-y-2">
                 {dev.development_charges.estimates.map((est: any, i: number) => (
                   <div key={i} className="flex items-baseline justify-between rounded-lg bg-stone-50 px-4 py-3">
                     <div>
-                      <span className="text-[13px] font-medium text-stone-700">{est.category}</span>
-                      <p className="text-[11px] text-stone-400">{est.units} unit{est.units !== 1 ? "s" : ""} × ${Number(est.rate_per_unit).toLocaleString()}/unit</p>
+                      <span className="text-[13px] font-medium text-[var(--text-primary)]">{est.category}</span>
+                      <p className="text-[11px] text-[var(--text-muted)]">{est.units} unit{est.units !== 1 ? "s" : ""} × ${Number(est.rate_per_unit).toLocaleString()}/unit</p>
                     </div>
-                    <span className="font-mono text-[15px] font-bold text-stone-900">${Number(est.total).toLocaleString()}</span>
+                    <span className="font-mono text-[15px] font-bold text-[var(--text-primary)]">${Number(est.total).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
             )}
             {(dev.development_charges.total_estimated || devChargesTotal.isEdited) && (
               <EditableField {...ep("development_potential.development_charges.total_estimated", devChargesTotal.value, devChargesTotal.isEdited, devChargesTotal.original, devChargesTotal.editNote)}>
-                <div className="mt-3 flex items-baseline justify-between border-t border-stone-200 pt-3">
-                  <span className="text-[14px] font-semibold text-stone-700">Total Estimated</span>
-                  <span className="font-mono text-[22px] font-bold text-stone-900">${Number(devChargesTotal.value as number).toLocaleString()}</span>
+                <div className="mt-3 flex items-baseline justify-between border-t border-[var(--border)] pt-3">
+                  <span className="text-[14px] font-semibold text-[var(--text-primary)]">Total Estimated</span>
+                  <span className="font-mono text-[22px] font-bold text-[var(--text-primary)]">${Number(devChargesTotal.value as number).toLocaleString()}</span>
                 </div>
               </EditableField>
             )}
             {dev.development_charges.note && (
-              <p className="mt-3 rounded-lg bg-stone-50 p-3 text-[11px] leading-relaxed text-stone-400">{dev.development_charges.note}</p>
+              <p className="mt-3 rounded-lg bg-stone-50 p-3 text-[11px] leading-relaxed text-[var(--text-muted)]">{dev.development_charges.note}</p>
             )}
           </div>
         </>
@@ -1019,19 +1020,19 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
         <>
           <SectionHeading id="contact" title="Planning Contact" icon={Icons.phone} />
 
-          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-            <p className="mb-3 text-[11px] uppercase tracking-wide text-stone-400">Administrative — not regulatory</p>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+            <p className="mb-3 text-[11px] uppercase tracking-wide text-[var(--text-muted)]">Administrative — not regulatory</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg bg-stone-50 p-4">
-                <p className="text-[15px] font-semibold text-stone-900">{data.planning_contact.MANAGER}</p>
-                <p className="mt-1 text-[12px] text-stone-500">{data.planning_contact.SECTION} · {data.planning_contact.DISTRICT}</p>
+                <p className="text-[15px] font-semibold text-[var(--text-primary)]">{data.planning_contact.MANAGER}</p>
+                <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{data.planning_contact.SECTION} · {data.planning_contact.DISTRICT}</p>
               </div>
               <div className="space-y-2 rounded-lg bg-stone-50 p-4">
                 {data.planning_contact.PHONE && (
-                  <p className="text-[13px] text-stone-600">📞 <a href={`tel:${data.planning_contact.PHONE}`} className="underline hover:text-stone-900">{data.planning_contact.PHONE}</a></p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">📞 <a href={`tel:${data.planning_contact.PHONE}`} className="underline hover:text-[var(--text-primary)]">{data.planning_contact.PHONE}</a></p>
                 )}
                 {data.planning_contact.EMAIL && (
-                  <p className="text-[13px] text-stone-600">✉️ <a href={`mailto:${data.planning_contact.EMAIL}`} className="underline hover:text-stone-900">{data.planning_contact.EMAIL}</a></p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">✉️ <a href={`mailto:${data.planning_contact.EMAIL}`} className="underline hover:text-[var(--text-primary)]">{data.planning_contact.EMAIL}</a></p>
                 )}
               </div>
             </div>
@@ -1046,19 +1047,19 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
         <>
           <SectionHeading id="confidence" title="Report Confidence" icon={Icons.shield} />
 
-          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className={`flex h-16 w-16 items-center justify-center rounded-full border-4 ${
                 dev.confidence.overall_confidence === "high" ? "border-emerald-400 text-emerald-600"
                   : dev.confidence.overall_confidence === "medium" ? "border-amber-400 text-amber-600"
                   : dev.confidence.overall_confidence === "low" ? "border-red-400 text-red-600"
-                  : "border-stone-300 text-stone-500"
+                  : "border-stone-300 text-[var(--text-secondary)]"
               }`}>
                 <span className="text-[20px] font-bold">{dev.confidence.overall_score}</span>
               </div>
               <div>
-                <p className="text-[16px] font-bold text-stone-900">{dev.confidence.overall_confidence?.toUpperCase()} Confidence</p>
-                <p className="text-[12px] text-stone-500">
+                <p className="text-[16px] font-bold text-[var(--text-primary)]">{dev.confidence.overall_confidence?.toUpperCase()} Confidence</p>
+                <p className="text-[12px] text-[var(--text-secondary)]">
                   {dev.confidence.high_confidence_count}/{dev.confidence.section_count} sections high-confidence
                   {dev.confidence.low_confidence_count > 0 && (
                     <span className="text-red-500"> · {dev.confidence.low_confidence_count} low-confidence</span>
@@ -1067,54 +1068,54 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
               </div>
             </div>
 
-            <p className="mb-4 text-[12px] leading-relaxed text-stone-500">{dev.confidence.summary}</p>
+            <p className="mb-4 text-[12px] leading-relaxed text-[var(--text-secondary)]">{dev.confidence.summary}</p>
 
             {dev.confidence.methodology && (
-              <details className="mb-4 rounded-lg border border-stone-100 bg-stone-50">
-                <summary className="cursor-pointer px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-stone-500 hover:text-stone-700">
+              <details className="mb-4 rounded-lg border border-[var(--border)] bg-stone-50">
+                <summary className="cursor-pointer px-4 py-2.5 text-[11px] font-heading font-semibold uppercase tracking-wide text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                   How This Score Works
                 </summary>
                 <div className="px-4 pb-3 pt-1">
-                  <p className="text-[11px] leading-relaxed text-stone-500 mb-3">{dev.confidence.methodology.description}</p>
+                  <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] mb-3">{dev.confidence.methodology.description}</p>
                   <div className="space-y-2 mb-3">
                     {dev.confidence.methodology.dimensions?.map((d: any, i: number) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full bg-stone-400" />
                         <div>
-                          <span className="text-[11px] font-semibold text-stone-700">{d.name} ({d.weight})</span>
-                          <span className="text-[11px] text-stone-500"> — {d.description}</span>
+                          <span className="text-[11px] font-semibold text-[var(--text-primary)]">{d.name} ({d.weight})</span>
+                          <span className="text-[11px] text-[var(--text-secondary)]"> — {d.description}</span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="rounded border border-stone-200 overflow-hidden">
+                  <div className="rounded border border-[var(--border)] overflow-hidden">
                     <table className="w-full text-[10px]">
                       <thead>
                         <tr className="bg-stone-100">
-                          <th className="px-2 py-1 text-left font-semibold text-stone-600">Level</th>
-                          <th className="px-2 py-1 text-left font-semibold text-stone-600">Score</th>
-                          <th className="px-2 py-1 text-left font-semibold text-stone-600">Meaning</th>
+                          <th className="px-2 py-1 text-left font-semibold text-[var(--text-secondary)]">Level</th>
+                          <th className="px-2 py-1 text-left font-semibold text-[var(--text-secondary)]">Score</th>
+                          <th className="px-2 py-1 text-left font-semibold text-[var(--text-secondary)]">Meaning</th>
                         </tr>
                       </thead>
                       <tbody>
                         {dev.confidence.methodology.thresholds?.map((t: any) => (
-                          <tr key={t.level} className="border-t border-stone-100">
+                          <tr key={t.level} className="border-t border-[var(--border)]">
                             <td className="px-2 py-1">
                               <span className={`inline-block rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
                                 t.level === "high" ? "bg-emerald-100 text-emerald-700"
                                   : t.level === "medium" ? "bg-amber-100 text-amber-700"
                                   : t.level === "low" ? "bg-red-100 text-red-700"
-                                  : "bg-stone-200 text-stone-600"
+                                  : "bg-stone-200 text-[var(--text-secondary)]"
                               }`}>{t.level}</span>
                             </td>
-                            <td className="px-2 py-1 text-stone-600">{t.min_score}+</td>
-                            <td className="px-2 py-1 text-stone-500">{t.meaning}</td>
+                            <td className="px-2 py-1 text-[var(--text-secondary)]">{t.min_score}+</td>
+                            <td className="px-2 py-1 text-[var(--text-secondary)]">{t.meaning}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <p className="mt-2 text-[10px] italic text-stone-400">{dev.confidence.methodology.disclaimer}</p>
+                  <p className="mt-2 text-[10px] italic text-[var(--text-muted)]">{dev.confidence.methodology.disclaimer}</p>
                 </div>
               </details>
             )}
@@ -1122,27 +1123,27 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
             <div className="space-y-2">
               {dev.confidence.sections?.map((s: any) => {
                 const barColor = s.confidence === "high" ? "bg-emerald-500" : s.confidence === "medium" ? "bg-amber-500" : s.confidence === "low" ? "bg-red-500" : "bg-stone-400";
-                const badgeColor = s.confidence === "high" ? "bg-emerald-100 text-emerald-700" : s.confidence === "medium" ? "bg-amber-100 text-amber-700" : s.confidence === "low" ? "bg-red-100 text-red-700" : "bg-stone-200 text-stone-600";
+                const badgeColor = s.confidence === "high" ? "bg-emerald-100 text-emerald-700" : s.confidence === "medium" ? "bg-amber-100 text-amber-700" : s.confidence === "low" ? "bg-red-100 text-red-700" : "bg-stone-200 text-[var(--text-secondary)]";
                 return (
-                  <details key={s.section} className="group rounded-lg border border-stone-100 bg-white">
+                  <details key={s.section} className="group rounded-lg border border-[var(--border)] bg-[var(--card)]">
                     <summary className="cursor-pointer px-3 py-2.5 flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[12px] font-medium text-stone-700">{s.label}</span>
+                          <span className="text-[12px] font-medium text-[var(--text-primary)]">{s.label}</span>
                           <div className="flex items-center gap-2">
                             <span className={`text-[10px] font-bold uppercase rounded px-1.5 py-0.5 ${badgeColor}`}>{s.confidence}</span>
-                            <span className="text-[11px] font-medium text-stone-500">{s.score}/100</span>
+                            <span className="text-[11px] font-medium text-[var(--text-secondary)]">{s.score}/100</span>
                           </div>
                         </div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-stone-100">
                           <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${s.score}%` }} />
                         </div>
                       </div>
-                      <svg className="h-4 w-4 shrink-0 text-stone-400 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                      <svg className="h-4 w-4 shrink-0 text-[var(--text-muted)] transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                       </svg>
                     </summary>
-                    <div className="border-t border-stone-100 px-3 pb-3 pt-2.5 space-y-3">
+                    <div className="border-t border-[var(--border)] px-3 pb-3 pt-2.5 space-y-3">
                       {s.dimensions && (
                         <div className="grid grid-cols-3 gap-2">
                           {(["completeness", "authority", "certainty"] as const).map((dim) => {
@@ -1152,13 +1153,13 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                             return (
                               <div key={dim}>
                                 <div className="flex items-center justify-between mb-0.5">
-                                  <span className="text-[10px] text-stone-500">{d.label}</span>
-                                  <span className="text-[10px] font-medium text-stone-600">{d.score}</span>
+                                  <span className="text-[10px] text-[var(--text-secondary)]">{d.label}</span>
+                                  <span className="text-[10px] font-medium text-[var(--text-secondary)]">{d.score}</span>
                                 </div>
                                 <div className="h-1 w-full overflow-hidden rounded-full bg-stone-100">
                                   <div className={`h-full rounded-full ${dimBarColor}`} style={{ width: `${d.score}%` }} />
                                 </div>
-                                <p className="text-[9px] text-stone-400 mt-0.5">{d.weight}% weight</p>
+                                <p className="text-[9px] text-[var(--text-muted)] mt-0.5">{d.weight}% weight</p>
                               </div>
                             );
                           })}
@@ -1166,22 +1167,22 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                       )}
                       {s.rationale && (
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mb-1">Rationale</p>
-                          <p className="text-[11px] leading-relaxed text-stone-600">{s.rationale}</p>
+                          <p className="text-[10px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">Rationale</p>
+                          <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">{s.rationale}</p>
                         </div>
                       )}
                       {s.sources?.length > 0 && (
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mb-1">Data Sources</p>
+                          <p className="text-[10px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">Data Sources</p>
                           <ul className="space-y-0.5">
                             {s.sources.map((src: any, si: number) => (
                               <li key={si} className="flex items-start gap-1.5 text-[11px]">
                                 <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-                                <span className="text-stone-600">
+                                <span className="text-[var(--text-secondary)]">
                                   {src.url ? (
                                     <a href={src.url} target="_blank" rel="noopener noreferrer" className="underline decoration-blue-300 hover:text-blue-700">{src.name}</a>
                                   ) : src.name}
-                                  <span className="text-stone-400"> · {src.type}</span>
+                                  <span className="text-[var(--text-muted)]"> · {src.type}</span>
                                 </span>
                               </li>
                             ))}
@@ -1190,10 +1191,10 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                       )}
                       {s.verification_steps?.length > 0 && (
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mb-1">Verification Steps</p>
+                          <p className="text-[10px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)] mb-1">Verification Steps</p>
                           <ul className="space-y-1">
                             {s.verification_steps.map((v: any, vi: number) => {
-                              const urgencyStyle = v.urgency === "must" ? "bg-red-100 text-red-700 border-red-200" : v.urgency === "should" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-stone-50 text-stone-600 border-stone-200";
+                              const urgencyStyle = v.urgency === "must" ? "bg-red-100 text-red-700 border-red-200" : v.urgency === "should" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-stone-50 text-[var(--text-secondary)] border-[var(--border)]";
                               const urgencyIcon = v.urgency === "must" ? "🔴" : v.urgency === "should" ? "🟡" : "🔵";
                               return (
                                 <li key={vi} className={`rounded border px-2 py-1.5 text-[11px] leading-relaxed ${urgencyStyle}`}>
@@ -1207,7 +1208,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                       {s.gaps?.length > 0 && (
                         <div className="space-y-0.5">
                           {s.gaps.map((g: string, gi: number) => (
-                            <p key={gi} className="text-[10px] text-amber-500"><span aria-hidden="true">⚠</span> {g}</p>
+                            <p key={gi} className="text-[10px] text-amber-500"><AlertTriangle className="inline h-3 w-3" /> {g}</p>
                           ))}
                         </div>
                       )}
@@ -1218,9 +1219,9 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
             </div>
 
             {dev.confidence.due_diligence?.length > 0 && (
-              <div className="mt-5 rounded-xl border border-stone-200 bg-stone-50 p-4">
+              <div className="mt-5 rounded-xl border border-[var(--border)] bg-stone-50 p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[12px] font-bold text-stone-800">Due Diligence Checklist</p>
+                  <p className="text-[12px] font-bold text-[var(--text-primary)]">Due Diligence Checklist</p>
                   <div className="flex items-center gap-2 text-[10px]">
                     {dev.confidence.must_verify_count > 0 && (
                       <span className="rounded bg-red-100 px-1.5 py-0.5 font-bold text-red-700">{dev.confidence.must_verify_count} must verify</span>
@@ -1230,17 +1231,17 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                     )}
                   </div>
                 </div>
-                <p className="text-[11px] text-stone-500 mb-3">Complete these steps to validate the data in this report. Items are sorted by urgency.</p>
+                <p className="text-[11px] text-[var(--text-secondary)] mb-3">Complete these steps to validate the data in this report. Items are sorted by urgency.</p>
                 <ul className="space-y-1.5">
                   {dev.confidence.due_diligence.map((d: any, di: number) => {
-                    const urgencyBg = d.urgency === "must" ? "border-red-200 bg-red-50" : d.urgency === "should" ? "border-amber-200 bg-amber-50" : "border-stone-200 bg-white";
+                    const urgencyBg = d.urgency === "must" ? "border-red-200 bg-red-50" : d.urgency === "should" ? "border-amber-200 bg-amber-50" : "border-[var(--border)] bg-[var(--card)]";
                     const urgencyIcon = d.urgency === "must" ? "🔴" : d.urgency === "should" ? "🟡" : "🔵";
                     return (
                       <li key={di} className={`flex items-start gap-2 rounded border px-3 py-2 ${urgencyBg}`}>
                         <span className="mt-0.5 shrink-0" aria-hidden="true">{urgencyIcon}</span>
                         <div className="min-w-0">
-                          <p className="text-[11px] leading-relaxed text-stone-700">{d.text}</p>
-                          <p className="text-[9px] font-medium uppercase tracking-wide text-stone-400 mt-0.5">{d.section}</p>
+                          <p className="text-[11px] leading-relaxed text-[var(--text-primary)]">{d.text}</p>
+                          <p className="text-[9px] font-medium uppercase tracking-wide text-[var(--text-muted)] mt-0.5">{d.section}</p>
                         </div>
                       </li>
                     );
@@ -1263,9 +1264,9 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
             allowed_in_part: { bg: "bg-lime-100", text: "text-lime-700" },
             dismissed: { bg: "bg-red-100", text: "text-red-700" },
             settled: { bg: "bg-blue-100", text: "text-blue-700" },
-            withdrawn: { bg: "bg-stone-100", text: "text-stone-500" },
+            withdrawn: { bg: "bg-stone-100", text: "text-[var(--text-secondary)]" },
           };
-          const s = map[outcome] || { bg: "bg-stone-100", text: "text-stone-500" };
+          const s = map[outcome] || { bg: "bg-stone-100", text: "text-[var(--text-secondary)]" };
           return `${s.bg} ${s.text}`;
         };
         return (
@@ -1277,25 +1278,25 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
               count={olt.total_found}
             />
 
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm space-y-4">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm space-y-4">
               {/* Summary */}
-              <p className="text-[13px] leading-relaxed text-stone-600">{olt.summary_text}</p>
+              <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{olt.summary_text}</p>
 
               {/* Stats row */}
               {(olt.approval_rate !== null && olt.approval_rate !== undefined) && (
                 <div className="flex flex-wrap gap-3">
-                  <div className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">Appeal Success Rate</p>
+                  <div className="rounded-lg border border-[var(--border)] bg-stone-50 px-3 py-2">
+                    <p className="text-[10px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">Appeal Success Rate</p>
                     <p className={`text-[18px] font-bold ${olt.approval_rate >= 50 ? "text-emerald-600" : "text-red-600"}`}>
                       {olt.approval_rate}%
                     </p>
                   </div>
                   {olt.outcomes && Object.entries(olt.outcomes).map(([k, v]) => (
-                    <div key={k} className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">
+                    <div key={k} className="rounded-lg border border-[var(--border)] bg-stone-50 px-3 py-2">
+                      <p className="text-[10px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                         {k.replace(/_/g, " ")}
                       </p>
-                      <p className="text-[18px] font-bold text-stone-800">{v as number}</p>
+                      <p className="text-[18px] font-bold text-[var(--text-primary)]">{v as number}</p>
                     </div>
                   ))}
                 </div>
@@ -1304,33 +1305,33 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
               {/* Recent decisions list */}
               {olt.recent_decisions?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-[12px] font-semibold uppercase tracking-wide text-stone-400">
+                  <p className="text-[12px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                     Recent Decisions ({olt.recent_decisions.length})
                   </p>
                   {olt.recent_decisions.map((d: any, i: number) => (
-                    <div key={i} className="rounded-lg border border-stone-100 bg-stone-50/50 p-3">
+                    <div key={i} className="rounded-lg border border-[var(--border)] bg-stone-50/50 p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-mono text-[11px] font-bold text-stone-700">
+                            <span className="font-mono text-[11px] font-bold text-[var(--text-primary)]">
                               {d.file_number}
                             </span>
                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${outcomeBadge(d.outcome)}`}>
                               {d.outcome?.replace(/_/g, " ")}
                             </span>
                             {d.decision_type && (
-                              <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-500">
+                              <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)]">
                                 {d.decision_type.replace(/_/g, " ")}
                               </span>
                             )}
                           </div>
                           {d.title && (
-                            <p className="mt-1 text-[12px] leading-snug text-stone-600 line-clamp-2">
+                            <p className="mt-1 text-[12px] leading-snug text-[var(--text-secondary)] line-clamp-2">
                               {d.title}
                             </p>
                           )}
                           {d.addresses?.length > 0 && (
-                            <p className="mt-0.5 text-[11px] text-stone-400">
+                            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
                               <span aria-hidden="true">📍</span> {d.addresses.slice(0, 3).join(", ")}
                               {d.addresses.length > 3 && ` +${d.addresses.length - 3} more`}
                             </p>
@@ -1338,7 +1339,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                         </div>
                         <div className="shrink-0 text-right">
                           {d.date && (
-                            <p className="text-[11px] text-stone-400">{d.date}</p>
+                            <p className="text-[11px] text-[var(--text-muted)]">{d.date}</p>
                           )}
                           {d.url && (
                             <a
@@ -1353,7 +1354,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
                         </div>
                       </div>
                       {d.summary && (
-                        <p className="mt-2 text-[11px] leading-relaxed text-stone-500 line-clamp-3">
+                        <p className="mt-2 text-[11px] leading-relaxed text-[var(--text-secondary)] line-clamp-3">
                           {d.summary}
                         </p>
                       )}
@@ -1370,12 +1371,12 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
       {/*  NOTES & DISCLAIMER                                           */}
       {/* ============================================================ */}
       {dev.notes?.length > 0 && (
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-          <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">Notes</p>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+          <p className="mb-3 text-[13px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">Notes</p>
           <ul className="space-y-2">
             {dev.notes.map((note: string, i: number) => (
-              <li key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-stone-600">
-                <span className="mt-0.5 text-amber-500" aria-hidden="true">⚠</span>
+              <li key={i} className="flex items-start gap-2 text-[13px] leading-relaxed text-[var(--text-secondary)]">
+                <AlertTriangle className="inline h-3 w-3 mt-0.5 text-amber-500" />
                 <span>{note}</span>
               </li>
             ))}
@@ -1392,19 +1393,19 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
         />
       )}
 
-      <div className="rounded-xl border border-stone-200 bg-stone-50 p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Disclaimer</p>
-        <p className="mt-2 text-[12px] leading-relaxed text-stone-400">
+      <div className="rounded-xl border border-[var(--border)] bg-stone-50 p-5">
+        <p className="text-[11px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">Disclaimer</p>
+        <p className="mt-2 text-[12px] leading-relaxed text-[var(--text-muted)]">
           This analysis is for planning purposes only. Actual development rights depend on site-specific reviews, Committee of Adjustment decisions, and City approval. Consult a licensed planner for professional advice. Data sourced from the City of Toronto Open Data Portal (By-law 569-2013).
         </p>
       </div>
 
       {/* RAW JSON */}
-      <details className="rounded-xl border border-stone-200 bg-white shadow-sm">
-        <summary className="cursor-pointer px-5 py-3.5 text-[13px] font-medium text-stone-400 hover:text-stone-600">
+      <details className="rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+        <summary className="cursor-pointer px-5 py-3.5 text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)]">
           View raw JSON response
         </summary>
-        <pre className="max-h-96 overflow-auto border-t border-stone-100 px-5 py-4 font-mono text-[11px] leading-relaxed text-stone-500">
+        <pre className="max-h-96 overflow-auto border-t border-[var(--border)] px-5 py-4 font-mono text-[11px] leading-relaxed text-[var(--text-secondary)]">
           {JSON.stringify(data, null, 2)}
         </pre>
       </details>
