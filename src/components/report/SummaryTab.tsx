@@ -189,7 +189,7 @@ function PropertySnapshotCard({ data, editMode, userEdits, onEditField, onRevert
           </div>
 
           {/* Lot dimensions */}
-          <div className="ml-auto flex gap-5 shrink-0">
+          <div className="w-full sm:w-auto sm:ml-auto flex flex-wrap gap-x-5 gap-y-3">
             {minLotArea != null && (
               <div>
                 <p className="text-[22px] font-bold tracking-tight text-[var(--text-primary)]">{fmt(minLotArea)} m²</p>

@@ -147,12 +147,12 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Floating accent cards */}
-            <div className="absolute -bottom-4 -left-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-lg">
+            {/* Floating accent cards — hidden on mobile to prevent overflow */}
+            <div className="absolute -bottom-4 -left-4 hidden md:block rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-lg">
               <p className="text-[11px] font-semibold text-amber-800">Heritage Listed</p>
               <p className="text-[10px] text-amber-600">Part IV OHA — flagged</p>
             </div>
-            <div className="absolute -top-4 -right-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 shadow-lg">
+            <div className="absolute -top-4 -right-4 hidden md:block rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 shadow-lg">
               <p className="text-[11px] font-semibold text-sky-800">MTSA Active</p>
               <p className="text-[10px] text-sky-600">Bloor-Yonge Station</p>
             </div>
