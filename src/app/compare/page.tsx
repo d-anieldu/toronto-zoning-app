@@ -92,25 +92,25 @@ export default function ComparePage() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/90 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--card)]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-[15px] font-bold tracking-tight text-stone-900">
+            <Link href="/dashboard" className="text-[15px] font-bold tracking-tight text-[var(--text-primary)]">
               Toronto Zoning
             </Link>
-            <span className="text-stone-300">/</span>
-            <span className="text-[14px] font-medium text-stone-600">Compare</span>
+            <span className="text-[var(--text-muted)]">/</span>
+            <span className="text-[14px] font-medium text-[var(--text-secondary)]">Compare</span>
           </div>
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50"
+              className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)] shadow-sm hover:bg-stone-50"
             >
               ← Back to Lookup
             </Link>
             <Link
               href="/reports"
-              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50"
+              className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)] shadow-sm hover:bg-stone-50"
             >
               My Reports
             </Link>
@@ -120,19 +120,19 @@ export default function ComparePage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
-        <h1 className="text-[24px] font-bold tracking-tight text-stone-900 mb-6">
+        <h1 className="text-[24px] font-bold tracking-tight text-[var(--text-primary)] mb-6">
           Compare Properties
         </h1>
 
         {/* Address inputs */}
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm mb-6">
-          <p className="text-[13px] text-stone-500 mb-4">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm mb-6">
+          <p className="text-[13px] text-[var(--text-secondary)] mb-4">
             Enter 2–10 Toronto addresses for a side-by-side zoning comparison.
           </p>
           <div className="space-y-2">
             {addresses.map((addr, i) => (
               <div key={i} className="flex gap-2">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-[12px] font-bold text-stone-500">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-[12px] font-bold text-[var(--text-secondary)]">
                   {i + 1}
                 </div>
                 <input
@@ -140,7 +140,7 @@ export default function ComparePage() {
                   value={addr}
                   onChange={(e) => updateAddress(i, e.target.value)}
                   placeholder={`Address ${i + 1} — e.g. ${i === 0 ? "446 Roselawn Ave" : "89 Argyle St"}`}
-                  className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
+                  className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && i === addresses.length - 1) addAddress();
                   }}
@@ -148,7 +148,7 @@ export default function ComparePage() {
                 {addresses.length > 2 && (
                   <button
                     onClick={() => removeAddress(i)}
-                    className="rounded-lg border border-stone-200 px-2.5 text-[13px] text-stone-400 hover:bg-stone-50 hover:text-stone-600"
+                    className="rounded-lg border border-[var(--border)] px-2.5 text-[13px] text-[var(--text-muted)] hover:bg-stone-50 hover:text-[var(--text-secondary)]"
                   >
                     ✕
                   </button>
@@ -161,7 +161,7 @@ export default function ComparePage() {
             {addresses.length < 10 && (
               <button
                 onClick={addAddress}
-                className="rounded-lg border border-dashed border-stone-300 px-4 py-2 text-[12px] font-medium text-stone-500 hover:border-stone-400 hover:text-stone-700"
+                className="rounded-lg border border-dashed border-stone-300 px-4 py-2 text-[12px] font-medium text-[var(--text-secondary)] hover:border-stone-400 hover:text-[var(--text-primary)]"
               >
                 + Add Address
               </button>
@@ -187,7 +187,7 @@ export default function ComparePage() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-stone-300 border-t-stone-900" />
-            <p className="mt-3 text-[13px] text-stone-400">
+            <p className="mt-3 text-[13px] text-[var(--text-muted)]">
               Looking up {validCount} properties — this may take a moment…
             </p>
           </div>
@@ -195,21 +195,21 @@ export default function ComparePage() {
 
         {/* Results table */}
         {result && result.properties.length > 0 && (
-          <div className="rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-[12px]">
                 <thead>
-                  <tr className="border-b border-stone-200 bg-stone-50">
-                    <th className="sticky left-0 z-10 bg-stone-50 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                  <tr className="border-b border-[var(--border)] bg-stone-50">
+                    <th className="sticky left-0 z-10 bg-stone-50 px-4 py-3 text-left text-[11px] font-heading font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                       Field
                     </th>
                     {result.properties.map((prop, i) => (
                       <th key={i} className="min-w-[160px] px-4 py-3 text-left">
-                        <p className="text-[12px] font-semibold text-stone-900 truncate max-w-[180px]">
+                        <p className="text-[12px] font-semibold text-[var(--text-primary)] truncate max-w-[180px]">
                           {prop.address || prop.error || `Property ${i + 1}`}
                         </p>
                         {prop.zone_code && (
-                          <span className="mt-0.5 inline-block rounded bg-stone-200 px-1.5 py-0.5 text-[10px] font-mono font-bold text-stone-600">
+                          <span className="mt-0.5 inline-block rounded bg-stone-200 px-1.5 py-0.5 text-[10px] font-mono font-bold text-[var(--text-secondary)]">
                             {prop.zone_code}
                           </span>
                         )}
@@ -242,7 +242,7 @@ export default function ComparePage() {
                           rowIdx % 2 === 0 ? "" : "bg-stone-50/50"
                         } ${hasDiff ? "bg-amber-50/30" : ""}`}
                       >
-                        <td className="sticky left-0 z-10 bg-inherit px-4 py-2.5 font-medium text-stone-600 whitespace-nowrap">
+                        <td className="sticky left-0 z-10 bg-inherit px-4 py-2.5 font-medium text-[var(--text-secondary)] whitespace-nowrap">
                           {cfg.label}
                           {hasDiff && (
                             <span className="ml-1 text-[9px] text-amber-500">●</span>
@@ -262,10 +262,10 @@ export default function ComparePage() {
                               key={ci}
                               className={`px-4 py-2.5 font-mono ${
                                 prop.error
-                                  ? "text-stone-300"
+                                  ? "text-[var(--text-muted)]"
                                   : isBest
                                   ? "font-bold text-emerald-700"
-                                  : "text-stone-800"
+                                  : "text-[var(--text-primary)]"
                               }`}
                             >
                               {prop.error ? "—" : formatted}
@@ -280,7 +280,7 @@ export default function ComparePage() {
             </div>
 
             {/* Legend */}
-            <div className="border-t border-stone-100 px-4 py-3 flex items-center gap-4 text-[10px] text-stone-400">
+            <div className="border-t border-[var(--border)] px-4 py-3 flex items-center gap-4 text-[10px] text-[var(--text-muted)]">
               <span>
                 <span className="text-amber-500">●</span> = values differ
               </span>
