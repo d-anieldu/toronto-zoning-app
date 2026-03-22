@@ -44,7 +44,7 @@ export default async function Home() {
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[12px] font-medium text-emerald-700">Free during beta</span>
+              <span className="text-[12px] font-medium text-emerald-700">Completely Free</span>
             </div>
             <h1 className="font-heading mt-6 text-[clamp(2.5rem,5vw,3.75rem)] leading-[1.05] font-bold tracking-tight text-[var(--text-primary)]">
               Know what you can
