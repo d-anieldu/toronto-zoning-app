@@ -44,10 +44,11 @@ function SignIn() {
   }
 
   async function handleLinkedIn() {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     await supabase.auth.signInWithOAuth({
       provider: "linkedin_oidc",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+        redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
       },
     });
   }

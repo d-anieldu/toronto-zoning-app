@@ -16,10 +16,11 @@ export default function SignUp() {
   const [confirmSent, setConfirmSent] = useState(false);
 
   async function handleLinkedIn() {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
     await supabase.auth.signInWithOAuth({
       provider: "linkedin_oidc",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
       },
     });
   }
@@ -34,7 +35,7 @@ export default function SignUp() {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth/callback`,
       },
     });
 
