@@ -243,8 +243,8 @@ function MiniMap({
 
   if (!mapComponents) {
     return (
-      <div className="flex h-[320px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
-        <p className="text-[12px] text-stone-400">Loading map…</p>
+      <div className="flex h-[320px] items-center justify-center rounded-xl border border-[var(--border)] bg-stone-50">
+        <p className="text-[12px] text-[var(--text-muted)]">Loading map…</p>
       </div>
     );
   }
@@ -271,7 +271,7 @@ function MiniMap({
     });
 
   return (
-    <div className="overflow-hidden rounded-xl border border-stone-200">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)]">
       <MapContainer
         center={[center.lat, center.lon]}
         zoom={15}
@@ -322,27 +322,27 @@ function MiniMap({
                       className="inline-block h-2 w-2 rounded-full shrink-0"
                       style={{ backgroundColor: color }}
                     />
-                    <span className="font-semibold text-stone-700">
+                    <span className="font-semibold text-[var(--text-primary)]">
                       {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
                     </span>
                   </div>
-                  <p className="font-medium text-stone-800">
+                  <p className="font-medium text-[var(--text-primary)]">
                     {e.address || "Unknown"}
                   </p>
                   {e.event_date && (
-                    <p className="text-stone-400">{formatDate(e.event_date)}</p>
+                    <p className="text-[var(--text-muted)]">{formatDate(e.event_date)}</p>
                   )}
                   {e._description && (
-                    <p className="text-stone-500 line-clamp-2 mt-0.5">{e._description}</p>
+                    <p className="text-[var(--text-secondary)] line-clamp-2 mt-0.5">{e._description}</p>
                   )}
                   {e._status && (
-                    <p className="text-stone-500 mt-0.5">Status: {e._status}</p>
+                    <p className="text-[var(--text-secondary)] mt-0.5">Status: {e._status}</p>
                   )}
                   {e._cost && (
-                    <p className="text-stone-500 mt-0.5">Est. cost: {e._cost}</p>
+                    <p className="text-[var(--text-secondary)] mt-0.5">Est. cost: {e._cost}</p>
                   )}
                   {e.distance_m != null && (
-                    <p className="text-stone-400">{e.distance_m}m away</p>
+                    <p className="text-[var(--text-muted)]">{e.distance_m}m away</p>
                   )}
                   {e.url && (
                     <a
@@ -361,14 +361,14 @@ function MiniMap({
         })}
       </MapContainer>
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 px-3 py-2 bg-stone-50 border-t border-stone-100">
-        <span className="text-[10px] text-stone-400 font-medium">Legend:</span>
-        <span className="flex items-center gap-1 text-[10px] text-stone-500">
+      <div className="flex flex-wrap gap-3 px-3 py-2 bg-stone-50 border-t border-[var(--border)]">
+        <span className="text-[10px] text-[var(--text-muted)] font-medium">Legend:</span>
+        <span className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)]">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-stone-800 border border-white" />
           Subject property
         </span>
         {Object.entries(pinColors).map(([type, color]) => (
-          <span key={type} className="flex items-center gap-1 text-[10px] text-stone-500">
+          <span key={type} className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)]">
             <span
               className="inline-block h-2 w-2 rounded-full"
               style={{ backgroundColor: color }}
@@ -389,7 +389,7 @@ function TrendChart({
   data: { year: number; total: number; approved: number; refused: number; rate: number | null }[];
 }) {
   if (!data || data.length === 0) {
-    return <p className="text-[12px] text-stone-400 italic">Not enough data for trend analysis.</p>;
+    return <p className="text-[12px] text-[var(--text-muted)] italic">Not enough data for trend analysis.</p>;
   }
 
   const chartData = data.map((d) => ({
@@ -436,9 +436,9 @@ function TrendChart({
           <Bar dataKey="Withdrawn" stackId="a" fill="#d6d3d1" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-stone-400 pl-1">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-[var(--text-muted)] pl-1">
         {chartData.map((d) => d.rate != null && (
-          <span key={d.year}><span className="font-medium text-stone-600">{d.year}</span>: {d.rate}% approval</span>
+          <span key={d.year}><span className="font-medium text-[var(--text-secondary)]">{d.year}</span>: {d.rate}% approval</span>
         ))}
       </div>
     </div>
@@ -492,20 +492,20 @@ function ActivityFeed({ events }: { events: any[] }) {
                     {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
                   </Badge>
                   {e.distance_m != null && (
-                    <span className="text-[11px] text-stone-400">{e.distance_m}m</span>
+                    <span className="text-[11px] text-[var(--text-muted)]">{e.distance_m}m</span>
                   )}
                 </div>
-                <p className="mt-1 text-[12px] font-medium text-stone-700 truncate">
+                <p className="mt-1 text-[12px] font-medium text-[var(--text-primary)] truncate">
                   {e.address || e.title || "Unknown location"}
                 </p>
                 {e.raw_data?.DESCRIPTION && (
-                  <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-2">
+                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)] line-clamp-2">
                     {e.raw_data.DESCRIPTION}
                   </p>
                 )}
                 <div className="mt-0.5 flex items-center gap-2">
                   {(e.source_id || e.raw_data?.REFERENCE_FILE) && (
-                    <span className="text-[11px] text-stone-400">
+                    <span className="text-[11px] text-[var(--text-muted)]">
                       Ref: {e.source_id || e.raw_data.REFERENCE_FILE}
                     </span>
                   )}
@@ -521,7 +521,7 @@ function ActivityFeed({ events }: { events: any[] }) {
                   )}
                 </div>
               </div>
-              <span className="shrink-0 text-[11px] text-stone-400">
+              <span className="shrink-0 text-[11px] text-[var(--text-muted)]">
                 {formatDate(e.event_date)}
               </span>
             </div>
@@ -533,14 +533,14 @@ function ActivityFeed({ events }: { events: any[] }) {
         <button
           type="button"
           onClick={() => setShowCount((c) => c + 10)}
-          className="w-full rounded-lg border border-stone-200 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-50 transition-colors"
+          className="w-full rounded-lg border border-[var(--border)] py-2 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-stone-50 transition-colors"
         >
           Show more ({filtered.length - showCount} remaining)
         </button>
       )}
 
       {visible.length === 0 && (
-        <p className="text-[12px] text-stone-400 italic py-4 text-center">
+        <p className="text-[12px] text-[var(--text-muted)] italic py-4 text-center">
           No events found matching this filter.
         </p>
       )}
@@ -562,7 +562,7 @@ function RadiusSelector({
   const options = [250, 500, 1000];
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[11px] text-stone-400 mr-1">Radius:</span>
+      <span className="text-[11px] text-[var(--text-muted)] mr-1">Radius:</span>
       {options.map((r) => (
         <button
           key={r}
@@ -572,7 +572,7 @@ function RadiusSelector({
           className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
             value === r
               ? "bg-stone-900 text-white"
-              : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+              : "bg-stone-100 text-[var(--text-secondary)] hover:bg-stone-200"
           } ${loading ? "opacity-50 cursor-wait" : ""}`}
         >
           {r >= 1000 ? `${r / 1000}km` : `${r}m`}
@@ -587,7 +587,7 @@ function RadiusSelector({
 const STATUS_COLOR: Record<string, string> = {
   "Permit Issued": "bg-emerald-100 text-emerald-700",
   "Inspection": "bg-blue-100 text-blue-700",
-  "Closed": "bg-stone-100 text-stone-500",
+  "Closed": "bg-stone-100 text-[var(--text-secondary)]",
   "Cancelled": "bg-red-100 text-red-600",
   "Revision Issued": "bg-amber-100 text-amber-700",
 };
@@ -622,34 +622,34 @@ function BuildingPermitsSection({
         {/* Hero stats */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div>
-            <p className="text-[20px] font-bold text-stone-900">{permits.total}</p>
-            <p className="text-[11px] text-stone-400">permits found</p>
+            <p className="text-[20px] font-bold text-[var(--text-primary)]">{permits.total}</p>
+            <p className="text-[11px] text-[var(--text-muted)]">permits found</p>
           </div>
           <div>
             <p className="text-[20px] font-bold text-violet-600">
               {formatCost(permits.total_est_cost)}
             </p>
-            <p className="text-[11px] text-stone-400">est. construction</p>
+            <p className="text-[11px] text-[var(--text-muted)]">est. construction</p>
           </div>
           <div>
-            <p className="text-[20px] font-bold text-stone-900">
+            <p className="text-[20px] font-bold text-[var(--text-primary)]">
               {permits.net_dwelling_units > 0 ? "+" : ""}
               {permits.net_dwelling_units}
             </p>
-            <p className="text-[11px] text-stone-400">net dwelling units</p>
+            <p className="text-[11px] text-[var(--text-muted)]">net dwelling units</p>
           </div>
           <div>
-            <p className="text-[20px] font-bold text-stone-900">
+            <p className="text-[20px] font-bold text-[var(--text-primary)]">
               {Object.keys(permits.by_status).length}
             </p>
-            <p className="text-[11px] text-stone-400">status categories</p>
+            <p className="text-[11px] text-[var(--text-muted)]">status categories</p>
           </div>
         </div>
 
         {/* Status breakdown */}
         {Object.keys(permits.by_status).length > 0 && (
           <div>
-            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Permit Status</p>
+            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Permit Status</p>
             <div className="flex flex-wrap gap-1.5">
               {Object.entries(permits.by_status)
                 .sort(([, a], [, b]) => b - a)
@@ -657,7 +657,7 @@ function BuildingPermitsSection({
                   <span
                     key={status}
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      STATUS_COLOR[status] || "bg-stone-100 text-stone-500"
+                      STATUS_COLOR[status] || "bg-stone-100 text-[var(--text-secondary)]"
                     }`}
                   >
                     {status} ({count})
@@ -670,7 +670,7 @@ function BuildingPermitsSection({
         {/* Work type filters */}
         {permits.by_work_type.length > 0 && (
           <div>
-            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Work Types</p>
+            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Work Types</p>
             <div className="flex flex-wrap gap-1.5">
               <Tag active={!workFilter} onClick={() => setWorkFilter(null)}>
                 All ({permits.total})
@@ -697,7 +697,7 @@ function BuildingPermitsSection({
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        STATUS_COLOR[p.status] || "bg-stone-100 text-stone-500"
+                        STATUS_COLOR[p.status] || "bg-stone-100 text-[var(--text-secondary)]"
                       }`}
                     >
                       {p.status || "Unknown"}
@@ -708,35 +708,35 @@ function BuildingPermitsSection({
                       </span>
                     )}
                     {(p.dwelling_units_created > 0 || p.dwelling_units_lost > 0) && (
-                      <span className="text-[10px] text-stone-400">
+                      <span className="text-[10px] text-[var(--text-muted)]">
                         {p.dwelling_units_created > 0 && `+${p.dwelling_units_created}`}
                         {p.dwelling_units_lost > 0 && ` -${p.dwelling_units_lost}`} units
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-[12px] font-medium text-stone-700 truncate">
+                  <p className="mt-1 text-[12px] font-medium text-[var(--text-primary)] truncate">
                     {p.address || "Unknown location"}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-stone-500">
+                  <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
                     {p.work || p.permit_type}
                     {p.structure_type && ` · ${p.structure_type}`}
                   </p>
                   {p.description && (
-                    <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-2">
+                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)] line-clamp-2">
                       {p.description}
                     </p>
                   )}
                   {p.current_use && p.proposed_use && p.current_use !== p.proposed_use && (
-                    <p className="mt-0.5 text-[10px] text-stone-400">
+                    <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
                       {p.current_use} → {p.proposed_use}
                     </p>
                   )}
-                  <p className="mt-0.5 text-[10px] text-stone-400">
+                  <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
                     Permit: {p.permit_num}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <span className="text-[11px] text-stone-400">
+                  <span className="text-[11px] text-[var(--text-muted)]">
                     {p.issued_date ? formatDate(p.issued_date) : formatDate(p.application_date)}
                   </span>
                 </div>
@@ -749,14 +749,14 @@ function BuildingPermitsSection({
           <button
             type="button"
             onClick={() => setShowCount((c) => c + 10)}
-            className="w-full rounded-lg border border-stone-200 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-50 transition-colors"
+            className="w-full rounded-lg border border-[var(--border)] py-2 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-stone-50 transition-colors"
           >
             Show more ({filtered.length - showCount} remaining)
           </button>
         )}
 
         {visible.length === 0 && (
-          <p className="text-[12px] text-stone-400 italic py-4 text-center">
+          <p className="text-[12px] text-[var(--text-muted)] italic py-4 text-center">
             No permits found matching this filter.
           </p>
         )}
@@ -769,7 +769,7 @@ function BuildingPermitsSection({
 
 const APP_STATUS_COLOR: Record<string, string> = {
   "Under Review": "bg-blue-100 text-blue-700",
-  "Closed": "bg-stone-100 text-stone-500",
+  "Closed": "bg-stone-100 text-[var(--text-secondary)]",
   "Approved": "bg-emerald-100 text-emerald-700",
   "OMB Approved": "bg-emerald-100 text-emerald-700",
   "Refused": "bg-red-100 text-red-600",
@@ -807,33 +807,33 @@ function DevApplicationsSection({
         {/* Hero stats */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div>
-            <p className="text-[20px] font-bold text-stone-900">{devApps.total}</p>
-            <p className="text-[11px] text-stone-400">applications</p>
+            <p className="text-[20px] font-bold text-[var(--text-primary)]">{devApps.total}</p>
+            <p className="text-[11px] text-[var(--text-muted)]">applications</p>
           </div>
           <div>
-            <p className="text-[20px] font-bold text-stone-900">
+            <p className="text-[20px] font-bold text-[var(--text-primary)]">
               {devApps.by_type.length}
             </p>
-            <p className="text-[11px] text-stone-400">application types</p>
+            <p className="text-[11px] text-[var(--text-muted)]">application types</p>
           </div>
           <div>
-            <p className="text-[20px] font-bold text-stone-900">
+            <p className="text-[20px] font-bold text-[var(--text-primary)]">
               {Object.keys(devApps.by_status).length}
             </p>
-            <p className="text-[11px] text-stone-400">status categories</p>
+            <p className="text-[11px] text-[var(--text-muted)]">status categories</p>
           </div>
           <div>
-            <p className="text-[20px] font-bold text-stone-900">
+            <p className="text-[20px] font-bold text-[var(--text-primary)]">
               {devApps.by_status["Under Review"] || 0}
             </p>
-            <p className="text-[11px] text-stone-400">under review</p>
+            <p className="text-[11px] text-[var(--text-muted)]">under review</p>
           </div>
         </div>
 
         {/* Type breakdown */}
         {devApps.by_type.length > 0 && (
           <div>
-            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Application Types</p>
+            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Application Types</p>
             <div className="flex flex-wrap gap-1.5">
               <Tag active={!typeFilter} onClick={() => setTypeFilter(null)}>
                 All ({devApps.total})
@@ -854,7 +854,7 @@ function DevApplicationsSection({
         {/* Status breakdown */}
         {Object.keys(devApps.by_status).length > 0 && (
           <div>
-            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Status</p>
+            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Status</p>
             <div className="flex flex-wrap gap-1.5">
               {Object.entries(devApps.by_status)
                 .sort(([, a], [, b]) => b - a)
@@ -862,7 +862,7 @@ function DevApplicationsSection({
                   <span
                     key={status}
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      APP_STATUS_COLOR[status] || "bg-stone-100 text-stone-500"
+                      APP_STATUS_COLOR[status] || "bg-stone-100 text-[var(--text-secondary)]"
                     }`}
                   >
                     {status} ({count})
@@ -881,35 +881,35 @@ function DevApplicationsSection({
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        APP_TYPE_COLOR[a.app_type] || "bg-stone-100 text-stone-500"
+                        APP_TYPE_COLOR[a.app_type] || "bg-stone-100 text-[var(--text-secondary)]"
                       }`}
                     >
                       {a.app_type}
                     </span>
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        APP_STATUS_COLOR[a.status] || "bg-stone-100 text-stone-500"
+                        APP_STATUS_COLOR[a.status] || "bg-stone-100 text-[var(--text-secondary)]"
                       }`}
                     >
                       {a.status}
                     </span>
                   </div>
-                  <p className="mt-1 text-[12px] font-medium text-stone-700 truncate">
+                  <p className="mt-1 text-[12px] font-medium text-[var(--text-primary)] truncate">
                     {a.address || "Unknown location"}
                   </p>
                   {a.description && (
-                    <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-2">
+                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)] line-clamp-2">
                       {a.description}
                     </p>
                   )}
                   <div className="mt-0.5 flex items-center gap-2 flex-wrap">
                     {a.app_number && (
-                      <span className="text-[10px] text-stone-400">
+                      <span className="text-[10px] text-[var(--text-muted)]">
                         App: {a.app_number}
                       </span>
                     )}
                     {a.ward_name && (
-                      <span className="text-[10px] text-stone-400">
+                      <span className="text-[10px] text-[var(--text-muted)]">
                         · Ward {a.ward_number}: {a.ward_name}
                       </span>
                     )}
@@ -932,7 +932,7 @@ function DevApplicationsSection({
                   )}
                 </div>
                 <div className="shrink-0 text-right">
-                  <span className="text-[11px] text-stone-400">
+                  <span className="text-[11px] text-[var(--text-muted)]">
                     {formatDate(a.date_submitted)}
                   </span>
                 </div>
@@ -945,14 +945,14 @@ function DevApplicationsSection({
           <button
             type="button"
             onClick={() => setShowCount((c) => c + 10)}
-            className="w-full rounded-lg border border-stone-200 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-50 transition-colors"
+            className="w-full rounded-lg border border-[var(--border)] py-2 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-stone-50 transition-colors"
           >
             Show more ({filtered.length - showCount} remaining)
           </button>
         )}
 
         {visible.length === 0 && (
-          <p className="text-[12px] text-stone-400 italic py-4 text-center">
+          <p className="text-[12px] text-[var(--text-muted)] italic py-4 text-center">
             No applications found matching this filter.
           </p>
         )}
@@ -1112,30 +1112,30 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
           {/* Stats cards */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-xl border border-stone-100 bg-stone-100 h-20" />
+              <div key={i} className="rounded-xl border border-[var(--border)] bg-stone-100 h-20" />
             ))}
           </div>
           {/* Map placeholder */}
           <div className="space-y-1.5">
             <div className="h-3.5 w-28 rounded-full bg-stone-100" />
-            <div className="rounded-xl border border-stone-100 bg-stone-100 h-[320px]" />
+            <div className="rounded-xl border border-[var(--border)] bg-stone-100 h-[320px]" />
           </div>
           {/* CoA / precedents section */}
-          <div className="rounded-xl border border-stone-100 bg-white p-4 space-y-3">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
             <div className="h-3.5 w-44 rounded-full bg-stone-100" />
             {[...Array(3)].map((_, i) => (
               <div key={i} className="h-12 rounded-lg bg-stone-100" />
             ))}
           </div>
           {/* Building Permits section */}
-          <div className="rounded-xl border border-stone-100 bg-white p-4 space-y-3">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
             <div className="h-3.5 w-36 rounded-full bg-stone-100" />
             {[...Array(3)].map((_, i) => (
               <div key={i} className="h-12 rounded-lg bg-stone-100" />
             ))}
           </div>
           {/* Dev Applications section */}
-          <div className="rounded-xl border border-stone-100 bg-white p-4 space-y-3">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
             <div className="h-3.5 w-52 rounded-full bg-stone-100" />
             {[...Array(3)].map((_, i) => (
               <div key={i} className="h-12 rounded-lg bg-stone-100" />
@@ -1151,11 +1151,11 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
     return (
       <div className="space-y-6 py-6">
         <SectionHeading title="Nearby Activity" icon="📍" />
-        <div className="rounded-xl border border-stone-200 bg-stone-50 p-8 text-center">
-          <p className="text-[14px] font-medium text-stone-500">
+        <div className="rounded-xl border border-[var(--border)] bg-stone-50 p-8 text-center">
+          <p className="text-[14px] font-medium text-[var(--text-secondary)]">
             No nearby activity data available
           </p>
-          <p className="mt-1 text-[12px] text-stone-400">
+          <p className="mt-1 text-[12px] text-[var(--text-muted)]">
             Committee of Adjustment decisions and other development activity
             will appear here once data is ingested for this area.
           </p>
@@ -1208,7 +1208,7 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
         {/* Common variance types */}
         {overview && overview.common_variance_types.length > 0 && (
           <div className="mt-3">
-            <p className="text-[11px] font-medium text-stone-400 mb-1.5">Common Variance Types</p>
+            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Common Variance Types</p>
             <div className="flex flex-wrap gap-1.5">
               {overview.common_variance_types.slice(0, 8).map((vt) => (
                 <Tag key={vt.type}>
@@ -1225,7 +1225,7 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
         <div>
           <SectionHeading title="Activity Map" icon="🗺️" count={mapEvents.length} />
           {mapEventTotal > MAP_EVENT_LIMIT && (
-            <p className="mb-2 text-[10px] text-stone-400">
+            <p className="mb-2 text-[10px] text-[var(--text-muted)]">
               Showing {MAP_EVENT_LIMIT} most recent of {mapEventTotal} total events
             </p>
           )}
@@ -1243,23 +1243,23 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <p className="text-[20px] font-bold text-stone-900">{sameZone.count}</p>
-                <p className="text-[11px] text-stone-400">in same zone</p>
+                <p className="text-[20px] font-bold text-[var(--text-primary)]">{sameZone.count}</p>
+                <p className="text-[11px] text-[var(--text-muted)]">in same zone</p>
               </div>
               <div>
                 <p className="text-[20px] font-bold text-emerald-600">{pct(sameZone.approval_rate)}</p>
-                <p className="text-[11px] text-stone-400">approval rate</p>
+                <p className="text-[11px] text-[var(--text-muted)]">approval rate</p>
               </div>
               <div>
-                <p className="text-[20px] font-bold text-stone-900">{sameZone.approved || 0}</p>
-                <p className="text-[11px] text-stone-400">approved</p>
+                <p className="text-[20px] font-bold text-[var(--text-primary)]">{sameZone.approved || 0}</p>
+                <p className="text-[11px] text-[var(--text-muted)]">approved</p>
               </div>
             </div>
 
             {/* Top variances approved in this zone */}
             {sameZone.top_variances.length > 0 && (
               <div>
-                <p className="text-[11px] font-medium text-stone-400 mb-1.5">
+                <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">
                   Most Common Variances in Zone
                 </p>
                 <div className="space-y-1">
@@ -1268,10 +1268,10 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
                       key={v.type}
                       className="flex items-center justify-between rounded-lg bg-stone-50 px-3 py-1.5"
                     >
-                      <span className="text-[12px] text-stone-600">
+                      <span className="text-[12px] text-[var(--text-secondary)]">
                         {metricLabel(v.type)}
                       </span>
-                      <span className="text-[12px] font-mono text-stone-500">
+                      <span className="text-[12px] font-mono text-[var(--text-secondary)]">
                         {v.count}
                       </span>
                     </div>
@@ -1283,21 +1283,21 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
             {/* Sample decisions */}
             {sameZone.sample_decisions.length > 0 && (
               <div>
-                <p className="text-[11px] font-medium text-stone-400 mb-1.5">
+                <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">
                   Recent Decisions
                 </p>
                 <div className="divide-y divide-stone-100">
                   {sameZone.sample_decisions.map((d: any, i: number) => (
                     <div key={d.id || i} className="py-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[12px] font-medium text-stone-700">
+                        <span className="text-[12px] font-medium text-[var(--text-primary)]">
                           {d.address || "Unknown"}
                         </span>
                         <Badge variant={EVENT_TYPE_BADGE[d.event_type] || "default"}>
                           {EVENT_TYPE_LABELS[d.event_type] || d.event_type}
                         </Badge>
                       </div>
-                      <p className="mt-0.5 text-[11px] text-stone-400">
+                      <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
                         {formatDate(d.event_date)}
                         {d.distance_m != null && ` · ${d.distance_m}m away`}
                         {(d.source_id || d.raw_data?.REFERENCE_FILE) && ` · Ref: ${d.source_id || d.raw_data.REFERENCE_FILE}`}
@@ -1330,22 +1330,22 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <p className="text-[20px] font-bold text-stone-900">{similarLots.count}</p>
-                <p className="text-[11px] text-stone-400">similar lots found</p>
+                <p className="text-[20px] font-bold text-[var(--text-primary)]">{similarLots.count}</p>
+                <p className="text-[11px] text-[var(--text-muted)]">similar lots found</p>
               </div>
               <div>
                 <p className="text-[20px] font-bold text-emerald-600">{pct(similarLots.approval_rate)}</p>
-                <p className="text-[11px] text-stone-400">approval rate</p>
+                <p className="text-[11px] text-[var(--text-muted)]">approval rate</p>
               </div>
               <div>
-                <p className="text-[12px] text-stone-500 mt-1">
+                <p className="text-[12px] text-[var(--text-secondary)] mt-1">
                   Method: {similarLots.method?.replace(/_/g, " ") || "zone proximity"}
                 </p>
               </div>
             </div>
 
             {similarLots.note && (
-              <p className="text-[11px] text-stone-400 italic">{similarLots.note}</p>
+              <p className="text-[11px] text-[var(--text-muted)] italic">{similarLots.note}</p>
             )}
 
             {/* Top matches */}
@@ -1354,14 +1354,14 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
                 {similarLots.matches.slice(0, 5).map((m: any, i: number) => (
                   <div key={m.id || i} className="py-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-medium text-stone-700">
+                      <span className="text-[12px] font-medium text-[var(--text-primary)]">
                         {m.address || "Unknown"}
                       </span>
                       <Badge variant={EVENT_TYPE_BADGE[m.event_type] || "default"}>
                         {EVENT_TYPE_LABELS[m.event_type] || m.event_type}
                       </Badge>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-stone-400">
+                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
                       {formatDate(m.event_date)}
                       {m.distance_m != null && ` · ${m.distance_m}m away`}
                       {m.raw_data?.ZONING_DESIGNATION && ` · Zone: ${m.raw_data.ZONING_DESIGNATION}`}
@@ -1402,16 +1402,16 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
             {oltDecisions.appeal_success_rate != null && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-[20px] font-bold text-stone-900">
+                  <p className="text-[20px] font-bold text-[var(--text-primary)]">
                     {oltDecisions.total || oltSamples.length}
                   </p>
-                  <p className="text-[11px] text-stone-400">OLT decisions found</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">OLT decisions found</p>
                 </div>
                 <div>
                   <p className="text-[20px] font-bold text-amber-600">
                     {pct(oltDecisions.appeal_success_rate)}
                   </p>
-                  <p className="text-[11px] text-stone-400">appeal success rate</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">appeal success rate</p>
                 </div>
               </div>
             )}
@@ -1419,10 +1419,10 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
             <div className="divide-y divide-stone-100">
               {oltSamples.slice(0, 5).map((d: any, i: number) => (
                 <div key={i} className="py-2">
-                  <p className="text-[12px] font-medium text-stone-700">
+                  <p className="text-[12px] font-medium text-[var(--text-primary)]">
                     {d.title || d.case_name || "OLT Decision"}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-stone-400">
+                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
                     {d.date || d.decision_date || ""}
                     {d.outcome && ` · ${d.outcome}`}
                   </p>
@@ -1470,14 +1470,14 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
       )}
 
       {/* ─── Disclaimer ───────────────────────────────────────────── */}
-      <div className="rounded-lg border border-stone-100 bg-stone-50 px-4 py-3">
-        <p className="text-[10px] text-stone-400 leading-relaxed">
+      <div className="rounded-lg border border-[var(--border)] bg-stone-50 px-4 py-3">
+        <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
           <strong>Disclaimer:</strong> Variance intelligence is based on historical Committee of
           Adjustment decisions and other publicly available data from Toronto Open Data. Approval
           rates and trends are statistical summaries, not predictions. Always consult a planning
           professional before making decisions based on this data.
         </p>
-        <p className="mt-1.5 text-[10px] text-stone-400">
+        <p className="mt-1.5 text-[10px] text-[var(--text-muted)]">
           Data sources:{" "}
           <a
             href="https://open.toronto.ca/dataset/committee-of-adjustment-decisions/"
