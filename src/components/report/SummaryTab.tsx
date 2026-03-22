@@ -650,26 +650,93 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
             reportId={reportId}
           />
 
-          {/* Site Plan Control */}
-          <FlagItem
-            status={
-              dev.site_plan_control?.required
-                ? "warn"
-                : dev.site_plan_control?.required === false
-                  ? "good"
-                  : "neutral"
-            }
-            label={
-              dev.site_plan_control?.required
-                ? "Site Plan Control required"
-                : dev.site_plan_control?.required === false
-                  ? "Site Plan Control not required"
-                  : "Site Plan Control — check with City"
-            }
-            address={data.address}
-            fieldPath="quick_flags.site_plan_control"
-            reportId={reportId}
-          />
+          {/* Site Plan Control — detailed section */}
+          {dev.site_plan_control && (
+            <div
+              className={`rounded-xl border p-5 shadow-sm ${
+                dev.site_plan_control.required
+                  ? dev.site_plan_control.confidence === "high"
+                    ? "border-red-200 bg-red-50/60"
+                    : "border-amber-200 bg-amber-50/60"
+                  : "border-emerald-200 bg-emerald-50/60"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 pb-3">
+                {dev.site_plan_control.required
+                  ? <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+                  : <CheckCircle2 className="h-5 w-5 text-emerald-500" aria-hidden="true" />}
+                <h3 className="font-heading text-[15px] font-semibold tracking-tight text-[var(--text-primary)]">Site Plan Control</h3>
+                <Badge variant={dev.site_plan_control.required ? (dev.site_plan_control.confidence === "high" ? "danger" : "warning") : "success"}>
+                  {dev.site_plan_control.required ? "Required" : "Likely Exempt"}
+                </Badge>
+                <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]">
+                  {dev.site_plan_control.confidence} confidence
+                </span>
+              </div>
+              <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{dev.site_plan_control.summary}</p>
+
+              {dev.site_plan_control.triggers?.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    Triggers ({dev.site_plan_control.trigger_count})
+                  </p>
+                  <div className="space-y-2">
+                    {dev.site_plan_control.triggers.map((t: any, i: number) => (
+                      <div key={i} className="flex items-start gap-2.5 rounded-lg border border-red-100 bg-white/80 px-3 py-2.5">
+                        <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${t.severity === "definite" ? "bg-red-500" : "bg-amber-500"}`} aria-hidden="true" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[12px] font-semibold text-[var(--text-primary)]">
+                              {t.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                            </span>
+                            <span className="text-[10px] text-[var(--text-muted)]">{t.rule}</span>
+                          </div>
+                          <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--text-secondary)]">{t.reason}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {dev.site_plan_control.exemptions?.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    Potential Exemptions ({dev.site_plan_control.exemption_count})
+                  </p>
+                  <div className="space-y-2">
+                    {dev.site_plan_control.exemptions.map((e: any, i: number) => (
+                      <div key={i} className={`rounded-lg border px-3 py-2.5 ${e.overridden ? "border-[var(--border)] bg-stone-100 opacity-60" : "border-emerald-100 bg-white/80"}`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${e.overridden ? "bg-red-500" : "bg-emerald-500"}`} aria-hidden="true" />
+                          <span className="text-[12px] font-semibold text-[var(--text-primary)]">
+                            {e.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                          </span>
+                          {e.overridden && <Badge variant="danger">Overridden</Badge>}
+                        </div>
+                        <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--text-secondary)]">{e.reason}</p>
+                        {e.overridden && e.override_reason && (
+                          <p className="mt-1 text-[11px] italic text-red-500">{e.override_reason}</p>
+                        )}
+                        {!e.overridden && e.conditions?.length > 0 && (
+                          <ul className="mt-1.5 space-y-0.5">
+                            {e.conditions.map((cond: string, ci: number) => (
+                              <li key={ci} className="text-[11px] text-[var(--text-muted)]">• {cond}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 rounded-lg border border-sky-100 bg-sky-50 p-3">
+                <p className="text-[12px] font-semibold text-sky-700">Recommendation</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-sky-600">{dev.site_plan_control.recommendation}</p>
+              </div>
+            </div>
+          )}
 
           {/* SASP */}
           {eff.op_context?.sasp_policies?.length > 0 && (
