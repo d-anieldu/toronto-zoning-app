@@ -156,25 +156,25 @@ export default function ProjectsPage() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/90 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-[15px] font-bold tracking-tight text-stone-900">
+            <Link href="/dashboard" className="text-[15px] font-bold tracking-tight text-[var(--text-primary)]">
               Toronto Zoning
             </Link>
-            <span className="text-stone-300">/</span>
-            <span className="text-[14px] font-medium text-stone-600">Projects</span>
+            <span className="text-[var(--text-muted)]">/</span>
+            <span className="text-[14px] font-medium text-[var(--text-secondary)]">Projects</span>
           </div>
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50"
+              className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)] shadow-sm hover:bg-stone-50"
             >
               ← Back to Lookup
             </Link>
             <Link
               href="/compare"
-              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-600 shadow-sm hover:bg-stone-50"
+              className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)] shadow-sm hover:bg-stone-50"
             >
               Compare
             </Link>
@@ -185,7 +185,7 @@ export default function ProjectsPage() {
 
       <main className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-[24px] font-bold tracking-tight text-stone-900">Your Workspace</h1>
+          <h1 className="text-[24px] font-bold tracking-tight text-[var(--text-primary)]">Your Workspace</h1>
           <button
             onClick={() => setShowNewProject(true)}
             className="rounded-xl bg-stone-900 px-4 py-2 text-[13px] font-semibold text-white shadow-sm hover:bg-stone-800"
@@ -208,12 +208,12 @@ export default function ProjectsPage() {
               onClick={() => setTab(t.id)}
               className={`flex-1 rounded-lg px-4 py-2 text-[13px] font-medium transition-colors ${
                 tab === t.id
-                  ? "bg-white text-stone-900 shadow-sm"
-                  : "text-stone-500 hover:text-stone-700"
+                  ? "bg-[var(--card)] text-[var(--text-primary)] shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               {t.label}
-              <span className="ml-1.5 rounded-full bg-stone-200 px-1.5 py-0.5 text-[10px] font-semibold text-stone-600">
+              <span className="ml-1.5 rounded-full bg-stone-200 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--text-secondary)]">
                 {t.count}
               </span>
             </button>
@@ -237,15 +237,15 @@ export default function ProjectsPage() {
 
         {/* ── Create Project Modal ─── */}
         {showNewProject && (
-          <div className="mb-6 rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-            <h3 className="text-[15px] font-semibold text-stone-900">Create Project</h3>
+          <div className="mb-6 rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+            <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">Create Project</h3>
             <div className="mt-3 space-y-3">
               <input
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Project name — e.g. Roselawn Infill"
-                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
+                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
                 autoFocus
               />
               <input
@@ -253,7 +253,7 @@ export default function ProjectsPage() {
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
                 placeholder="Description (optional)"
-                className="w-full rounded-lg border border-stone-200 px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
+                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
               />
               <div className="flex gap-2">
                 <button
@@ -265,7 +265,7 @@ export default function ProjectsPage() {
                 </button>
                 <button
                   onClick={() => setShowNewProject(false)}
-                  className="rounded-lg border border-stone-200 px-4 py-2 text-[13px] text-stone-600 hover:bg-stone-50"
+                  className="rounded-lg border border-[var(--border)] px-4 py-2 text-[13px] text-[var(--text-secondary)] hover:bg-stone-50"
                 >
                   Cancel
                 </button>
@@ -278,10 +278,10 @@ export default function ProjectsPage() {
         {!loading && tab === "projects" && (
           <div className="space-y-4">
             {projects.length === 0 && !showNewProject && (
-              <div className="rounded-xl border border-dashed border-stone-300 bg-white p-12 text-center">
+              <div className="rounded-xl border border-dashed border-stone-300 bg-[var(--card)] p-12 text-center">
                 <span className="text-[40px]">📁</span>
-                <p className="mt-3 text-[15px] font-medium text-stone-700">No projects yet</p>
-                <p className="mt-1 text-[13px] text-stone-400">
+                <p className="mt-3 text-[15px] font-medium text-[var(--text-primary)]">No projects yet</p>
+                <p className="mt-1 text-[13px] text-[var(--text-muted)]">
                   Create a project to organize properties you&apos;re analyzing.
                 </p>
                 <button
@@ -294,14 +294,14 @@ export default function ProjectsPage() {
             )}
 
             {projects.map((proj) => (
-              <div key={proj.id} className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+              <div key={proj.id} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-[15px] font-semibold text-stone-900">📁 {proj.name}</h3>
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">📁 {proj.name}</h3>
                     {proj.description && (
-                      <p className="mt-0.5 text-[12px] text-stone-400">{proj.description}</p>
+                      <p className="mt-0.5 text-[12px] text-[var(--text-muted)]">{proj.description}</p>
                     )}
-                    <div className="mt-2 flex items-center gap-3 text-[11px] text-stone-400">
+                    <div className="mt-2 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
                       <span>{proj.property_count || 0} properties</span>
                       <span>Created {new Date(proj.created_at).toLocaleDateString()}</span>
                     </div>
@@ -309,7 +309,7 @@ export default function ProjectsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setAddingTo(addingTo === proj.id ? null : proj.id)}
-                      className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-medium text-stone-600 hover:bg-stone-50"
+                      className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-secondary)] hover:bg-stone-50"
                     >
                       + Add Property
                     </button>
@@ -324,13 +324,13 @@ export default function ProjectsPage() {
 
                 {/* Add property form */}
                 {addingTo === proj.id && (
-                  <div className="mt-4 flex gap-2 border-t border-stone-100 pt-4">
+                  <div className="mt-4 flex gap-2 border-t border-[var(--border)] pt-4">
                     <input
                       type="text"
                       value={propertyAddress}
                       onChange={(e) => setPropertyAddress(e.target.value)}
                       placeholder="Enter address — e.g. 446 Roselawn Ave"
-                      className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
+                      className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-[13px] focus:border-stone-400 focus:outline-none"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === "Enter") addProperty(proj.id);
@@ -345,7 +345,7 @@ export default function ProjectsPage() {
                     </button>
                     <button
                       onClick={() => setAddingTo(null)}
-                      className="rounded-lg border border-stone-200 px-3 py-2 text-[13px] text-stone-500 hover:bg-stone-50"
+                      className="rounded-lg border border-[var(--border)] px-3 py-2 text-[13px] text-[var(--text-secondary)] hover:bg-stone-50"
                     >
                       ✕
                     </button>
@@ -360,10 +360,10 @@ export default function ProjectsPage() {
         {!loading && tab === "saved" && (
           <div className="space-y-2">
             {savedReports.length === 0 && (
-              <div className="rounded-xl border border-dashed border-stone-300 bg-white p-12 text-center">
+              <div className="rounded-xl border border-dashed border-stone-300 bg-[var(--card)] p-12 text-center">
                 <span className="text-[40px]">📋</span>
-                <p className="mt-3 text-[15px] font-medium text-stone-700">No saved reports</p>
-                <p className="mt-1 text-[13px] text-stone-400">
+                <p className="mt-3 text-[15px] font-medium text-[var(--text-primary)]">No saved reports</p>
+                <p className="mt-1 text-[13px] text-[var(--text-muted)]">
                   Reports you save from lookups will appear here.
                 </p>
                 <Link
@@ -378,17 +378,17 @@ export default function ProjectsPage() {
             {savedReports.map((report) => (
               <div
                 key={report.id}
-                className="flex items-center justify-between rounded-xl border border-stone-200 bg-white px-5 py-4 shadow-sm transition-colors hover:border-stone-300"
+                className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 shadow-sm transition-colors hover:border-stone-300"
               >
                 <div>
-                  <p className="text-[14px] font-semibold text-stone-900">{report.address}</p>
-                  <p className="text-[11px] text-stone-400">
+                  <p className="text-[14px] font-semibold text-[var(--text-primary)]">{report.address}</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">
                     Saved {new Date(report.saved_at).toLocaleDateString()}
                   </p>
                 </div>
                 <Link
                   href={`/dashboard?address=${encodeURIComponent(report.address)}`}
-                  className="rounded-lg border border-stone-200 px-3 py-1.5 text-[12px] font-medium text-stone-600 hover:bg-stone-50"
+                  className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-stone-50"
                 >
                   View Report →
                 </Link>
@@ -401,10 +401,10 @@ export default function ProjectsPage() {
         {!loading && tab === "shared" && (
           <div className="space-y-2">
             {sharedReports.length === 0 && (
-              <div className="rounded-xl border border-dashed border-stone-300 bg-white p-12 text-center">
+              <div className="rounded-xl border border-dashed border-stone-300 bg-[var(--card)] p-12 text-center">
                 <span className="text-[40px]">🔗</span>
-                <p className="mt-3 text-[15px] font-medium text-stone-700">No shared links</p>
-                <p className="mt-1 text-[13px] text-stone-400">
+                <p className="mt-3 text-[15px] font-medium text-[var(--text-primary)]">No shared links</p>
+                <p className="mt-1 text-[13px] text-[var(--text-muted)]">
                   Share a report from any lookup to create a public link.
                 </p>
               </div>
@@ -413,11 +413,11 @@ export default function ProjectsPage() {
             {sharedReports.map((report) => (
               <div
                 key={report.report_id}
-                className="flex items-center justify-between rounded-xl border border-stone-200 bg-white px-5 py-4 shadow-sm"
+                className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 shadow-sm"
               >
                 <div>
-                  <p className="text-[14px] font-semibold text-stone-900">{report.address}</p>
-                  <div className="mt-1 flex items-center gap-3 text-[11px] text-stone-400">
+                  <p className="text-[14px] font-semibold text-[var(--text-primary)]">{report.address}</p>
+                  <div className="mt-1 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
                     <span>{report.view_count} views</span>
                     <span>Created {new Date(report.created_at).toLocaleDateString()}</span>
                     {report.expires_at && (
@@ -432,7 +432,7 @@ export default function ProjectsPage() {
                         `${window.location.origin}/report/${report.report_id}`
                       );
                     }}
-                    className="rounded-lg border border-stone-200 px-3 py-1.5 text-[11px] font-medium text-stone-600 hover:bg-stone-50"
+                    className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-[11px] font-medium text-[var(--text-secondary)] hover:bg-stone-50"
                   >
                     Copy Link
                   </button>
