@@ -9,6 +9,7 @@
 
 import { Card, Row, Badge, Icons, Tag, SectionHeading, FlagProvider } from "./primitives";
 import { RefLink } from "../ReferencePanel";
+import { AlertTriangle } from "lucide-react";
 import EditableField from "./EditableField";
 import SectionNoteEditor from "./SectionNoteEditor";
 import { getFieldValue } from "@/lib/report-edits";
@@ -68,7 +69,7 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
         <>
           <SectionHeading id="uses" title="Permitted Uses" icon={Icons.home} />
 
-          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
             {eff.expanded_uses ? (
               <div className="space-y-4">
                 {eff.expanded_uses.permitted_residential?.length > 0 && (
@@ -87,7 +88,7 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
                           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onAnalyzeUse(d.use || d); }}
                         >
                           <div>
-                            <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
+                            <span className="text-[12px] font-medium text-[var(--text-primary)]">{d.use || d}</span>
                             {d.conditions && <p className="text-[11px] text-emerald-600">{d.conditions}</p>}
                           </div>
                           <span className="shrink-0 ml-2 text-[10px] text-indigo-400">Analyze →</span>
@@ -97,7 +98,7 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
                   </div>
                 )}
                 {eff.expanded_uses.permitted_non_residential?.length > 0 && (
-                  <div className="border-t border-stone-100 pt-3">
+                  <div className="border-t border-[var(--border)] pt-3">
                     <p className="mb-1.5 text-[12px] font-medium text-sky-600">
                       Permitted Non-Residential ({eff.expanded_uses.permitted_non_residential.length})
                     </p>
@@ -112,7 +113,7 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
                           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onAnalyzeUse(d.use || d); }}
                         >
                           <div>
-                            <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
+                            <span className="text-[12px] font-medium text-[var(--text-primary)]">{d.use || d}</span>
                             {d.conditions && <p className="text-[11px] text-sky-600">{d.conditions}</p>}
                           </div>
                           <span className="shrink-0 ml-2 text-[10px] text-indigo-400">Analyze →</span>
@@ -122,7 +123,7 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
                   </div>
                 )}
                 {eff.expanded_uses.conditional_residential?.length > 0 && (
-                  <div className="border-t border-stone-100 pt-3">
+                  <div className="border-t border-[var(--border)] pt-3">
                     <p className="mb-1.5 text-[12px] font-medium text-amber-600">
                       Conditional Residential ({eff.expanded_uses.conditional_residential.length})
                     </p>
@@ -137,7 +138,7 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
                           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onAnalyzeUse(d.use || d); }}
                         >
                           <div>
-                            <span className="text-[12px] font-medium text-stone-700">{d.use || d}</span>
+                            <span className="text-[12px] font-medium text-[var(--text-primary)]">{d.use || d}</span>
                             {d.conditions && <p className="text-[11px] text-amber-600">{d.conditions}</p>}
                           </div>
                           <span className="shrink-0 ml-2 text-[10px] text-indigo-400">Analyze →</span>
@@ -155,8 +156,8 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
                   ))}
                 </div>
                 {eff.conditional_uses?.length > 0 && (
-                  <div className="border-t border-stone-100 pt-3">
-                    <p className="mb-2 text-[12px] font-medium text-stone-500">Conditional Uses</p>
+                  <div className="border-t border-[var(--border)] pt-3">
+                    <p className="mb-2 text-[12px] font-medium text-[var(--text-secondary)]">Conditional Uses</p>
                     <div className="flex flex-wrap gap-2">
                       {eff.conditional_uses.map((u: string) => (
                         <Tag key={u}>{u}</Tag>
@@ -185,8 +186,8 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
                   {Object.entries(eff.parking.residential_rates).map(
                     ([type, rate]: [string, any]) => (
                       <div key={type} className="flex items-baseline justify-between gap-3 rounded-lg bg-stone-50 px-3 py-2">
-                        <span className="text-[12px] font-medium text-stone-700">{type}</span>
-                        <span className="text-right text-[12px] text-stone-500">{rate.description || rate.requirement}</span>
+                        <span className="text-[12px] font-medium text-[var(--text-primary)]">{type}</span>
+                        <span className="text-right text-[12px] text-[var(--text-secondary)]">{rate.description || rate.requirement}</span>
                       </div>
                     )
                   )}
@@ -205,17 +206,17 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
 
           {eff.parking_zone_note && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
-              ⚠ {eff.parking_zone_note}
+              <AlertTriangle className="mr-1 inline h-3.5 w-3.5" /> {eff.parking_zone_note}
             </div>
           )}
 
           {eff.parking?.visitor_parking && (
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-              <p className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-stone-400">Visitor Parking Formula</p>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+              <p className="mb-2 font-heading text-[13px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Visitor Parking Formula</p>
               <EditableField {...ep("effective_standards.parking.visitor_parking.formula", visitorFormula)}>
-                <p className="font-mono text-[14px] font-medium text-stone-700">{visitorFormula.value as string}</p>
+                <p className="font-mono text-[14px] font-medium text-[var(--text-primary)]">{visitorFormula.value as string}</p>
               </EditableField>
-              <p className="mt-1 text-[11px] text-stone-400">
+              <p className="mt-1 text-[11px] text-[var(--text-muted)]">
                 Rate type: {eff.parking.visitor_parking.rate_type} · Parking Zone {eff.parking.visitor_parking.parking_zone}
               </p>
             </div>
@@ -226,30 +227,30 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
               {eff.parking?.exemptions &&
                 Object.entries(eff.parking.exemptions).map(([key, exemption]: [string, any]) => (
                   <div key={key} className="mb-4 last:mb-0">
-                    <p className="text-[13px] font-semibold text-stone-700">
+                    <p className="text-[13px] font-semibold text-[var(--text-primary)]">
                       <RefLink type="bylaw-section" id={exemption.section} label={`s. ${exemption.section}`}>
                         s. {exemption.section}
                       </RefLink>: {exemption.title}
                     </p>
                     {exemption.description && (
-                      <p className="mt-1 text-[12px] leading-relaxed text-stone-500">{exemption.description}</p>
+                      <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-secondary)]">{exemption.description}</p>
                     )}
                     {exemption.rules?.map((rule: any, i: number) => (
                       <div key={i} className="ml-3 mt-1.5">
-                        <p className="text-[12px] text-stone-500">
-                          <span className="font-medium text-stone-600">{rule.rule.replace(/_/g, " ")}:</span> {rule.description}
+                        <p className="text-[12px] text-[var(--text-secondary)]">
+                          <span className="font-medium text-[var(--text-primary)]">{rule.rule.replace(/_/g, " ")}:</span> {rule.description}
                         </p>
                       </div>
                     ))}
                     {exemption.note && (
-                      <p className="mt-1.5 text-[11px] italic text-stone-400">{exemption.note}</p>
+                      <p className="mt-1.5 text-[11px] italic text-[var(--text-muted)]">{exemption.note}</p>
                     )}
                   </div>
                 ))}
               {!eff.parking?.exemptions && dev.parking_estimate?.exemption_notes?.length > 0 && (
                 <ul className="space-y-2">
                   {dev.parking_estimate.exemption_notes.map((n: string, i: number) => (
-                    <li key={i} className="text-[12px] leading-relaxed text-stone-500">• {n}</li>
+                    <li key={i} className="text-[12px] leading-relaxed text-[var(--text-secondary)]">• {n}</li>
                   ))}
                 </ul>
               )}
@@ -258,31 +259,31 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
 
           {/* Parking Maximum */}
           {dev.parking_maximum?.applies && (
-            <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-              <p className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-stone-400">Parking Maximum</p>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
+              <p className="mb-3 font-heading text-[13px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Parking Maximum</p>
               <div className="grid gap-3 sm:grid-cols-2 mb-3">
-                <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
+                <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
                   <EditableField {...ep("development_potential.parking_maximum.max_spaces_permitted", maxSpacesPerm)}>
-                    <p className="text-[22px] font-bold text-stone-900">{maxSpacesPerm.value as number}</p>
+                    <p className="text-[22px] font-bold text-[var(--text-primary)]">{maxSpacesPerm.value as number}</p>
                   </EditableField>
-                  <p className="text-[12px] text-stone-500">Max spaces permitted</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Max spaces permitted</p>
                 </div>
-                <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-                  <p className="text-[22px] font-bold text-stone-900">{dev.parking_maximum.max_rate_per_unit}</p>
-                  <p className="text-[12px] text-stone-500">Avg rate per unit</p>
+                <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
+                  <p className="text-[22px] font-bold text-[var(--text-primary)]">{dev.parking_maximum.max_rate_per_unit}</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Avg rate per unit</p>
                 </div>
               </div>
               {dev.parking_maximum.rates_by_bedroom && (
                 <div className="space-y-1.5">
                   {Object.entries(dev.parking_maximum.rates_by_bedroom).map(([bed, rate]: [string, any]) => (
                     <div key={bed} className="flex items-baseline justify-between gap-3 rounded-lg bg-stone-50 px-3 py-2">
-                      <span className="text-[12px] font-medium text-stone-700">{bed.replace(/_/g, " ")}</span>
-                      <span className="text-right text-[12px] text-stone-500">{rate} spaces/unit</span>
+                      <span className="text-[12px] font-medium text-[var(--text-primary)]">{bed.replace(/_/g, " ")}</span>
+                      <span className="text-right text-[12px] text-[var(--text-secondary)]">{rate} spaces/unit</span>
                     </div>
                   ))}
                 </div>
               )}
-              <div className="mt-3 flex items-center gap-4 text-[11px] text-stone-400">
+              <div className="mt-3 flex items-center gap-4 text-[11px] text-[var(--text-muted)]">
                 <span>Parking Zone: {dev.parking_maximum.parking_zone}</span>
                 {dev.parking_maximum.near_transit && <Badge variant="info">Near Transit</Badge>}
                 {dev.parking_maximum.visitor_max_spaces != null && (
@@ -291,11 +292,11 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
               </div>
               {dev.parking_maximum.exceeds_maximum && (
                 <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
-                  ⚠ {dev.parking_maximum.note}
+                  <AlertTriangle className="mr-1 inline h-3.5 w-3.5" /> {dev.parking_maximum.note}
                 </div>
               )}
               {dev.parking_maximum.bylaw_ref && (
-                <p className="mt-2 text-[10px] text-stone-400">{dev.parking_maximum.bylaw_ref}</p>
+                <p className="mt-2 text-[10px] text-[var(--text-muted)]">{dev.parking_maximum.bylaw_ref}</p>
               )}
             </div>
           )}
@@ -331,11 +332,11 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
 
           {dev.bicycle_parking.exception_override && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
-              ⚠ Exception override: {dev.bicycle_parking.exception_override}
+              <AlertTriangle className="mr-1 inline h-3.5 w-3.5" /> Exception override: {dev.bicycle_parking.exception_override}
             </div>
           )}
           {dev.bicycle_parking.note && (
-            <p className="text-[11px] italic text-stone-400">{dev.bicycle_parking.note}</p>
+            <p className="text-[11px] italic text-[var(--text-muted)]">{dev.bicycle_parking.note}</p>
           )}
         </>
       )}
@@ -355,10 +356,10 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
                 <div className="mt-2 space-y-1.5">
                   {dev.loading_space.required_spaces.map((space: any, i: number) => (
                     <div key={i} className="flex items-baseline justify-between gap-3 rounded-lg bg-stone-50 px-3 py-2">
-                      <span className="text-[12px] font-medium text-stone-700">
+                      <span className="text-[12px] font-medium text-[var(--text-primary)]">
                         {space.count}× Type &ldquo;{space.type}&rdquo;
                       </span>
-                      <span className="text-right text-[12px] text-stone-500">
+                      <span className="text-right text-[12px] text-[var(--text-secondary)]">
                         {space.length_m}m × {space.width_m}m
                         {space.clearance_m ? `, ${space.clearance_m}m clearance` : ""}
                       </span>
@@ -378,11 +379,11 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
 
           {dev.loading_space.exception_override && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
-              ⚠ Exception override: {dev.loading_space.exception_override}
+              <AlertTriangle className="mr-1 inline h-3.5 w-3.5" /> Exception override: {dev.loading_space.exception_override}
             </div>
           )}
           {dev.loading_space.note && (
-            <p className="text-[11px] italic text-stone-400">{dev.loading_space.note}</p>
+            <p className="text-[11px] italic text-[var(--text-muted)]">{dev.loading_space.note}</p>
           )}
         </>
       )}
@@ -414,11 +415,11 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
 
           {dev.amenity_space.exception_override && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-700">
-              ⚠ Exception override: {dev.amenity_space.exception_override}
+              <AlertTriangle className="mr-1 inline h-3.5 w-3.5" /> Exception override: {dev.amenity_space.exception_override}
             </div>
           )}
           {dev.amenity_space.note && (
-            <p className="text-[11px] italic text-stone-400">{dev.amenity_space.note}</p>
+            <p className="text-[11px] italic text-[var(--text-muted)]">{dev.amenity_space.note}</p>
           )}
         </>
       )}
@@ -458,7 +459,7 @@ export default function UsesParkingTab({ data, onAnalyzeUse, editMode, userEdits
           </div>
 
           {dev.inclusionary_zoning.phasing_note && (
-            <p className="text-[11px] italic text-stone-400">{dev.inclusionary_zoning.phasing_note}</p>
+            <p className="text-[11px] italic text-[var(--text-muted)]">{dev.inclusionary_zoning.phasing_note}</p>
           )}
           {dev.inclusionary_zoning.parking_note && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-[12px] text-emerald-700">
