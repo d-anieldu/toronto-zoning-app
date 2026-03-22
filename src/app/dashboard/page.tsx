@@ -23,7 +23,6 @@ export default function DashboardPage() {
                 { label: "Dashboard", href: "/dashboard", active: true },
                 { label: "Compare", href: "/compare", active: false },
                 { label: "Reports", href: "/reports", active: false },
-                { label: "Projects", href: "/projects", active: false },
               ].map((item) => (
                 <Link
                   key={item.label}
