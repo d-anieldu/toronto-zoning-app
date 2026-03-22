@@ -14,7 +14,7 @@ import dynamic from "next/dynamic";
 import {
   Zap, Building2, Home, ClipboardList, MapPin, ScrollText,
   Copy, Check, Printer, ChevronUp, Share2, Loader2,
-  Train,
+  Train, Map,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ReferenceProvider, RefLink } from "./ReferencePanel";
@@ -53,6 +53,7 @@ interface Props {
 /* ================================================================== */
 
 const TABS = [
+  { id: "map",        label: "Map",                    Icon: Map },
   { id: "summary",    label: "Summary",               Icon: Zap },
   { id: "envelope",   label: "Building Envelope",      Icon: Building2 },
   { id: "uses",       label: "Uses & Parking",         Icon: Home },
@@ -115,7 +116,7 @@ export default function ZoningReport({
   reportId,
 }: Props) {
   const reportRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<TabId>("summary");
+  const [activeTab, setActiveTab] = useState<TabId>("map");
   const [analyzeUse, setAnalyzeUse] = useState<string | null>(null);
   const [showCopied, setShowCopied] = useState(false);
 
@@ -443,26 +444,26 @@ export default function ZoningReport({
             </div>
           </nav>
 
-          {/* Mini-map in sidebar */}
-          {coords.latitude && coords.longitude && (
-            <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] shadow-sm">
-              <MapPanel
-                latitude={coords.latitude}
-                longitude={coords.longitude}
-                activeSiteLayers={layers}
-                zoneCode={zoneCode}
-                zoneString={zoneString}
-                lotArea={dev.lot?.area_sqm}
-                frontage={dev.lot?.frontage_m}
-              />
-            </div>
-          )}
+
         </aside>
 
         {/* ── Main content ── */}
         <div className="min-w-0 flex-1 space-y-5">
           {/* Tab content */}
           <div className="min-h-[400px]">
+            {activeTab === "map" && coords.latitude && coords.longitude && (
+              <div className="overflow-hidden rounded-xl border border-[var(--border)] shadow-sm" style={{ height: "70vh" }}>
+                <MapPanel
+                  latitude={coords.latitude}
+                  longitude={coords.longitude}
+                  activeSiteLayers={layers}
+                  zoneCode={zoneCode}
+                  zoneString={zoneString}
+                  lotArea={dev.lot?.area_sqm}
+                  frontage={dev.lot?.frontage_m}
+                />
+              </div>
+            )}
             {activeTab === "summary" && (
               <SummaryTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
             )}
