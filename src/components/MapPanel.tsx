@@ -436,8 +436,8 @@ export default function MapPanel({
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-      <div className="flex flex-col lg:flex-row min-h-[360px] lg:min-h-[520px]">
+    <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-full">
+      <div className="flex flex-col lg:flex-row h-full min-h-[360px] lg:min-h-[520px]">
         {/* ── Map ────────────────────────────────────────────────── */}
         <div className="relative flex-1 min-h-[280px] lg:min-h-[400px]">
           <MapContainer
@@ -606,7 +606,6 @@ export default function MapPanel({
         {/* ── Layer sidebar ──────────────────────────────────────── */}
         <div
           className="w-full overflow-y-auto border-t border-stone-200 bg-stone-50/60 lg:w-80 lg:border-l lg:border-t-0"
-          style={{ maxHeight: 520 }}
         >
           {/* Property context header */}
           {(zoneCode || zoneString) && (
