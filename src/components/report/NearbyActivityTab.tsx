@@ -16,8 +16,8 @@
  *   H. Development Applications (collapsible accordion)
  */
 
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { ChevronDown, CheckCircle2, XCircle, MinusCircle, Gavel, Clock, HardHat } from "lucide-react";
 import { Tag } from "./primitives";
 import SectionNoteEditor from "./SectionNoteEditor";
 
@@ -505,13 +505,13 @@ const ICON_CIRCLE_CLASS: Record<string, string> = {
   building_permit: "bg-violet-100 text-violet-600",
 };
 
-const ICON_SYMBOL: Record<string, string> = {
-  coa_approved: "check_circle",
-  coa_refused: "cancel",
-  coa_withdrawn: "remove_circle",
-  coa_hearing: "gavel",
-  dev_application: "pending",
-  building_permit: "construction",
+const ICON_MAP: Record<string, React.ReactNode> = {
+  coa_approved: <CheckCircle2 size={16} />,
+  coa_refused: <XCircle size={16} />,
+  coa_withdrawn: <MinusCircle size={16} />,
+  coa_hearing: <Gavel size={16} />,
+  dev_application: <Clock size={16} />,
+  building_permit: <HardHat size={16} />,
 };
 
 function ActivityFeed({ events }: { events: any[] }) {
@@ -585,9 +585,7 @@ function ActivityFeed({ events }: { events: any[] }) {
                     "bg-stone-100 text-stone-500"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {ICON_SYMBOL[e.event_type] || "circle"}
-                  </span>
+                  {ICON_MAP[e.event_type] ?? <Clock size={16} />}
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-[13px] font-bold text-stone-900 leading-tight truncate">
