@@ -6,20 +6,19 @@
  * NearbyActivityTab — "Nearby Activity" tab for the zoning report.
  *
  * Sections:
- *   A. Variance Intelligence Overview (hero stats)
- *   B. Inline Mini-Map (Leaflet with colour-coded pins)
- *   C. Same-Zone Precedents
- *   D. Similar Lot Analysis
- *   E. Recent Activity Feed
- *   F. OLT Appeal Decisions
- *   G. Trend Chart (CSS bar chart)
+ *   A. Hero Stats (4 metric cards)
+ *   B. Interactive Map (Leaflet with colour-coded pins)
+ *   C. Same-Zone Precedents Table
+ *   D. Similar Lot Comparables Table
+ *   E. Variance Trends (CSS stacked bar chart)
+ *   F. Recent Activity Feed (filterable, icon rows)
+ *   G. Building Permits (collapsible accordion)
+ *   H. Development Applications (collapsible accordion)
  */
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend,
-} from "recharts";
-import { Card, Row, Badge, StatCard, SectionHeading, Tag } from "./primitives";
+import { ChevronDown } from "lucide-react";
+import { Tag } from "./primitives";
 import SectionNoteEditor from "./SectionNoteEditor";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
@@ -131,7 +130,10 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   building_permit: "Building Permit",
 };
 
-const EVENT_TYPE_BADGE: Record<string, "success" | "danger" | "warning" | "info" | "default"> = {
+const EVENT_TYPE_VARIANT: Record<
+  string,
+  "success" | "danger" | "warning" | "info" | "default"
+> = {
   coa_approved: "success",
   coa_refused: "danger",
   coa_withdrawn: "warning",
@@ -152,7 +154,6 @@ function formatDate(d: string | null | undefined): string {
     return new Date(d).toLocaleDateString("en-CA", {
       year: "numeric",
       month: "short",
-      day: "numeric",
     });
   } catch {
     return d;
@@ -164,12 +165,39 @@ function pct(v: number | null | undefined): string {
   return `${v}%`;
 }
 
-/* ── Mini-Map (dynamic loaded — SSR safe) ──────────────────────────── */
+function formatCost(v: number | null): string {
+  if (v == null) return "—";
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
+  return `$${v.toFixed(0)}`;
+}
 
-/**
- * Spread events that lack real coordinates in a circle around the
- * property centre so they are visible on the map.
- */
+/* ── Decision badge ────────────────────────────────────────────────── */
+
+function DecisionBadge({ eventType }: { eventType: string }) {
+  const variant = EVENT_TYPE_VARIANT[eventType];
+  const label = (EVENT_TYPE_LABELS[eventType] || eventType).replace("CoA ", "");
+  const cls =
+    variant === "success"
+      ? "bg-emerald-100 text-emerald-800"
+      : variant === "danger"
+        ? "bg-red-100 text-red-700"
+        : variant === "warning"
+          ? "bg-amber-100 text-amber-700"
+          : variant === "info"
+            ? "bg-sky-100 text-sky-700"
+            : "bg-stone-100 text-stone-600";
+  return (
+    <span
+      className={`px-2 py-0.5 rounded-full text-[11px] font-bold uppercase whitespace-nowrap ${cls}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+/* ── Mini-Map ──────────────────────────────────────────────────────── */
+
 function spreadPosition(
   index: number,
   total: number,
@@ -197,18 +225,16 @@ function MiniMap({
   const [mapComponents, setMapComponents] = useState<any>(null);
 
   useEffect(() => {
-    // Dynamic import to avoid SSR issues with Leaflet
     Promise.all([
       import("react-leaflet"),
       import("leaflet"),
-      // @ts-expect-error — CSS module import
+      // @ts-expect-error CSS module
       import("leaflet/dist/leaflet.css"),
     ]).then(([rl, L]) => {
       setMapComponents({ rl, L: L.default || L });
     });
   }, []);
 
-  // Position events: use real coords if available, else spread around centre
   const positioned = useMemo(() => {
     const needSpread = events.filter((e) => !e.lat || !e.lng);
     return events.map((e) => {
@@ -224,11 +250,17 @@ function MiniMap({
     });
   }, [events, center]);
 
-  // Pre-build icon cache per colour so L.divIcon is not recreated on every render
   const iconsByColor = useMemo(() => {
     if (!mapComponents) return {} as Record<string, any>;
     const { L } = mapComponents;
-    const colors = ["#22c55e", "#ef4444", "#f59e0b", "#94a3b8", "#3b82f6", "#8b5cf6"];
+    const colors = [
+      "#22c55e",
+      "#ef4444",
+      "#f59e0b",
+      "#94a3b8",
+      "#3b82f6",
+      "#8b5cf6",
+    ];
     const cache: Record<string, any> = {};
     for (const color of colors) {
       cache[color] = L.divIcon({
@@ -243,13 +275,13 @@ function MiniMap({
 
   if (!mapComponents) {
     return (
-      <div className="flex h-[320px] items-center justify-center rounded-xl border border-[var(--border)] bg-stone-50">
-        <p className="text-[12px] text-[var(--text-muted)]">Loading map…</p>
+      <div className="flex h-[340px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
+        <p className="text-[12px] text-stone-400">Loading map…</p>
       </div>
     );
   }
 
-  const { MapContainer, TileLayer, CircleMarker, Circle, Popup, Marker } =
+  const { MapContainer, TileLayer, CircleMarker, Circle, Marker, Popup } =
     mapComponents.rl;
   const L = mapComponents.L;
 
@@ -263,19 +295,27 @@ function MiniMap({
   };
 
   const markerIcon = (color: string) =>
-    iconsByColor[color] || L.divIcon({
+    iconsByColor[color] ||
+    L.divIcon({
       className: "",
-      html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;"></div>`,
+      html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
       iconSize: [12, 12],
       iconAnchor: [6, 6],
     });
 
+  const legendItems = [
+    { label: "Approved", color: "#22c55e" },
+    { label: "Refused", color: "#ef4444" },
+    { label: "Dev Apps", color: "#3b82f6" },
+    { label: "Permits", color: "#8b5cf6" },
+  ];
+
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+    <div className="relative h-[340px] rounded-xl overflow-hidden border border-stone-200 shadow-sm">
       <MapContainer
         center={[center.lat, center.lon]}
         zoom={15}
-        style={{ height: "320px", width: "100%" }}
+        style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={false}
         zoomControl={false}
       >
@@ -283,7 +323,6 @@ function MiniMap({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
-        {/* Search radius circle */}
         <Circle
           center={[center.lat, center.lon]}
           radius={radiusM}
@@ -295,10 +334,9 @@ function MiniMap({
             dashArray: "5 5",
           }}
         />
-        {/* Property marker */}
         <CircleMarker
           center={[center.lat, center.lon]}
-          radius={6}
+          radius={7}
           pathOptions={{
             color: "#1e293b",
             fillColor: "#1e293b",
@@ -306,7 +344,6 @@ function MiniMap({
             weight: 2,
           }}
         />
-        {/* Event pins */}
         {positioned.map((e: any, i: number) => {
           const color = pinColors[e.event_type] || "#94a3b8";
           return (
@@ -316,42 +353,30 @@ function MiniMap({
               icon={markerIcon(color)}
             >
               <Popup>
-                <div className="text-[11px] leading-relaxed max-w-[220px]">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span
-                      className="inline-block h-2 w-2 rounded-full shrink-0"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span className="font-semibold text-[var(--text-primary)]">
-                      {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
-                    </span>
-                  </div>
-                  <p className="font-medium text-[var(--text-primary)]">
-                    {e.address || "Unknown"}
+                <div className="text-[11px] leading-relaxed max-w-[200px]">
+                  <p className="font-semibold text-stone-800">
+                    {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
                   </p>
+                  <p className="font-medium mt-0.5">{e.address || "Unknown"}</p>
                   {e.event_date && (
-                    <p className="text-[var(--text-muted)]">{formatDate(e.event_date)}</p>
+                    <p className="text-stone-400">{formatDate(e.event_date)}</p>
                   )}
                   {e._description && (
-                    <p className="text-[var(--text-secondary)] line-clamp-2 mt-0.5">{e._description}</p>
-                  )}
-                  {e._status && (
-                    <p className="text-[var(--text-secondary)] mt-0.5">Status: {e._status}</p>
-                  )}
-                  {e._cost && (
-                    <p className="text-[var(--text-secondary)] mt-0.5">Est. cost: {e._cost}</p>
+                    <p className="text-stone-500 line-clamp-2 mt-0.5">
+                      {e._description}
+                    </p>
                   )}
                   {e.distance_m != null && (
-                    <p className="text-[var(--text-muted)]">{e.distance_m}m away</p>
+                    <p className="text-stone-400">{e.distance_m}m away</p>
                   )}
                   {e.url && (
                     <a
                       href={e.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block mt-1 text-indigo-500 hover:text-indigo-700 font-medium"
+                      className="text-indigo-500 mt-1 inline-block"
                     >
-                      View details &nearr;
+                      View details ↗
                     </a>
                   )}
                 </div>
@@ -360,92 +385,134 @@ function MiniMap({
           );
         })}
       </MapContainer>
-      {/* Legend */}
-      <div className="flex flex-wrap gap-3 px-3 py-2 bg-stone-50 border-t border-[var(--border)]">
-        <span className="text-[10px] text-[var(--text-muted)] font-medium">Legend:</span>
-        <span className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)]">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-stone-800 border border-white" />
-          Subject property
-        </span>
-        {Object.entries(pinColors).map(([type, color]) => (
-          <span key={type} className="flex items-center gap-1 text-[10px] text-[var(--text-secondary)]">
+      {/* Glass legend overlay */}
+      <div className="absolute bottom-4 left-4 right-4 z-[400] flex items-center justify-center gap-4 px-4 py-2 rounded-lg bg-white/70 backdrop-blur-sm text-[11px] font-semibold text-stone-500 uppercase tracking-tight">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-stone-800 shrink-0" />
+          <span>Subject</span>
+        </div>
+        {legendItems.map(({ label, color }) => (
+          <div key={label} className="flex items-center gap-1.5">
             <span
-              className="inline-block h-2 w-2 rounded-full"
+              className="w-2 h-2 rounded-full shrink-0"
               style={{ backgroundColor: color }}
             />
-            {EVENT_TYPE_LABELS[type] || type}
-          </span>
+            {label}
+          </div>
         ))}
       </div>
     </div>
   );
 }
 
-/* ── Trend Bar Chart (Recharts) ────────────────────────────────────── */
+/* ── CSS Trend Chart ───────────────────────────────────────────────── */
 
 function TrendChart({
   data,
 }: {
-  data: { year: number; total: number; approved: number; refused: number; rate: number | null }[];
+  data: {
+    year: number;
+    total: number;
+    approved: number;
+    refused: number;
+    rate: number | null;
+  }[];
 }) {
   if (!data || data.length === 0) {
-    return <p className="text-[12px] text-[var(--text-muted)] italic">Not enough data for trend analysis.</p>;
+    return (
+      <p className="text-[12px] text-stone-400 italic">
+        Not enough data for trend analysis.
+      </p>
+    );
   }
 
-  const chartData = data.map((d) => ({
-    year: String(d.year),
-    Approved: d.approved,
-    Refused: d.refused,
-    Withdrawn: Math.max(0, d.total - d.approved - d.refused),
-    rate: d.rate,
-  }));
+  const maxTotal = Math.max(...data.map((d) => d.approved + d.refused), 1);
+  const MAX_H = 120;
 
   return (
-    <div className="space-y-1">
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={chartData} barSize={18} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-          <XAxis
-            dataKey="year"
-            tick={{ fontSize: 11, fill: "#78716c" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 11, fill: "#78716c" }}
-            axisLine={false}
-            tickLine={false}
-            allowDecimals={false}
-          />
-          <Tooltip
-            contentStyle={{
-              fontSize: 12,
-              borderRadius: 8,
-              border: "1px solid #e7e5e4",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-            }}
-            formatter={(value, name) => [value, name]}
-            labelFormatter={(label) => `${label}`}
-          />
-          <Legend
-            wrapperStyle={{ fontSize: 11, paddingTop: 4 }}
-            iconType="square"
-            iconSize={8}
-          />
-          <Bar dataKey="Approved" stackId="a" fill="#4ade80" radius={[0, 0, 0, 0]} />
-          <Bar dataKey="Refused"  stackId="a" fill="#f87171" radius={[0, 0, 0, 0]} />
-          <Bar dataKey="Withdrawn" stackId="a" fill="#d6d3d1" radius={[3, 3, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-[var(--text-muted)] pl-1">
-        {chartData.map((d) => d.rate != null && (
-          <span key={d.year}><span className="font-medium text-[var(--text-secondary)]">{d.year}</span>: {d.rate}% approval</span>
-        ))}
+    <div>
+      <div
+        className="flex items-end justify-between gap-3 px-2 mb-3"
+        style={{ height: MAX_H + 28 }}
+      >
+        {data.map((d) => {
+          const approvedH = Math.max(
+            Math.round((d.approved / maxTotal) * MAX_H),
+            d.approved > 0 ? 4 : 0,
+          );
+          const refusedH = Math.max(
+            Math.round((d.refused / maxTotal) * MAX_H),
+            d.refused > 0 ? 4 : 0,
+          );
+          return (
+            <div key={d.year} className="flex flex-col items-center flex-1">
+              <div className="w-full flex flex-col-reverse gap-px">
+                <div
+                  className="w-full bg-emerald-500 rounded-t-sm"
+                  style={{ height: approvedH }}
+                  title={`Approved: ${d.approved}`}
+                />
+                {refusedH > 0 && (
+                  <div
+                    className="w-full bg-red-400"
+                    style={{ height: refusedH }}
+                    title={`Refused: ${d.refused}`}
+                  />
+                )}
+              </div>
+              <span className="text-[11px] text-stone-400 mt-2">{d.year}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-stone-400 px-2 mb-4">
+        {data.map(
+          (d) =>
+            d.rate != null && (
+              <span key={d.year}>
+                <span className="font-semibold text-stone-600">{d.year}</span>:{" "}
+                {d.rate}% approval
+              </span>
+            ),
+        )}
+      </div>
+      <div className="flex justify-center gap-6 pt-3 border-t border-stone-100">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 bg-emerald-500 rounded-sm inline-block" />
+          <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-tighter">
+            Approved
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 bg-red-400 rounded-sm inline-block" />
+          <span className="text-[11px] font-semibold text-stone-400 uppercase tracking-tighter">
+            Refused
+          </span>
+        </div>
       </div>
     </div>
   );
 }
 
 /* ── Activity Feed ─────────────────────────────────────────────────── */
+
+const ICON_CIRCLE_CLASS: Record<string, string> = {
+  coa_approved: "bg-emerald-100 text-emerald-600",
+  coa_refused: "bg-red-100 text-red-600",
+  coa_withdrawn: "bg-amber-100 text-amber-600",
+  coa_hearing: "bg-stone-100 text-stone-500",
+  dev_application: "bg-sky-100 text-sky-600",
+  building_permit: "bg-violet-100 text-violet-600",
+};
+
+const ICON_SYMBOL: Record<string, string> = {
+  coa_approved: "check_circle",
+  coa_refused: "cancel",
+  coa_withdrawn: "remove_circle",
+  coa_hearing: "gavel",
+  dev_application: "pending",
+  building_permit: "construction",
+};
 
 function ActivityFeed({ events }: { events: any[] }) {
   const [filter, setFilter] = useState<string | null>(null);
@@ -460,87 +527,119 @@ function ActivityFeed({ events }: { events: any[] }) {
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [events]);
 
-  const filtered = useMemo(() => {
-    if (!filter) return events;
-    return events.filter((e) => e.event_type === filter);
-  }, [events, filter]);
-
+  const filtered = useMemo(
+    () =>
+      !filter
+        ? events
+        : events.filter((e: any) => e.event_type === filter),
+    [events, filter],
+  );
   const visible = filtered.slice(0, showCount);
 
   return (
-    <div className="space-y-3">
-      {/* Filter toggles */}
+    <div className="space-y-4">
+      {/* Filter chips */}
       <div className="flex flex-wrap gap-1.5">
-        <Tag active={!filter} onClick={() => setFilter(null)}>
-          All ({events.length})
-        </Tag>
+        <button
+          onClick={() => setFilter(null)}
+          className={`px-3 py-1 text-[11px] font-bold rounded-full transition-colors ${
+            !filter
+              ? "bg-stone-900 text-white shadow-sm"
+              : "border border-stone-200 text-stone-500 hover:bg-stone-100"
+          }`}
+        >
+          All
+        </button>
         {types.map(([type, count]) => (
-          <Tag key={type} active={filter === type} onClick={() => setFilter(type)}>
+          <button
+            key={type}
+            onClick={() => setFilter(type)}
+            className={`px-3 py-1 text-[11px] font-medium rounded-full transition-colors ${
+              filter === type
+                ? "bg-stone-900 text-white"
+                : "border border-stone-200 text-stone-500 hover:bg-stone-100"
+            }`}
+          >
             {EVENT_TYPE_LABELS[type] || type} ({count})
-          </Tag>
+          </button>
         ))}
       </div>
 
-      {/* Event list */}
-      <div className="divide-y divide-stone-100">
-        {visible.map((e: any, i: number) => (
-          <div key={e.id || i} className="py-2.5 first:pt-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Badge variant={EVENT_TYPE_BADGE[e.event_type] || "default"}>
-                    {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
-                  </Badge>
-                  {e.distance_m != null && (
-                    <span className="text-[11px] text-[var(--text-muted)]">{e.distance_m}m</span>
-                  )}
+      {/* Event rows */}
+      <div className="space-y-1">
+        {visible.map((e: any, i: number) => {
+          const desc = e.raw_data?.DESCRIPTION
+            ? ` — ${e.raw_data.DESCRIPTION.slice(0, 70)}${
+                e.raw_data.DESCRIPTION.length > 70 ? "…" : ""
+              }`
+            : "";
+          return (
+            <div
+              key={e.id || i}
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-stone-50 transition-colors"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                    ICON_CIRCLE_CLASS[e.event_type] ||
+                    "bg-stone-100 text-stone-500"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {ICON_SYMBOL[e.event_type] || "circle"}
+                  </span>
                 </div>
-                <p className="mt-1 text-[12px] font-medium text-[var(--text-primary)] truncate">
-                  {e.address || e.title || "Unknown location"}
-                </p>
-                {e.raw_data?.DESCRIPTION && (
-                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)] line-clamp-2">
-                    {e.raw_data.DESCRIPTION}
-                  </p>
-                )}
-                <div className="mt-0.5 flex items-center gap-2">
-                  {(e.source_id || e.raw_data?.REFERENCE_FILE) && (
-                    <span className="text-[11px] text-[var(--text-muted)]">
-                      Ref: {e.source_id || e.raw_data.REFERENCE_FILE}
+                <div className="min-w-0">
+                  <h4 className="text-[13px] font-bold text-stone-900 leading-tight truncate">
+                    {e.address || e.title || "Unknown location"}
+                    {desc}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className="text-[11px] text-stone-400 uppercase tracking-tighter">
+                      {formatDate(e.event_date)}
                     </span>
-                  )}
-                  {e.url && (
-                    <a
-                      href={e.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-0.5 text-[11px] font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
-                    >
-                      View on AIC <span aria-hidden="true">&nearr;</span>
-                    </a>
-                  )}
+                    {e.distance_m != null && (
+                      <span className="text-[11px] text-stone-400">
+                        {e.distance_m}m
+                      </span>
+                    )}
+                    {(e.source_id || e.raw_data?.REFERENCE_FILE) && (
+                      <span className="text-[11px] text-stone-400">
+                        Ref: {e.source_id || e.raw_data.REFERENCE_FILE}
+                      </span>
+                    )}
+                    {e.url && (
+                      <a
+                        href={e.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-indigo-500 hover:text-indigo-700 font-medium"
+                      >
+                        View on AIC ↗
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
-              <span className="shrink-0 text-[11px] text-[var(--text-muted)]">
-                {formatDate(e.event_date)}
-              </span>
+              <div className="shrink-0 ml-3">
+                <DecisionBadge eventType={e.event_type} />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {filtered.length > showCount && (
         <button
           type="button"
           onClick={() => setShowCount((c) => c + 10)}
-          className="w-full rounded-lg border border-[var(--border)] py-2 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-stone-50 transition-colors"
+          className="w-full rounded-lg border border-stone-200 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-50 transition-colors"
         >
           Show more ({filtered.length - showCount} remaining)
         </button>
       )}
-
       {visible.length === 0 && (
-        <p className="text-[12px] text-[var(--text-muted)] italic py-4 text-center">
+        <p className="py-4 text-center text-[12px] text-stone-400 italic">
           No events found matching this filter.
         </p>
       )}
@@ -559,11 +658,10 @@ function RadiusSelector({
   onChange: (r: number) => void;
   loading: boolean;
 }) {
-  const options = [250, 500, 1000];
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[11px] text-[var(--text-muted)] mr-1">Radius:</span>
-      {options.map((r) => (
+      <span className="text-[11px] text-stone-400 mr-1">Radius:</span>
+      {[250, 500, 1000].map((r) => (
         <button
           key={r}
           type="button"
@@ -572,7 +670,7 @@ function RadiusSelector({
           className={`rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
             value === r
               ? "bg-stone-900 text-white"
-              : "bg-stone-100 text-[var(--text-secondary)] hover:bg-stone-200"
+              : "bg-stone-100 text-stone-500 hover:bg-stone-200"
           } ${loading ? "opacity-50 cursor-wait" : ""}`}
         >
           {r >= 1000 ? `${r / 1000}km` : `${r}m`}
@@ -582,198 +680,175 @@ function RadiusSelector({
   );
 }
 
-/* ── Building Permits Section ──────────────────────────────────────── */
+/* ── Building Permits content ──────────────────────────────────────── */
 
-const STATUS_COLOR: Record<string, string> = {
+const PERMIT_STATUS_COLOR: Record<string, string> = {
   "Permit Issued": "bg-emerald-100 text-emerald-700",
-  "Inspection": "bg-blue-100 text-blue-700",
-  "Closed": "bg-stone-100 text-[var(--text-secondary)]",
-  "Cancelled": "bg-red-100 text-red-600",
+  Inspection: "bg-blue-100 text-blue-700",
+  Closed: "bg-stone-100 text-stone-500",
+  Cancelled: "bg-red-100 text-red-600",
   "Revision Issued": "bg-amber-100 text-amber-700",
 };
 
-function formatCost(v: number | null): string {
-  if (v == null) return "—";
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
-  return `$${v.toFixed(0)}`;
-}
-
-function BuildingPermitsSection({
+function BuildingPermitsContent({
   permits,
-  permitList,
 }: {
   permits: NonNullable<NearbyData["building_permits"]>;
-  permitList: NonNullable<NearbyData["building_permits"]>["permits"];
 }) {
-  const [showCount, setShowCount] = useState(5);
   const [workFilter, setWorkFilter] = useState<string | null>(null);
+  const [showCount, setShowCount] = useState(5);
 
-  const filtered = useMemo(() => {
-    if (!workFilter) return permitList;
-    return permitList.filter((p) => p.work === workFilter);
-  }, [permitList, workFilter]);
-
+  const filtered = useMemo(
+    () =>
+      !workFilter
+        ? permits.permits
+        : permits.permits.filter((p) => p.work === workFilter),
+    [permits.permits, workFilter],
+  );
   const visible = filtered.slice(0, showCount);
 
   return (
-    <Card label="Building Permits">
-      <div className="space-y-4">
-        {/* Hero stats */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div>
-            <p className="text-[20px] font-bold text-[var(--text-primary)]">{permits.total}</p>
-            <p className="text-[11px] text-[var(--text-muted)]">permits found</p>
-          </div>
-          <div>
-            <p className="text-[20px] font-bold text-violet-600">
-              {formatCost(permits.total_est_cost)}
-            </p>
-            <p className="text-[11px] text-[var(--text-muted)]">est. construction</p>
-          </div>
-          <div>
-            <p className="text-[20px] font-bold text-[var(--text-primary)]">
-              {permits.net_dwelling_units > 0 ? "+" : ""}
-              {permits.net_dwelling_units}
-            </p>
-            <p className="text-[11px] text-[var(--text-muted)]">net dwelling units</p>
-          </div>
-          <div>
-            <p className="text-[20px] font-bold text-[var(--text-primary)]">
-              {Object.keys(permits.by_status).length}
-            </p>
-            <p className="text-[11px] text-[var(--text-muted)]">status categories</p>
-          </div>
+    <div className="pt-5 space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <p className="text-[20px] font-bold text-stone-900">{permits.total}</p>
+          <p className="text-[11px] text-stone-400">permits</p>
         </div>
+        <div>
+          <p className="text-[20px] font-bold text-violet-600">
+            {formatCost(permits.total_est_cost)}
+          </p>
+          <p className="text-[11px] text-stone-400">est. construction</p>
+        </div>
+        <div>
+          <p
+            className={`text-[20px] font-bold ${
+              permits.net_dwelling_units >= 0
+                ? "text-emerald-600"
+                : "text-red-600"
+            }`}
+          >
+            {permits.net_dwelling_units > 0 ? "+" : ""}
+            {permits.net_dwelling_units}
+          </p>
+          <p className="text-[11px] text-stone-400">net dwelling units</p>
+        </div>
+      </div>
 
-        {/* Status breakdown */}
-        {Object.keys(permits.by_status).length > 0 && (
-          <div>
-            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Permit Status</p>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.entries(permits.by_status)
-                .sort(([, a], [, b]) => b - a)
-                .map(([status, count]) => (
-                  <span
-                    key={status}
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      STATUS_COLOR[status] || "bg-stone-100 text-[var(--text-secondary)]"
-                    }`}
-                  >
-                    {status} ({count})
-                  </span>
-                ))}
-            </div>
-          </div>
-        )}
+      {Object.keys(permits.by_status).length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(permits.by_status)
+            .sort(([, a], [, b]) => b - a)
+            .map(([status, count]) => (
+              <span
+                key={status}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                  PERMIT_STATUS_COLOR[status] || "bg-stone-100 text-stone-500"
+                }`}
+              >
+                {status} ({count})
+              </span>
+            ))}
+        </div>
+      )}
 
-        {/* Work type filters */}
-        {permits.by_work_type.length > 0 && (
-          <div>
-            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Work Types</p>
-            <div className="flex flex-wrap gap-1.5">
-              <Tag active={!workFilter} onClick={() => setWorkFilter(null)}>
-                All ({permits.total})
-              </Tag>
-              {permits.by_work_type.slice(0, 6).map((wt) => (
-                <Tag
-                  key={wt.type}
-                  active={workFilter === wt.type}
-                  onClick={() => setWorkFilter(wt.type)}
-                >
-                  {wt.type} ({wt.count})
-                </Tag>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Permit list */}
-        <div className="divide-y divide-stone-100">
-          {visible.map((p) => (
-            <div key={p.permit_num} className="py-2.5 first:pt-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        STATUS_COLOR[p.status] || "bg-stone-100 text-[var(--text-secondary)]"
-                      }`}
-                    >
-                      {p.status || "Unknown"}
-                    </span>
-                    {p.est_cost != null && (
-                      <span className="text-[11px] font-medium text-violet-600">
-                        {formatCost(p.est_cost)}
-                      </span>
-                    )}
-                    {(p.dwelling_units_created > 0 || p.dwelling_units_lost > 0) && (
-                      <span className="text-[10px] text-[var(--text-muted)]">
-                        {p.dwelling_units_created > 0 && `+${p.dwelling_units_created}`}
-                        {p.dwelling_units_lost > 0 && ` -${p.dwelling_units_lost}`} units
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-[12px] font-medium text-[var(--text-primary)] truncate">
-                    {p.address || "Unknown location"}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
-                    {p.work || p.permit_type}
-                    {p.structure_type && ` · ${p.structure_type}`}
-                  </p>
-                  {p.description && (
-                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)] line-clamp-2">
-                      {p.description}
-                    </p>
-                  )}
-                  {p.current_use && p.proposed_use && p.current_use !== p.proposed_use && (
-                    <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
-                      {p.current_use} → {p.proposed_use}
-                    </p>
-                  )}
-                  <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
-                    Permit: {p.permit_num}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <span className="text-[11px] text-[var(--text-muted)]">
-                    {p.issued_date ? formatDate(p.issued_date) : formatDate(p.application_date)}
-                  </span>
-                </div>
-              </div>
-            </div>
+      {permits.by_work_type.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          <Tag active={!workFilter} onClick={() => setWorkFilter(null)}>
+            All ({permits.total})
+          </Tag>
+          {permits.by_work_type.slice(0, 6).map((wt) => (
+            <Tag
+              key={wt.type}
+              active={workFilter === wt.type}
+              onClick={() => setWorkFilter(wt.type)}
+            >
+              {wt.type} ({wt.count})
+            </Tag>
           ))}
         </div>
+      )}
 
-        {filtered.length > showCount && (
-          <button
-            type="button"
-            onClick={() => setShowCount((c) => c + 10)}
-            className="w-full rounded-lg border border-[var(--border)] py-2 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-stone-50 transition-colors"
-          >
-            Show more ({filtered.length - showCount} remaining)
-          </button>
-        )}
-
-        {visible.length === 0 && (
-          <p className="text-[12px] text-[var(--text-muted)] italic py-4 text-center">
-            No permits found matching this filter.
-          </p>
-        )}
+      <div className="divide-y divide-stone-100">
+        {visible.map((p) => (
+          <div key={p.permit_num} className="py-3 first:pt-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      PERMIT_STATUS_COLOR[p.status] ||
+                      "bg-stone-100 text-stone-500"
+                    }`}
+                  >
+                    {p.status || "Unknown"}
+                  </span>
+                  {p.est_cost != null && (
+                    <span className="text-[11px] font-medium text-violet-600">
+                      {formatCost(p.est_cost)}
+                    </span>
+                  )}
+                  {(p.dwelling_units_created > 0 ||
+                    p.dwelling_units_lost > 0) && (
+                    <span className="text-[10px] text-stone-400">
+                      {p.dwelling_units_created > 0 &&
+                        `+${p.dwelling_units_created}`}
+                      {p.dwelling_units_lost > 0 && ` −${p.dwelling_units_lost}`}{" "}
+                      units
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-[13px] font-semibold text-stone-900 truncate">
+                  {p.address}
+                </p>
+                <p className="mt-0.5 text-[11px] text-stone-500">
+                  {p.work || p.permit_type}
+                  {p.structure_type && ` · ${p.structure_type}`}
+                </p>
+                {p.description && (
+                  <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-2">
+                    {p.description}
+                  </p>
+                )}
+                <p className="mt-0.5 text-[10px] text-stone-400">
+                  Permit #{p.permit_num}
+                </p>
+              </div>
+              <span className="shrink-0 text-[11px] text-stone-400">
+                {formatDate(p.issued_date || p.application_date)}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
-    </Card>
+
+      {filtered.length > showCount && (
+        <button
+          type="button"
+          onClick={() => setShowCount((c) => c + 10)}
+          className="w-full rounded-lg border border-stone-200 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-50 transition-colors"
+        >
+          Show more ({filtered.length - showCount} remaining)
+        </button>
+      )}
+      {visible.length === 0 && (
+        <p className="py-4 text-center text-[12px] text-stone-400 italic">
+          No permits match this filter.
+        </p>
+      )}
+    </div>
   );
 }
 
-/* ── Dev Applications Section ──────────────────────────────────────── */
+/* ── Dev Applications content ─────────────────────────────────────── */
 
 const APP_STATUS_COLOR: Record<string, string> = {
   "Under Review": "bg-blue-100 text-blue-700",
-  "Closed": "bg-stone-100 text-[var(--text-secondary)]",
-  "Approved": "bg-emerald-100 text-emerald-700",
+  Closed: "bg-stone-100 text-stone-500",
+  Approved: "bg-emerald-100 text-emerald-700",
   "OMB Approved": "bg-emerald-100 text-emerald-700",
-  "Refused": "bg-red-100 text-red-600",
-  "Complete": "bg-emerald-100 text-emerald-700",
+  Refused: "bg-red-100 text-red-600",
+  Complete: "bg-emerald-100 text-emerald-700",
 };
 
 const APP_TYPE_COLOR: Record<string, string> = {
@@ -784,180 +859,160 @@ const APP_TYPE_COLOR: Record<string, string> = {
   "Plan of Condominium": "bg-indigo-100 text-indigo-700",
 };
 
-function DevApplicationsSection({
+function DevApplicationsContent({
   devApps,
-  appList,
 }: {
   devApps: NonNullable<NearbyData["dev_applications"]>;
-  appList: NonNullable<NearbyData["dev_applications"]>["applications"];
 }) {
-  const [showCount, setShowCount] = useState(5);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [showCount, setShowCount] = useState(5);
 
-  const filtered = useMemo(() => {
-    if (!typeFilter) return appList;
-    return appList.filter((a) => a.app_type === typeFilter);
-  }, [appList, typeFilter]);
-
+  const filtered = useMemo(
+    () =>
+      !typeFilter
+        ? devApps.applications
+        : devApps.applications.filter((a) => a.app_type === typeFilter),
+    [devApps.applications, typeFilter],
+  );
   const visible = filtered.slice(0, showCount);
 
   return (
-    <Card label="Development Applications">
-      <div className="space-y-4">
-        {/* Hero stats */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div>
-            <p className="text-[20px] font-bold text-[var(--text-primary)]">{devApps.total}</p>
-            <p className="text-[11px] text-[var(--text-muted)]">applications</p>
-          </div>
-          <div>
-            <p className="text-[20px] font-bold text-[var(--text-primary)]">
-              {devApps.by_type.length}
-            </p>
-            <p className="text-[11px] text-[var(--text-muted)]">application types</p>
-          </div>
-          <div>
-            <p className="text-[20px] font-bold text-[var(--text-primary)]">
-              {Object.keys(devApps.by_status).length}
-            </p>
-            <p className="text-[11px] text-[var(--text-muted)]">status categories</p>
-          </div>
-          <div>
-            <p className="text-[20px] font-bold text-[var(--text-primary)]">
-              {devApps.by_status["Under Review"] || 0}
-            </p>
-            <p className="text-[11px] text-[var(--text-muted)]">under review</p>
-          </div>
+    <div className="pt-5 space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <p className="text-[20px] font-bold text-stone-900">{devApps.total}</p>
+          <p className="text-[11px] text-stone-400">applications</p>
         </div>
+        <div>
+          <p className="text-[20px] font-bold text-blue-600">
+            {devApps.by_status["Under Review"] || 0}
+          </p>
+          <p className="text-[11px] text-stone-400">under review</p>
+        </div>
+        <div>
+          <p className="text-[20px] font-bold text-stone-900">
+            {devApps.by_type.length}
+          </p>
+          <p className="text-[11px] text-stone-400">app types</p>
+        </div>
+      </div>
 
-        {/* Type breakdown */}
-        {devApps.by_type.length > 0 && (
-          <div>
-            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Application Types</p>
-            <div className="flex flex-wrap gap-1.5">
-              <Tag active={!typeFilter} onClick={() => setTypeFilter(null)}>
-                All ({devApps.total})
-              </Tag>
-              {devApps.by_type.map((t) => (
-                <Tag
-                  key={t.type}
-                  active={typeFilter === t.type}
-                  onClick={() => setTypeFilter(t.type)}
-                >
-                  {t.type} ({t.count})
-                </Tag>
-              ))}
-            </div>
-          </div>
-        )}
+      {Object.keys(devApps.by_status).length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(devApps.by_status)
+            .sort(([, a], [, b]) => b - a)
+            .map(([status, count]) => (
+              <span
+                key={status}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                  APP_STATUS_COLOR[status] || "bg-stone-100 text-stone-500"
+                }`}
+              >
+                {status} ({count})
+              </span>
+            ))}
+        </div>
+      )}
 
-        {/* Status breakdown */}
-        {Object.keys(devApps.by_status).length > 0 && (
-          <div>
-            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Status</p>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.entries(devApps.by_status)
-                .sort(([, a], [, b]) => b - a)
-                .map(([status, count]) => (
-                  <span
-                    key={status}
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                      APP_STATUS_COLOR[status] || "bg-stone-100 text-[var(--text-secondary)]"
-                    }`}
-                  >
-                    {status} ({count})
-                  </span>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* Application list */}
-        <div className="divide-y divide-stone-100">
-          {visible.map((a) => (
-            <div key={a.app_number} className="py-2.5 first:pt-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        APP_TYPE_COLOR[a.app_type] || "bg-stone-100 text-[var(--text-secondary)]"
-                      }`}
-                    >
-                      {a.app_type}
-                    </span>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        APP_STATUS_COLOR[a.status] || "bg-stone-100 text-[var(--text-secondary)]"
-                      }`}
-                    >
-                      {a.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[12px] font-medium text-[var(--text-primary)] truncate">
-                    {a.address || "Unknown location"}
-                  </p>
-                  {a.description && (
-                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)] line-clamp-2">
-                      {a.description}
-                    </p>
-                  )}
-                  <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-                    {a.app_number && (
-                      <span className="text-[10px] text-[var(--text-muted)]">
-                        App: {a.app_number}
-                      </span>
-                    )}
-                    {a.ward_name && (
-                      <span className="text-[10px] text-[var(--text-muted)]">
-                        · Ward {a.ward_number}: {a.ward_name}
-                      </span>
-                    )}
-                  </div>
-                  {a.community_meeting_date && (
-                    <p className="mt-0.5 text-[10px] text-amber-600">
-                      Community meeting: {formatDate(a.community_meeting_date)}
-                      {a.community_meeting_location && ` at ${a.community_meeting_location}`}
-                    </p>
-                  )}
-                  {a.app_url && (
-                    <a
-                      href={a.app_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-0.5 inline-block text-[10px] text-indigo-500 hover:underline"
-                    >
-                      View on Application Info Centre →
-                    </a>
-                  )}
-                </div>
-                <div className="shrink-0 text-right">
-                  <span className="text-[11px] text-[var(--text-muted)]">
-                    {formatDate(a.date_submitted)}
-                  </span>
-                </div>
-              </div>
-            </div>
+      {devApps.by_type.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          <Tag active={!typeFilter} onClick={() => setTypeFilter(null)}>
+            All ({devApps.total})
+          </Tag>
+          {devApps.by_type.map((t) => (
+            <Tag
+              key={t.type}
+              active={typeFilter === t.type}
+              onClick={() => setTypeFilter(t.type)}
+            >
+              {t.type} ({t.count})
+            </Tag>
           ))}
         </div>
+      )}
 
-        {filtered.length > showCount && (
-          <button
-            type="button"
-            onClick={() => setShowCount((c) => c + 10)}
-            className="w-full rounded-lg border border-[var(--border)] py-2 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-stone-50 transition-colors"
-          >
-            Show more ({filtered.length - showCount} remaining)
-          </button>
-        )}
-
-        {visible.length === 0 && (
-          <p className="text-[12px] text-[var(--text-muted)] italic py-4 text-center">
-            No applications found matching this filter.
-          </p>
-        )}
+      <div className="divide-y divide-stone-100">
+        {visible.map((a) => (
+          <div key={a.app_number} className="py-3 first:pt-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      APP_TYPE_COLOR[a.app_type] || "bg-stone-100 text-stone-500"
+                    }`}
+                  >
+                    {a.app_type}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      APP_STATUS_COLOR[a.status] || "bg-stone-100 text-stone-500"
+                    }`}
+                  >
+                    {a.status}
+                  </span>
+                </div>
+                <p className="mt-1 text-[13px] font-semibold text-stone-900 truncate">
+                  {a.address}
+                </p>
+                {a.description && (
+                  <p className="mt-0.5 text-[11px] text-stone-400 line-clamp-2">
+                    {a.description}
+                  </p>
+                )}
+                <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+                  {a.app_number && (
+                    <span className="text-[10px] text-stone-400">
+                      App: {a.app_number}
+                    </span>
+                  )}
+                  {a.ward_name && (
+                    <span className="text-[10px] text-stone-400">
+                      · Ward {a.ward_number}: {a.ward_name}
+                    </span>
+                  )}
+                </div>
+                {a.community_meeting_date && (
+                  <p className="mt-0.5 text-[10px] text-amber-600">
+                    Community meeting: {formatDate(a.community_meeting_date)}
+                    {a.community_meeting_location &&
+                      ` at ${a.community_meeting_location}`}
+                  </p>
+                )}
+                {a.app_url && (
+                  <a
+                    href={a.app_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-0.5 inline-block text-[10px] text-indigo-500 hover:underline"
+                  >
+                    View on Application Info Centre →
+                  </a>
+                )}
+              </div>
+              <span className="shrink-0 text-[11px] text-stone-400">
+                {formatDate(a.date_submitted)}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
-    </Card>
+
+      {filtered.length > showCount && (
+        <button
+          type="button"
+          onClick={() => setShowCount((c) => c + 10)}
+          className="w-full rounded-lg border border-stone-200 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-50 transition-colors"
+        >
+          Show more ({filtered.length - showCount} remaining)
+        </button>
+      )}
+      {visible.length === 0 && (
+        <p className="py-4 text-center text-[12px] text-stone-400 italic">
+          No applications match this filter.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -965,31 +1020,42 @@ function DevApplicationsSection({
 /*  MAIN COMPONENT                                                     */
 /* ================================================================== */
 
-export default function NearbyActivityTab({ data, editMode, sectionNotes, onEditNote }: { data: Record<string, any>; editMode?: boolean; sectionNotes?: Record<string, string>; onEditNote?: (sectionId: string, note: string) => void }) {
+export default function NearbyActivityTab({
+  data,
+  editMode,
+  sectionNotes,
+  onEditNote,
+}: {
+  data: Record<string, any>;
+  editMode?: boolean;
+  sectionNotes?: Record<string, string>;
+  onEditNote?: (sectionId: string, note: string) => void;
+}) {
   const coords = useMemo(() => data.coordinates || {}, [data.coordinates]);
   const nearby: NearbyData = data.nearby_activity || {};
   const dev = data.development_potential || {};
-
-  const [radius, setRadius] = useState(nearby.radius_m || 500);
-  const [liveData, setLiveData] = useState<NearbyData>(nearby);
-  // Start loading immediately if nearby_activity was not included in the initial lookup response
-  const [loading, setLoading] = useState(!data.nearby_activity);
-  const [loadingMessage, setLoadingMessage] = useState(() =>
-    `Searching ${nearby.radius_m || 500}m around ${data.address || "this location"}…`
-  );
-
-  // Effective standards for zone info
   const eff = data.effective_standards || {};
   const zoneCode = eff.zone_code || "";
 
-  // Refetch when radius changes (if different from initial)
+  const [radius, setRadius] = useState(nearby.radius_m || 500);
+  const [liveData, setLiveData] = useState<NearbyData>(nearby);
+  const [loading, setLoading] = useState(!data.nearby_activity);
+  const [loadingMessage, setLoadingMessage] = useState(
+    () =>
+      `Searching ${nearby.radius_m || 500}m around ${data.address || "this location"}…`,
+  );
+
+  const [permitsOpen, setPermitsOpen] = useState(false);
+  const [devAppsOpen, setDevAppsOpen] = useState(false);
+
   const handleRadiusChange = useCallback(
     async (newRadius: number) => {
       setRadius(newRadius);
       if (!coords.longitude || !coords.latitude) return;
-
       setLoading(true);
-      setLoadingMessage(`Searching ${newRadius}m around ${data.address || "this location"}…`);
+      setLoadingMessage(
+        `Searching ${newRadius}m around ${data.address || "this location"}…`,
+      );
       try {
         const params = new URLSearchParams({
           lon: String(coords.longitude),
@@ -997,17 +1063,15 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
           radius: String(newRadius),
         });
         if (zoneCode) params.set("zone_code", zoneCode);
-        if (data.parcel?.frontage_m) params.set("lot_frontage_m", String(data.parcel.frontage_m));
-        if (data.parcel?.area_sqm) params.set("lot_area_sqm", String(data.parcel.area_sqm));
+        if (data.parcel?.frontage_m)
+          params.set("lot_frontage_m", String(data.parcel.frontage_m));
+        if (data.parcel?.area_sqm)
+          params.set("lot_area_sqm", String(data.parcel.area_sqm));
         if (data.address) params.set("address", data.address);
-
         const res = await fetch(`/api/nearby-activity/stats?${params}`);
-        if (res.ok) {
-          const json = await res.json();
-          setLiveData(json);
-        }
-      } catch (err) {
-        console.error("Failed to fetch nearby activity stats:", err);
+        if (res.ok) setLiveData(await res.json());
+      } catch {
+        // non-critical
       } finally {
         setLoading(false);
       }
@@ -1015,12 +1079,11 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
     [coords, zoneCode, data.parcel, data.address],
   );
 
-  // On mount: if nearby data wasn't included in the lookup response, fetch it now
   useEffect(() => {
-    if (data.nearby_activity) return; // already loaded server-side
+    if (data.nearby_activity) return;
     if (!coords.longitude || !coords.latitude) return;
     handleRadiusChange(radius);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coords.latitude, coords.longitude]);
 
   const overview = liveData.overview;
@@ -1031,18 +1094,16 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
   const permits = liveData.building_permits;
   const permitList = useMemo(() => permits?.permits || [], [permits]);
   const devApps = liveData.dev_applications;
-  const devAppList = useMemo(() => devApps?.applications || [], [devApps]);
+  const devAppList = useMemo(
+    () => devApps?.applications || [],
+    [devApps],
+  );
 
-  // Merge all event sources into a single array for MiniMap
-  // Cap at 50 markers (sorted by recency) to keep the DOM lean in dense areas
   const MAP_EVENT_LIMIT = 50;
   const { mapEvents, mapEventTotal } = useMemo(() => {
     const merged: any[] = [];
-    // CoA events
-    for (const e of events) {
+    for (const e of events)
       merged.push({ ...e, _key: `evt-${e.id || merged.length}` });
-    }
-    // Building permits → map-compatible shape
     for (const p of permitList) {
       merged.push({
         _key: `bp-${p.permit_num}`,
@@ -1051,19 +1112,11 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
         event_date: p.issued_date || p.application_date,
         _description: p.description || `${p.work} — ${p.structure_type}`,
         _status: p.status,
-        _cost:
-          p.est_cost != null
-            ? p.est_cost >= 1_000_000
-              ? `$${(p.est_cost / 1_000_000).toFixed(1)}M`
-              : p.est_cost >= 1_000
-                ? `$${(p.est_cost / 1_000).toFixed(0)}K`
-                : `$${p.est_cost}`
-            : undefined,
+        _cost: formatCost(p.est_cost),
         lat: p.lat,
         lng: p.lng,
       });
     }
-    // Dev applications → map-compatible shape
     for (const a of devAppList) {
       merged.push({
         _key: `da-${a.app_number}`,
@@ -1079,83 +1132,81 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
     }
     const total = merged.length;
     if (total > MAP_EVENT_LIMIT) {
-      // Keep the most recent events for the map
       merged.sort((a, b) =>
-        String(b.event_date || "").localeCompare(String(a.event_date || ""))
+        String(b.event_date || "").localeCompare(String(a.event_date || "")),
       );
       merged.splice(MAP_EVENT_LIMIT);
     }
     return { mapEvents: merged, mapEventTotal: total };
   }, [events, permitList, devAppList]);
 
-  // OLT decisions from dev potential
   const oltDecisions = dev.olt_decisions || {};
-  const oltSamples = oltDecisions.samples || oltDecisions.recent_decisions || [];
+  const oltSamples =
+    oltDecisions.samples || oltDecisions.recent_decisions || [];
 
   const hasData = (overview?.total ?? 0) > 0;
   const hasPermits = (permits?.total ?? 0) > 0;
   const hasDevApps = (devApps?.total ?? 0) > 0;
 
-  /* ── Skeleton loading state (shown while initial fetch is in progress) ── */
-  if (loading && !hasData && events.length === 0 && !hasPermits && !hasDevApps) {
+  /* ── Loading skeleton ──────────────────────────────────────────── */
+  if (
+    loading &&
+    !hasData &&
+    events.length === 0 &&
+    !hasPermits &&
+    !hasDevApps
+  ) {
     return (
       <div className="space-y-6 py-6">
-        <SectionHeading title="Nearby Activity" icon="📍" />
-        {/* Informative loading status */}
+        <div className="flex items-center justify-between border-b border-stone-200 pb-4">
+          <h2 className="text-[22px] font-extrabold text-stone-900 tracking-tight">
+            Nearby Activity
+          </h2>
+        </div>
         <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
-          <p className="text-[12px] font-medium text-indigo-700">{loadingMessage}</p>
+          <p className="text-[12px] font-medium text-indigo-700">
+            {loadingMessage}
+          </p>
           <p className="mt-0.5 text-[11px] text-indigo-400">
-            Querying Committee of Adjustment records, building permits, and development applications…
+            Querying Committee of Adjustment records, building permits, and
+            development applications…
           </p>
         </div>
         <div className="animate-pulse space-y-6">
-          {/* Stats cards */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-xl border border-[var(--border)] bg-stone-100 h-20" />
+              <div
+                key={i}
+                className="rounded-xl border border-stone-200 bg-stone-100 h-20"
+              />
             ))}
           </div>
-          {/* Map placeholder */}
-          <div className="space-y-1.5">
-            <div className="h-3.5 w-28 rounded-full bg-stone-100" />
-            <div className="rounded-xl border border-[var(--border)] bg-stone-100 h-[320px]" />
-          </div>
-          {/* CoA / precedents section */}
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
-            <div className="h-3.5 w-44 rounded-full bg-stone-100" />
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 rounded-lg bg-stone-100" />
-            ))}
-          </div>
-          {/* Building Permits section */}
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
-            <div className="h-3.5 w-36 rounded-full bg-stone-100" />
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 rounded-lg bg-stone-100" />
-            ))}
-          </div>
-          {/* Dev Applications section */}
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
-            <div className="h-3.5 w-52 rounded-full bg-stone-100" />
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 rounded-lg bg-stone-100" />
-            ))}
-          </div>
+          <div className="rounded-xl border border-stone-200 bg-stone-100 h-[340px]" />
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-stone-200 bg-stone-100 h-32"
+            />
+          ))}
         </div>
       </div>
     );
   }
 
-  /* ── Empty state ─────────────────────────────────────────────────── */
+  /* ── Empty state ───────────────────────────────────────────────── */
   if (!hasData && events.length === 0 && !hasPermits && !hasDevApps) {
     return (
       <div className="space-y-6 py-6">
-        <SectionHeading title="Nearby Activity" icon="📍" />
-        <div className="rounded-xl border border-[var(--border)] bg-stone-50 p-8 text-center">
-          <p className="text-[14px] font-medium text-[var(--text-secondary)]">
+        <div className="flex items-center justify-between border-b border-stone-200 pb-4">
+          <h2 className="text-[22px] font-extrabold text-stone-900 tracking-tight">
+            Nearby Activity
+          </h2>
+        </div>
+        <div className="rounded-xl border border-stone-200 bg-stone-50 p-8 text-center">
+          <p className="text-[14px] font-medium text-stone-600">
             No nearby activity data available
           </p>
-          <p className="mt-1 text-[12px] text-[var(--text-muted)]">
+          <p className="mt-1 text-[12px] text-stone-400">
             Committee of Adjustment decisions and other development activity
             will appear here once data is ingested for this area.
           </p>
@@ -1164,69 +1215,95 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
     );
   }
 
+  /* ── Main render ───────────────────────────────────────────────── */
   return (
     <div className="space-y-6 py-6">
-      {/* ─── Section A: Hero Stats ─────────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between">
-          <SectionHeading title="Variance Intelligence" icon="📍" />
-          <RadiusSelector value={radius} onChange={handleRadiusChange} loading={loading} />
-        </div>
-
-        {loading && (
-          <div className="mb-3 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2">
-            <p className="text-[11px] text-indigo-600 animate-pulse">Updating data for {radius}m radius…</p>
-          </div>
-        )}
-
-        {overview && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard
-              value={overview.total}
-              label="Applications"
-              sub={`within ${radius}m`}
-            />
-            <StatCard
-              value={pct(overview.approval_rate)}
-              label="Approval Rate"
-              sub={`${overview.approved} of ${overview.approved + overview.refused} decided`}
-              accent
-            />
-            <StatCard
-              value={overview.approved}
-              label="Approved"
-              sub={overview.refused > 0 ? `vs ${overview.refused} refused` : undefined}
-            />
-            <StatCard
-              value={overview.pending + overview.withdrawn}
-              label="Pending / Withdrawn"
-              sub={`${overview.pending} pending, ${overview.withdrawn} withdrawn`}
-            />
-          </div>
-        )}
-
-        {/* Common variance types */}
-        {overview && overview.common_variance_types.length > 0 && (
-          <div className="mt-3">
-            <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">Common Variance Types</p>
-            <div className="flex flex-wrap gap-1.5">
-              {overview.common_variance_types.slice(0, 8).map((vt) => (
-                <Tag key={vt.type}>
-                  {metricLabel(vt.type)} ({vt.count})
-                </Tag>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* ─── Header ─────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between border-b border-stone-200 pb-4">
+        <h2 className="text-[22px] font-extrabold text-stone-900 tracking-tight">
+          Nearby Activity
+        </h2>
+        <RadiusSelector
+          value={radius}
+          onChange={handleRadiusChange}
+          loading={loading}
+        />
       </div>
 
-      {/* ─── Section B: Mini-Map ───────────────────────────────────── */}
+      {loading && (
+        <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2">
+          <p className="animate-pulse text-[11px] font-medium text-indigo-600">
+            Updating data for {radius}m radius…
+          </p>
+        </div>
+      )}
+
+      {/* ─── A. Hero Stats ──────────────────────────────────────── */}
+      <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+          <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold block mb-1">
+            CoA Applications
+          </span>
+          <div className="text-[22px] font-bold text-stone-900">
+            {overview?.total ?? "—"}
+          </div>
+          <span className="text-[10px] text-stone-400 leading-tight">
+            within {radius}m
+          </span>
+        </div>
+
+        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+          <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold block mb-1">
+            Approval Rate
+          </span>
+          <div className="text-[22px] font-bold text-emerald-600">
+            {pct(overview?.approval_rate ?? null)}
+          </div>
+          <span className="text-[10px] text-stone-400 leading-tight">
+            {overview
+              ? `${overview.approved} of ${overview.approved + overview.refused} decided`
+              : "minor variance success"}
+          </span>
+        </div>
+
+        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+          <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold block mb-1">
+            Top Variance
+          </span>
+          <div className="text-[22px] font-bold text-stone-900 truncate">
+            {overview?.common_variance_types?.[0]
+              ? metricLabel(overview.common_variance_types[0].type).split(
+                  " ",
+                )[0]
+              : "—"}
+          </div>
+          <span className="text-[10px] text-stone-400 leading-tight">
+            {overview?.common_variance_types?.[0]
+              ? `${overview.common_variance_types[0].count} cases`
+              : "most common type"}
+          </span>
+        </div>
+
+        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+          <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold block mb-1">
+            Active Permits
+          </span>
+          <div className="text-[22px] font-bold text-stone-900">
+            {permits?.total ?? "—"}
+          </div>
+          <span className="text-[10px] text-stone-400 leading-tight">
+            building permits nearby
+          </span>
+        </div>
+      </section>
+
+      {/* ─── B. Interactive Map ─────────────────────────────────── */}
       {coords.latitude && coords.longitude && mapEvents.length > 0 && (
-        <div>
-          <SectionHeading title="Activity Map" icon="🗺️" count={mapEvents.length} />
+        <section>
           {mapEventTotal > MAP_EVENT_LIMIT && (
-            <p className="mb-2 text-[10px] text-[var(--text-muted)]">
-              Showing {MAP_EVENT_LIMIT} most recent of {mapEventTotal} total events
+            <p className="mb-2 text-[10px] text-stone-400">
+              Showing {MAP_EVENT_LIMIT} most recent of {mapEventTotal} total
+              events
             </p>
           )}
           <MiniMap
@@ -1234,232 +1311,287 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
             events={mapEvents}
             radiusM={radius}
           />
-        </div>
+        </section>
       )}
 
-      {/* ─── Section C: Same-Zone Precedents ───────────────────────── */}
+      {/* ─── C. Same-Zone Precedents Table ──────────────────────── */}
       {sameZone && sameZone.count > 0 && (
-        <Card label={`Same Zone Precedents — ${sameZone.zone_code || "Unknown"}`}>
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <p className="text-[20px] font-bold text-[var(--text-primary)]">{sameZone.count}</p>
-                <p className="text-[11px] text-[var(--text-muted)]">in same zone</p>
-              </div>
-              <div>
-                <p className="text-[20px] font-bold text-emerald-600">{pct(sameZone.approval_rate)}</p>
-                <p className="text-[11px] text-[var(--text-muted)]">approval rate</p>
-              </div>
-              <div>
-                <p className="text-[20px] font-bold text-[var(--text-primary)]">{sameZone.approved || 0}</p>
-                <p className="text-[11px] text-[var(--text-muted)]">approved</p>
-              </div>
+        <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold">
+              Same-Zone Precedents ({sameZone.zone_code || "—"})
+            </span>
+            <span className="text-[11px] text-stone-400">
+              {sameZone.count} decisions · {pct(sameZone.approval_rate)}{" "}
+              approval
+            </span>
+          </div>
+
+          {sameZone.top_variances.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              {sameZone.top_variances.slice(0, 6).map((v) => (
+                <span
+                  key={v.type}
+                  className="px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-600 text-[11px] font-medium"
+                >
+                  {metricLabel(v.type)} ({v.count})
+                </span>
+              ))}
             </div>
+          )}
 
-            {/* Top variances approved in this zone */}
-            {sameZone.top_variances.length > 0 && (
-              <div>
-                <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">
-                  Most Common Variances in Zone
-                </p>
-                <div className="space-y-1">
-                  {sameZone.top_variances.slice(0, 5).map((v) => (
-                    <div
-                      key={v.type}
-                      className="flex items-center justify-between rounded-lg bg-stone-50 px-3 py-1.5"
-                    >
-                      <span className="text-[12px] text-[var(--text-secondary)]">
-                        {metricLabel(v.type)}
-                      </span>
-                      <span className="text-[12px] font-mono text-[var(--text-secondary)]">
-                        {v.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Sample decisions */}
-            {sameZone.sample_decisions.length > 0 && (
-              <div>
-                <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1.5">
-                  Recent Decisions
-                </p>
-                <div className="divide-y divide-stone-100">
-                  {sameZone.sample_decisions.map((d: any, i: number) => (
-                    <div key={d.id || i} className="py-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[12px] font-medium text-[var(--text-primary)]">
-                          {d.address || "Unknown"}
-                        </span>
-                        <Badge variant={EVENT_TYPE_BADGE[d.event_type] || "default"}>
-                          {EVENT_TYPE_LABELS[d.event_type] || d.event_type}
-                        </Badge>
-                      </div>
-                      <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                        {formatDate(d.event_date)}
-                        {d.distance_m != null && ` · ${d.distance_m}m away`}
-                        {(d.source_id || d.raw_data?.REFERENCE_FILE) && ` · Ref: ${d.source_id || d.raw_data.REFERENCE_FILE}`}
-                        {d.url && (
-                          <>
-                            {" · "}
+          {sameZone.sample_decisions.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[13px]">
+                <thead>
+                  <tr className="text-[11px] uppercase text-stone-400 font-bold border-b border-stone-100">
+                    <th className="pb-3 px-2">Address</th>
+                    <th className="pb-3 px-2">Distance</th>
+                    <th className="pb-3 px-2">Variance</th>
+                    <th className="pb-3 px-2">Decision</th>
+                    <th className="pb-3 px-2">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-50">
+                  {sameZone.sample_decisions.map((d: any, i: number) => {
+                    const varianceText =
+                      d.raw_data?.VARIANCE_REQUESTED ||
+                      (d.raw_data?.METRIC_TYPE
+                        ? metricLabel(d.raw_data.METRIC_TYPE)
+                        : "—");
+                    return (
+                      <tr
+                        key={d.id || i}
+                        className="hover:bg-stone-50 transition-colors"
+                      >
+                        <td className="py-3 px-2 font-medium">
+                          {d.url ? (
                             <a
                               href={d.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+                              className="text-indigo-600 hover:underline"
                             >
-                              View on AIC &nearr;
+                              {d.address || "Unknown"}
                             </a>
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {/* ─── Section D: Similar Lots ───────────────────────────────── */}
-      {similarLots && similarLots.count > 0 && (
-        <Card label="Similar Lot Analysis">
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <p className="text-[20px] font-bold text-[var(--text-primary)]">{similarLots.count}</p>
-                <p className="text-[11px] text-[var(--text-muted)]">similar lots found</p>
-              </div>
-              <div>
-                <p className="text-[20px] font-bold text-emerald-600">{pct(similarLots.approval_rate)}</p>
-                <p className="text-[11px] text-[var(--text-muted)]">approval rate</p>
-              </div>
-              <div>
-                <p className="text-[12px] text-[var(--text-secondary)] mt-1">
-                  Method: {similarLots.method?.replace(/_/g, " ") || "zone proximity"}
-                </p>
-              </div>
+                          ) : (
+                            d.address || "Unknown"
+                          )}
+                        </td>
+                        <td className="py-3 px-2 text-stone-400">
+                          {d.distance_m != null ? `${d.distance_m}m` : "—"}
+                        </td>
+                        <td className="py-3 px-2 text-stone-600">
+                          {varianceText}
+                        </td>
+                        <td className="py-3 px-2">
+                          <DecisionBadge eventType={d.event_type} />
+                        </td>
+                        <td className="py-3 px-2 text-stone-400">
+                          {formatDate(d.event_date)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+          )}
 
-            {similarLots.note && (
-              <p className="text-[11px] text-[var(--text-muted)] italic">{similarLots.note}</p>
-            )}
-
-            {/* Top matches */}
-            {similarLots.matches.length > 0 && (
-              <div className="divide-y divide-stone-100">
-                {similarLots.matches.slice(0, 5).map((m: any, i: number) => (
-                  <div key={m.id || i} className="py-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-medium text-[var(--text-primary)]">
-                        {m.address || "Unknown"}
-                      </span>
-                      <Badge variant={EVENT_TYPE_BADGE[m.event_type] || "default"}>
-                        {EVENT_TYPE_LABELS[m.event_type] || m.event_type}
-                      </Badge>
-                    </div>
-                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                      {formatDate(m.event_date)}
-                      {m.distance_m != null && ` · ${m.distance_m}m away`}
-                      {m.raw_data?.ZONING_DESIGNATION && ` · Zone: ${m.raw_data.ZONING_DESIGNATION}`}
-                      {m.url && (
-                        <>
-                          {" · "}
-                          <a
-                            href={m.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
-                          >
-                            View on AIC &nearr;
-                          </a>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </Card>
+          {sameZone.message && (
+            <p className="mt-3 text-[11px] text-stone-400 italic">
+              {sameZone.message}
+            </p>
+          )}
+        </section>
       )}
 
-      {/* ─── Section E: Activity Feed ──────────────────────────────── */}
+      {/* ─── D. Similar Lot Comparables Table ───────────────────── */}
+      {similarLots && similarLots.count > 0 && (
+        <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold">
+              Similar Lot Comparables
+            </span>
+            <span className="text-[11px] text-stone-400">
+              {similarLots.count} matches · {pct(similarLots.approval_rate)}{" "}
+              approval
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[13px]">
+              <thead>
+                <tr className="text-[11px] uppercase text-stone-400 font-bold border-b border-stone-100">
+                  <th className="pb-3 px-2">Address</th>
+                  <th className="pb-3 px-2">Zone</th>
+                  <th className="pb-3 px-2">Decision</th>
+                  <th className="pb-3 px-2">Date</th>
+                  <th className="pb-3 px-2">Distance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-50">
+                {similarLots.matches.slice(0, 8).map((m: any, i: number) => (
+                  <tr
+                    key={m.id || i}
+                    className="hover:bg-stone-50 transition-colors"
+                  >
+                    <td className="py-3 px-2 font-medium">
+                      {m.url ? (
+                        <a
+                          href={m.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:underline"
+                        >
+                          {m.address || "Unknown"}
+                        </a>
+                      ) : (
+                        m.address || "Unknown"
+                      )}
+                    </td>
+                    <td className="py-3 px-2">
+                      {m.raw_data?.ZONING_DESIGNATION && (
+                        <span className="px-1.5 py-0.5 rounded bg-stone-800 text-white text-[10px] font-medium">
+                          {m.raw_data.ZONING_DESIGNATION}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-2">
+                      <DecisionBadge eventType={m.event_type} />
+                    </td>
+                    <td className="py-3 px-2 text-stone-400">
+                      {formatDate(m.event_date)}
+                    </td>
+                    <td className="py-3 px-2 text-stone-400">
+                      {m.distance_m != null ? `${m.distance_m}m` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {similarLots.note && (
+            <p className="mt-3 text-[11px] text-stone-400 italic">
+              {similarLots.note}
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* ─── E. Variance Trends Chart ───────────────────────────── */}
+      {trend && trend.length > 0 && (
+        <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold mb-6 block">
+            Variance Trends — {trend.length} Year
+            {trend.length !== 1 ? "s" : ""}
+          </span>
+          <TrendChart data={trend} />
+        </section>
+      )}
+
+      {/* ─── F. Recent Activity Feed ────────────────────────────── */}
       {events.length > 0 && (
-        <div>
-          <SectionHeading title="Recent Activity Feed" icon="📋" count={events.length} />
+        <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold mb-5 block">
+            Recent Activity
+          </span>
           <ActivityFeed events={events} />
+        </section>
+      )}
+
+      {/* ─── OLT Appeal Decisions ───────────────────────────────── */}
+      {oltSamples.length > 0 && (
+        <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[11px] uppercase tracking-widest text-stone-500 font-semibold">
+              OLT Appeal Decisions
+            </span>
+            {oltDecisions.appeal_success_rate != null && (
+              <span className="text-[11px] text-stone-400">
+                {oltDecisions.total || oltSamples.length} decisions ·{" "}
+                {pct(oltDecisions.appeal_success_rate)} appeal success
+              </span>
+            )}
+          </div>
+          <div className="divide-y divide-stone-100">
+            {oltSamples.slice(0, 5).map((d: any, i: number) => (
+              <div key={i} className="py-3 first:pt-0">
+                <p className="text-[13px] font-semibold text-stone-900">
+                  {d.title || d.case_name || "OLT Decision"}
+                </p>
+                <p className="mt-0.5 text-[11px] text-stone-400">
+                  {d.date || d.decision_date || ""}
+                  {d.outcome && ` · ${d.outcome}`}
+                </p>
+                {d.url && (
+                  <a
+                    href={d.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-0.5 text-[11px] text-indigo-500 hover:underline"
+                  >
+                    View on CanLII →
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ─── G. Building Permits (accordion) ───────────────────── */}
+      {hasPermits && (
+        <div className="rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setPermitsOpen((o) => !o)}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-stone-50 transition-colors"
+          >
+            <span className="text-sm font-bold text-stone-900">
+              Building Permits ({permits!.total})
+            </span>
+            <ChevronDown
+              className={`w-4 h-4 text-stone-400 transition-transform duration-200 ${
+                permitsOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {permitsOpen && (
+            <div className="px-6 pb-6 border-t border-stone-100">
+              <BuildingPermitsContent permits={permits!} />
+            </div>
+          )}
         </div>
       )}
 
-      {/* ─── Section F: OLT Decisions ──────────────────────────────── */}
-      {oltSamples.length > 0 && (
-        <Card label="OLT Appeal Decisions">
-          <div className="space-y-3">
-            {oltDecisions.appeal_success_rate != null && (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-[20px] font-bold text-[var(--text-primary)]">
-                    {oltDecisions.total || oltSamples.length}
-                  </p>
-                  <p className="text-[11px] text-[var(--text-muted)]">OLT decisions found</p>
-                </div>
-                <div>
-                  <p className="text-[20px] font-bold text-amber-600">
-                    {pct(oltDecisions.appeal_success_rate)}
-                  </p>
-                  <p className="text-[11px] text-[var(--text-muted)]">appeal success rate</p>
-                </div>
-              </div>
-            )}
-
-            <div className="divide-y divide-stone-100">
-              {oltSamples.slice(0, 5).map((d: any, i: number) => (
-                <div key={i} className="py-2">
-                  <p className="text-[12px] font-medium text-[var(--text-primary)]">
-                    {d.title || d.case_name || "OLT Decision"}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                    {d.date || d.decision_date || ""}
-                    {d.outcome && ` · ${d.outcome}`}
-                  </p>
-                  {d.url && (
-                    <a
-                      href={d.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-0.5 text-[11px] text-indigo-500 hover:underline"
-                    >
-                      View on CanLII →
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* ─── Section G: Building Permits ────────────────────────── */}
-      {hasPermits && (
-        <BuildingPermitsSection permits={permits!} permitList={permitList} />
-      )}
-
-      {/* ─── Section H: Dev Applications ───────────────────────── */}
+      {/* ─── H. Dev Applications (accordion) ───────────────────── */}
       {hasDevApps && (
-        <DevApplicationsSection devApps={devApps!} appList={devAppList} />
+        <div className="rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setDevAppsOpen((o) => !o)}
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-stone-50 transition-colors"
+          >
+            <span className="text-sm font-bold text-stone-900">
+              Development Applications ({devApps!.total})
+            </span>
+            <ChevronDown
+              className={`w-4 h-4 text-stone-400 transition-transform duration-200 ${
+                devAppsOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {devAppsOpen && (
+            <div className="px-6 pb-6 border-t border-stone-100">
+              <DevApplicationsContent devApps={devApps!} />
+            </div>
+          )}
+        </div>
       )}
 
-      {/* ─── Section I: Trend Chart ────────────────────────────────── */}
-      {trend && trend.length > 0 && (
-        <Card label="Approval Trend (Year over Year)">
-          <TrendChart data={trend} />
-        </Card>
-      )}
-
+      {/* ─── Edit note ──────────────────────────────────────────── */}
       {editMode && (
         <SectionNoteEditor
           sectionId="nearby_activity"
@@ -1469,15 +1601,16 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
         />
       )}
 
-      {/* ─── Disclaimer ───────────────────────────────────────────── */}
-      <div className="rounded-lg border border-[var(--border)] bg-stone-50 px-4 py-3">
-        <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
-          <strong>Disclaimer:</strong> Variance intelligence is based on historical Committee of
-          Adjustment decisions and other publicly available data from Toronto Open Data. Approval
-          rates and trends are statistical summaries, not predictions. Always consult a planning
+      {/* ─── Disclaimer ─────────────────────────────────────────── */}
+      <div className="rounded-lg border border-stone-200 bg-stone-50 px-4 py-3">
+        <p className="text-[10px] text-stone-400 leading-relaxed">
+          <strong>Disclaimer:</strong> Variance intelligence is based on
+          historical Committee of Adjustment decisions and other publicly
+          available data from Toronto Open Data. Approval rates and trends are
+          statistical summaries, not predictions. Always consult a planning
           professional before making decisions based on this data.
         </p>
-        <p className="mt-1.5 text-[10px] text-[var(--text-muted)]">
+        <p className="mt-1.5 text-[10px] text-stone-400 flex flex-wrap gap-x-3">
           Data sources:{" "}
           <a
             href="https://open.toronto.ca/dataset/committee-of-adjustment-decisions/"
@@ -1487,7 +1620,6 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
           >
             CoA Decisions ↗
           </a>
-          {" · "}
           <a
             href="https://open.toronto.ca/dataset/building-permits-active-permits/"
             target="_blank"
@@ -1496,7 +1628,6 @@ export default function NearbyActivityTab({ data, editMode, sectionNotes, onEdit
           >
             Building Permits ↗
           </a>
-          {" · "}
           <a
             href="https://open.toronto.ca/dataset/development-applications/"
             target="_blank"

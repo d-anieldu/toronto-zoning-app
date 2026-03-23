@@ -28,10 +28,12 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      const base = process.env.NEXT_PUBLIC_SITE_URL || origin;
+      return NextResponse.redirect(`${base}${next}`);
     }
   }
 
   // If code exchange fails, redirect to sign-in with error
-  return NextResponse.redirect(`${origin}/sign-in`);
+  const base = process.env.NEXT_PUBLIC_SITE_URL || origin;
+  return NextResponse.redirect(`${base}/sign-in`);
 }
