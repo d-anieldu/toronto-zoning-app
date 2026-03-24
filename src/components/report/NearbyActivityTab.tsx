@@ -315,6 +315,7 @@ function MiniMap({
       <MapContainer
         center={[center.lat, center.lon]}
         zoom={15}
+        maxZoom={22}
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={false}
         zoomControl={false}
@@ -322,6 +323,8 @@ function MiniMap({
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          maxNativeZoom={20}
+          maxZoom={22}
         />
         <Circle
           center={[center.lat, center.lon]}
