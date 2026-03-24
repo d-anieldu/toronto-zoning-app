@@ -131,6 +131,18 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
+/* ── Zoom tracker ─────────────────────────────────────────────────── */
+
+function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const handler = () => onZoom(map.getZoom());
+    map.on("zoomend", handler);
+    return () => { map.off("zoomend", handler); };
+  }, [map, onZoom]);
+  return null;
+}
+
 /* ── Viewport-based parcel loader ─────────────────────────────────── */
 
 function ViewportParcelLoader({
@@ -146,6 +158,8 @@ function ViewportParcelLoader({
   const lastBbox = useRef("");
 
   useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     const handler = () => {
       // Only fetch detailed parcels when zoomed in enough for popups
       if (map.getZoom() < 15) return;
@@ -191,10 +205,18 @@ function ViewportParcelLoader({
         .catch(() => {});
     };
 
-    map.on("moveend", handler);
+    const debouncedHandler = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(handler, 300);
+    };
+
+    map.on("moveend", debouncedHandler);
     // Fire immediately to load parcels for the initial viewport
     handler();
-    return () => { map.off("moveend", handler); };
+    return () => {
+      map.off("moveend", debouncedHandler);
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
   }, [map, onLoad, subjectLon, subjectLat]);
 
   return null;
@@ -370,6 +392,7 @@ export default function MapPanel({
   const geoJsonRefs = useRef<Record<string, any>>({});
   const parcelGenRef = useRef(0);
   const loadedDataRef = useRef(loadedData);
+  const [mapZoom, setMapZoom] = useState(17);
   useEffect(() => {
     loadedDataRef.current = loadedData;
   }, [loadedData]);
@@ -413,14 +436,6 @@ export default function MapPanel({
     },
     []
   );
-
-  /* ── Fetch layer metadata on mount ───────────────────────────────── */
-  useEffect(() => {
-    fetch(`/api/map/metadata`)
-      .then((r) => r.json())
-      .then((d) => setMetadata(d.layers || []))
-      .catch((e) => console.error("Failed to load map metadata:", e));
-  }, []);
 
   /* ── Auto-load relevant layers once metadata arrives ─────────────── */
   const pendingAutoLoad = useMemo(() => {
@@ -468,6 +483,15 @@ export default function MapPanel({
     load();
     return () => { cancelled = true; };
   }, []);
+
+  /* ── Fetch layer metadata after parcels load (prioritized) ─────── */
+  useEffect(() => {
+    if (parcelsLoading) return; // wait for parcels to finish first
+    fetch(`/api/map/metadata`)
+      .then((r) => r.json())
+      .then((d) => setMetadata(d.layers || []))
+      .catch((e) => console.error("Failed to load map metadata:", e));
+  }, [parcelsLoading]);
 
   /* ── Derived: subject parcel edges for dimension labels ──────────── */
   const subjectEdges = useMemo(() => {
@@ -563,6 +587,7 @@ export default function MapPanel({
             zoom={17}
             maxZoom={22}
             scrollWheelZoom={true}
+            preferCanvas={true}
             className="h-full w-full"
             style={{ height: "100%" }}
           >
@@ -574,6 +599,7 @@ export default function MapPanel({
               maxZoom={22}
             />
             <FlyTo lat={latitude} lng={longitude} />
+            <ZoomTracker onZoom={setMapZoom} />
             <ViewportParcelLoader
               onLoad={handleParcelLoad}
               subjectLon={longitude}
@@ -591,6 +617,7 @@ export default function MapPanel({
 
             {/* Parcel boundaries (subject + neighbours) */}
             {parcelVisible &&
+              mapZoom >= 14 &&
               parcelData &&
               parcelData.features?.length > 0 && (
                 <GeoJSON
@@ -610,7 +637,7 @@ export default function MapPanel({
                   onEachFeature={(feature, layer) => {
                     const p = feature.properties || {};
                     // Compute centroid from geometry for reverse geocoding
-                    const coords = feature.geometry?.coordinates;
+                    const coords = (feature.geometry as any)?.coordinates;
                     let centroidLat = 0;
                     let centroidLon = 0;
                     try {
@@ -669,7 +696,7 @@ export default function MapPanel({
                         layer.bindPopup(`<div style="font-size:12px">${lines.join("<br/>")}</div>`).openPopup();
                       }
                     });
-                  }}}
+                  }}
                 />
               )}
 

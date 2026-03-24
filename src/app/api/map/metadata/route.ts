@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 const API_URL = process.env.API_URL;
 
 export async function GET() {
@@ -11,9 +13,12 @@ export async function GET() {
     if (!res.ok) {
       return NextResponse.json({ detail: "Backend error" }, { status: res.status });
     }
-    const data = await res.json();
-    return NextResponse.json(data, {
-      headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400" },
+    return new Response(res.body, {
+      status: res.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
+      },
     });
   } catch (error) {
     console.error("Map metadata error:", error);

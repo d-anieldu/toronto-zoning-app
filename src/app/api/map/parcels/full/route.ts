@@ -15,9 +15,12 @@ export async function GET(_request: NextRequest) {
       const err = await res.json().catch(() => ({ detail: "Backend error" }));
       return NextResponse.json(err, { status: res.status });
     }
-    const data = await res.json();
-    return NextResponse.json(data, {
-      headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400" },
+    return new Response(res.body, {
+      status: res.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
+      },
     });
   } catch (error) {
     console.error("Map full parcels error:", error);
