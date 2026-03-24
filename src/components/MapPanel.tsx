@@ -131,6 +131,71 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
+/* ── Viewport-based parcel loader ─────────────────────────────────── */
+
+function ViewportParcelLoader({
+  onLoad,
+  subjectLon,
+  subjectLat,
+}: {
+  onLoad: (fc: any) => void;
+  subjectLon: number;
+  subjectLat: number;
+}) {
+  const map = useMap();
+  const lastBbox = useRef("");
+
+  useEffect(() => {
+    const handler = () => {
+      const b = map.getBounds();
+      const cLat = (b.getNorth() + b.getSouth()) / 2;
+      const cLon = (b.getEast() + b.getWest()) / 2;
+      const rLat = (b.getNorth() - b.getSouth()) / 2;
+      const rLon = (b.getEast() - b.getWest()) / 2;
+      const radius = Math.min(Math.max(rLat, rLon), 0.03).toFixed(4);
+      const key = `${cLon.toFixed(4)},${cLat.toFixed(4)},${radius}`;
+      if (key === lastBbox.current) return;
+      lastBbox.current = key;
+
+      fetch(`/api/map/parcels?lon=${cLon}&lat=${cLat}&radius=${radius}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((fc) => {
+          if (!fc || !fc.features?.length) return;
+          // Re-tag the subject parcel based on original search point
+          const pt = L.latLng(subjectLat, subjectLon);
+          for (const f of fc.features) {
+            if (f.properties) {
+              f.properties.is_subject = false;
+            }
+          }
+          // Find parcel containing the original search point
+          for (const f of fc.features) {
+            try {
+              const coords = f.geometry?.coordinates;
+              if (f.geometry?.type === "Polygon" && coords) {
+                const latlngs = coords[0].map((c: number[]) => L.latLng(c[1], c[0]));
+                const poly = L.polygon(latlngs);
+                if (poly.getBounds().contains(pt)) {
+                  f.properties.is_subject = true;
+                  break;
+                }
+              }
+            } catch {
+              // skip malformed geometry
+            }
+          }
+          onLoad(fc);
+        })
+        .catch(() => {});
+    };
+
+    map.on("moveend", handler);
+    return () => { map.off("moveend", handler); };
+  }, [map, onLoad, subjectLon, subjectLat]);
+
+  return null;
+}
+
 /* ── Colour circle for sidebar labels ──────────────────────────────── */
 
 function Dot({ color }: { color: string }) {
@@ -378,7 +443,7 @@ export default function MapPanel({
     let cancelled = false;
     const fetchParcels = async (attempt = 1) => {
       try {
-        const r = await fetch(`/api/map/parcels?lon=${longitude}&lat=${latitude}&radius=0.002`);
+        const r = await fetch(`/api/map/parcels?lon=${longitude}&lat=${latitude}&radius=0.008`);
         if (!r.ok) throw new Error(`Parcels fetch ${r.status}`);
         const d = await r.json();
         if (!cancelled) setParcelData(d);
@@ -403,6 +468,11 @@ export default function MapPanel({
     );
     return subject?.properties?.edges || [];
   }, [parcelData]);
+
+  /* ── Callback for viewport-based parcel loading ──────────────────── */
+  const handleParcelLoad = useCallback((fc: any) => {
+    setParcelData(fc);
+  }, []);
 
   /* ── Toggle a layer on/off ───────────────────────────────────────── */
   const toggleLayer = useCallback(
@@ -467,6 +537,11 @@ export default function MapPanel({
               maxZoom={22}
             />
             <FlyTo lat={latitude} lng={longitude} />
+            <ViewportParcelLoader
+              onLoad={handleParcelLoad}
+              subjectLon={longitude}
+              subjectLat={latitude}
+            />
 
             {/* Address marker */}
             <Marker position={[latitude, longitude]} icon={defaultIcon}>
