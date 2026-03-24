@@ -621,7 +621,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/*  MAP                                                          */}
       {/* ============================================================ */}
       {data.coordinates?.latitude && data.coordinates?.longitude && (
-        <div className="overflow-hidden rounded-xl border border-[var(--border)] shadow-sm" style={{ height: "280px" }}>
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] shadow-sm" style={{ height: "380px" }}>
           <MapPanel
             latitude={data.coordinates.latitude}
             longitude={data.coordinates.longitude}
