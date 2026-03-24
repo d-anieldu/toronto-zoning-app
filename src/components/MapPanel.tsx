@@ -421,6 +421,17 @@ export default function MapPanel({
     [fetchLayer]
   );
 
+  /* ── Show / hide all layers ─────────────────────────────────────── */
+  const showAllLayers = useCallback(() => {
+    const allKeys = new Set(metadata.map((m) => m.key));
+    setActiveLayers(allKeys);
+    metadata.forEach((m) => fetchLayer(m.key));
+  }, [metadata, fetchLayer]);
+
+  const hideAllLayers = useCallback(() => {
+    setActiveLayers(new Set());
+  }, []);
+
   /* ── Group layers + filter ───────────────────────────────────────── */
   const filteredMeta = useMemo(() => {
     if (!layerFilter.trim()) return metadata;
@@ -649,6 +660,24 @@ export default function MapPanel({
           )}
 
           <div className="p-4">
+            {/* Show / hide all layers */}
+            {metadata.length > 0 && (
+              <div className="mb-3 flex gap-2">
+                <button
+                  onClick={showAllLayers}
+                  className="flex-1 rounded-lg border border-stone-200 bg-white py-1.5 text-[11px] font-semibold text-stone-600 shadow-sm transition-colors hover:bg-stone-50 hover:text-stone-800"
+                >
+                  Show All Layers
+                </button>
+                <button
+                  onClick={hideAllLayers}
+                  className="flex-1 rounded-lg border border-stone-200 bg-white py-1.5 text-[11px] font-semibold text-stone-600 shadow-sm transition-colors hover:bg-stone-50 hover:text-stone-800"
+                >
+                  Hide All Layers
+                </button>
+              </div>
+            )}
+
             {/* Search / filter */}
             <div className="relative mb-3">
               <svg
