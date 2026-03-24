@@ -275,7 +275,7 @@ function MiniMap({
 
   if (!mapComponents) {
     return (
-      <div className="flex h-[500px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
+      <div className="flex h-[700px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
         <p className="text-[12px] text-stone-400">Loading map…</p>
       </div>
     );
@@ -311,7 +311,7 @@ function MiniMap({
   ];
 
   return (
-    <div className="relative h-[500px] rounded-xl overflow-hidden border border-stone-200 shadow-sm">
+    <div className="relative h-[700px] rounded-xl overflow-hidden border border-stone-200 shadow-sm">
       <MapContainer
         center={[center.lat, center.lon]}
         zoom={15}
@@ -1183,7 +1183,7 @@ export default function NearbyActivityTab({
               />
             ))}
           </div>
-          <div className="rounded-xl border border-stone-200 bg-stone-100 h-[500px]" />
+          <div className="rounded-xl border border-stone-200 bg-stone-100 h-[700px]" />
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
