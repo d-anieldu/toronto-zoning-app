@@ -106,7 +106,6 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
   const hazardSetback = rv("effective_standards.natural_hazards.combined_setback_m");
   const heritageImpact = rv("effective_standards.heritage_impact.combined_impact");
   const coaRate = rv("development_potential.coa_precedents.approval_rate");
-  const devChargesTotal = rv("development_potential.development_charges.total_estimated");
   const opDesignationName = rv("effective_standards.op_context.op_designation.designation");
   const exceptionNum = rv("effective_standards.exception.exception_number");
   const rentalApplies = rv("development_potential.rental_replacement.potentially_applies");
@@ -974,42 +973,6 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
               </div>
             </div>
           )}
-        </>
-      )}
-
-      {/* ============================================================ */}
-      {/*  DEVELOPMENT CHARGES                                          */}
-      {/* ============================================================ */}
-      {dev.development_charges && (
-        <>
-          <SectionHeading id="charges" title="Development Charges" icon={Icons.dollar} />
-
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-            {dev.development_charges.estimates?.length > 0 && (
-              <div className="space-y-2">
-                {dev.development_charges.estimates.map((est: any, i: number) => (
-                  <div key={i} className="flex items-baseline justify-between rounded-lg bg-stone-50 px-4 py-3">
-                    <div>
-                      <span className="text-[13px] font-medium text-[var(--text-primary)]">{est.category}</span>
-                      <p className="text-[11px] text-[var(--text-muted)]">{est.units} unit{est.units !== 1 ? "s" : ""} × ${Number(est.rate_per_unit).toLocaleString()}/unit</p>
-                    </div>
-                    <span className="font-mono text-[15px] font-bold text-[var(--text-primary)]">${Number(est.total).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {(dev.development_charges.total_estimated || devChargesTotal.isEdited) && (
-              <EditableField {...ep("development_potential.development_charges.total_estimated", devChargesTotal.value, devChargesTotal.isEdited, devChargesTotal.original, devChargesTotal.editNote)}>
-                <div className="mt-3 flex items-baseline justify-between border-t border-[var(--border)] pt-3">
-                  <span className="text-[14px] font-semibold text-[var(--text-primary)]">Total Estimated</span>
-                  <span className="font-mono text-[22px] font-bold text-[var(--text-primary)]">${Number(devChargesTotal.value as number).toLocaleString()}</span>
-                </div>
-              </EditableField>
-            )}
-            {dev.development_charges.note && (
-              <p className="mt-3 rounded-lg bg-stone-50 p-3 text-[11px] leading-relaxed text-[var(--text-muted)]">{dev.development_charges.note}</p>
-            )}
-          </div>
         </>
       )}
 

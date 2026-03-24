@@ -47,6 +47,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/lookup|api/suggest|api/chat|api/map|api/reference|api/dev-charges|api/analyze-use|api/compare|api/nearby-activity|api/olt-decisions|api/policy-conformity).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/lookup|api/suggest|api/chat|api/map|api/reference|api/analyze-use|api/compare|api/nearby-activity|api/olt-decisions|api/policy-conformity).*)",
   ],
 };

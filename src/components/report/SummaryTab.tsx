@@ -18,7 +18,6 @@ import {
 import dynamic from "next/dynamic";
 import { Badge, severityColor, severityIcon, severityDotColor } from "./primitives";
 import FlagButton from "../FlagButton";
-import DevChargesCalculator from "../DevChargesCalculator";
 import ZoningStatisticsTable from "./ZoningStatisticsTable";
 import EditableField from "./EditableField";
 import SectionNoteEditor from "./SectionNoteEditor";
@@ -1135,31 +1134,8 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       )}
 
       {/* ============================================================ */}
-      {/*  DEVELOPMENT CHARGES — compact                                */}
-      {/* ============================================================ */}
-      {dev.development_charges?.total_estimated && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-          <div className="flex items-baseline justify-between">
-            <p className="font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-              Estimated Development Charges
-            </p>
-            <p className="font-mono text-[22px] font-bold tracking-tight text-[var(--text-primary)]">
-              ${fmt(dev.development_charges.total_estimated)}
-            </p>
-          </div>
-          {dev.development_charges.note && (
-            <p className="mt-2 text-[11px] text-[var(--text-muted)]">
-              {dev.development_charges.note}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* ============================================================ */}
       {/*  PLANNING CONTACT — compact                                   */}
       {/* ============================================================ */}
-      {/* ── Development Charges Calculator ── */}
-      <DevChargesCalculator address={data.address} />
 
       {data.planning_contact && (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">

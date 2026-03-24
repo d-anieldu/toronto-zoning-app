@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   Car,
   FileCheck,
-  DollarSign,
   Microscope,
 } from "lucide-react";
 import UserNav from "@/components/UserNav";
@@ -206,7 +205,7 @@ export default async function Home() {
               {
                 step: "03",
                 title: "Get your zoning profile",
-                desc: "Effective standards, development envelope, permitted uses, parking, heritage flags, and charges — all in one report.",
+                desc: "Effective standards, development envelope, permitted uses, parking, and heritage flags — all in one report.",
                 Icon: BarChart3,
               },
             ].map((s) => (
@@ -237,7 +236,6 @@ export default async function Home() {
               { Icon: AlertTriangle, title: "Constraints & Flags", desc: "Heritage designation, ravine protection, archaeological potential, and holding provisions flagged by severity.", color: "border-amber-200" },
               { Icon: Car, title: "Parking Requirements", desc: "Residential and visitor rates by building type, zone-specific exemptions, and exception overrides.", color: "border-[var(--border)]" },
               { Icon: FileCheck, title: "Official Plan Context", desc: "OP designation, secondary plan, MTSA status, and applicable Site & Area Specific Policies.", color: "border-sky-200" },
-              { Icon: DollarSign, title: "Development Charges", desc: "Estimated DC breakdown by category based on current City of Toronto rates.", color: "border-[var(--border)]" },
             ].map(({ Icon, title, desc, color }) => (
               <div key={title} className={`rounded-xl border ${color} bg-[var(--card)] p-5 shadow-sm transition-shadow hover:shadow-md`}>
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-stone-100">

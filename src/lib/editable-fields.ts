@@ -72,7 +72,6 @@ export const EDITABLE_FIELDS: Record<string, EditableFieldConfig> = {
   "effective_standards.heritage_impact.combined_impact":         { label: "Heritage Impact Level",         tab: "constraints_context", type: "text" },
   "effective_standards.natural_hazards.combined_setback_m":      { label: "Hazard Combined Setback (m)",   tab: "constraints_context", type: "number" },
   "development_potential.coa_precedents.approval_rate":          { label: "CoA Approval Rate %",           tab: "constraints_context", type: "number" },
-  "development_potential.development_charges.total_estimated":   { label: "Total Dev Charges ($)",         tab: "constraints_context", type: "number" },
   "effective_standards.op_context.op_designation.designation":   { label: "OP Designation",                tab: "constraints_context", type: "text" },
   "effective_standards.exception.exception_number":              { label: "Exception Number",              tab: "constraints_context", type: "text" },
   "development_potential.rental_replacement.potentially_applies": { label: "Rental Replacement Applies",   tab: "constraints_context", type: "boolean" },
