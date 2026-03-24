@@ -663,7 +663,7 @@ function RadiusSelector({
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-[11px] text-stone-400 mr-1">Radius:</span>
-      {[250, 500, 1000].map((r) => (
+      {[500, 1000, 2000, 5000].map((r) => (
         <button
           key={r}
           type="button"
@@ -1101,7 +1101,7 @@ export default function NearbyActivityTab({
     [devApps],
   );
 
-  const MAP_EVENT_LIMIT = 50;
+  const MAP_EVENT_LIMIT = 200;
   const { mapEvents, mapEventTotal } = useMemo(() => {
     const merged: any[] = [];
     for (const e of events)
