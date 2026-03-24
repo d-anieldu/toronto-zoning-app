@@ -106,7 +106,7 @@ export default function DashboardPage() {
             </p>
             <div className="pt-4 flex flex-wrap gap-3">
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/in/danieljzdu/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-stone-900 text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:bg-stone-800 transition-all inline-flex items-center gap-2"
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                 <ArrowRight className="h-4 w-4" />
               </a>
               <a
-                href="mailto:hello@torontozoning.com"
+                href="mailto:d4du@uwaterloo.ca"
                 className="border border-stone-300 text-stone-600 px-6 py-3 rounded-xl font-semibold shadow-sm hover:bg-stone-50 transition-all inline-flex items-center gap-2"
               >
                 Email me
