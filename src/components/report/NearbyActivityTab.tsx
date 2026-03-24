@@ -275,13 +275,13 @@ function MiniMap({
 
   if (!mapComponents) {
     return (
-      <div className="flex h-[340px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
+      <div className="flex h-[500px] items-center justify-center rounded-xl border border-stone-200 bg-stone-50">
         <p className="text-[12px] text-stone-400">Loading map…</p>
       </div>
     );
   }
 
-  const { MapContainer, TileLayer, CircleMarker, Circle, Marker, Popup } =
+  const { MapContainer, TileLayer, CircleMarker, Circle, Marker, Popup, ZoomControl } =
     mapComponents.rl;
   const L = mapComponents.L;
 
@@ -311,15 +311,16 @@ function MiniMap({
   ];
 
   return (
-    <div className="relative h-[340px] rounded-xl overflow-hidden border border-stone-200 shadow-sm">
+    <div className="relative h-[500px] rounded-xl overflow-hidden border border-stone-200 shadow-sm">
       <MapContainer
         center={[center.lat, center.lon]}
         zoom={15}
         maxZoom={22}
         style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
         zoomControl={false}
       >
+        <ZoomControl position="topright" />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -1182,7 +1183,7 @@ export default function NearbyActivityTab({
               />
             ))}
           </div>
-          <div className="rounded-xl border border-stone-200 bg-stone-100 h-[340px]" />
+          <div className="rounded-xl border border-stone-200 bg-stone-100 h-[500px]" />
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
