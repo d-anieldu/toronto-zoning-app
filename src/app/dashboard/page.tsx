@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Ruler, TrendingUp, AlertTriangle } from "lucide-react";
+import { Ruler, TrendingUp, AlertTriangle, ArrowRight, Mail } from "lucide-react";
 import SearchForm from "@/components/SearchForm";
 import UserNav from "@/components/UserNav";
 import RecentReports from "@/components/RecentReports";
@@ -7,96 +7,156 @@ import RecentReports from "@/components/RecentReports";
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center gap-3">
-              <span className="font-heading text-[15px] font-bold tracking-tight text-[var(--text-primary)]">
-                Toronto Zoning
-              </span>
-              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
-                Beta
-              </span>
-            </Link>
-            <nav className="hidden items-center gap-1 md:flex">
-              {[
-                { label: "Dashboard", href: "/dashboard", active: true },
-                { label: "Compare", href: "/compare", active: false },
-                { label: "Reports", href: "/reports", active: false },
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
-                    item.active
-                      ? "bg-stone-100 text-[var(--text-primary)]"
-                      : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+      {/* ── Top navigation ── */}
+      <header className="sticky top-0 z-50 w-full bg-stone-50/80 backdrop-blur-md shadow-sm">
+        <nav className="flex items-center justify-between px-8 h-16 max-w-screen-2xl mx-auto">
+          <Link
+            href="/dashboard"
+            className="text-xl font-bold tracking-tight text-stone-900 font-heading"
+          >
+            Toronto Zoning
+          </Link>
+
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium font-heading tracking-wide">
+            {[
+              { label: "Dashboard", href: "/dashboard", active: true },
+              { label: "Compare", href: "/compare", active: false },
+              { label: "Reports", href: "/reports", active: false },
+              { label: "Projects", href: "/projects", active: false },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={
+                  item.active
+                    ? "text-stone-900 font-bold border-b-2 border-emerald-600 pb-1"
+                    : "text-stone-500 hover:text-stone-900 transition-colors"
+                }
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden text-[12px] text-[var(--text-muted)] lg:block">
-              By-law 569-2013 · 19 GIS layers
-            </span>
-            <UserNav />
-          </div>
-        </div>
+
+          <UserNav />
+        </nav>
+        <div className="bg-stone-200/50 h-px" />
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
-        {/* Search hero — centrepiece */}
-        <div className="mb-8 text-center">
-          <h1 className="font-heading text-[28px] font-bold tracking-tight text-[var(--text-primary)]">
-            Zoning Lookup
-          </h1>
-          <p className="mx-auto mt-2 max-w-lg text-[14px] text-[var(--text-secondary)]">
-            Enter any Toronto address to generate a comprehensive zoning report
-            — standards, overlays, development potential, and more.
-          </p>
-        </div>
+      {/* ── Main content ── */}
+      <main className="max-w-screen-2xl mx-auto px-8 py-12 space-y-20">
+        {/* Search hero */}
+        <section className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="space-y-2">
+            <span className="text-xs tracking-widest uppercase text-stone-500 font-bold">
+              Zoning Lookup
+            </span>
+            <h1 className="font-heading text-5xl font-extrabold tracking-tight text-stone-900">
+              Precision Urban Planning
+            </h1>
+          </div>
+          <SearchForm />
+        </section>
 
-        <SearchForm />
-
-        {/* Tip cards */}
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
+        {/* Feature tip cards */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
               Icon: Ruler,
               title: "Standards & Setbacks",
-              desc: "Height, FSI, lot coverage, and setbacks resolved from zone + overlays + exceptions.",
+              desc: "Instantly verify permissible heights, floor space indexes (FSI), and required side-yard clearances for any lot.",
             },
             {
               Icon: TrendingUp,
               title: "Development Potential",
-              desc: "Max GFA, buildable envelope, floor plate, and feasible building types.",
+              desc: "Maximize Gross Floor Area (GFA). Our engine calculates theoretical maximums based on current by-laws.",
             },
             {
               Icon: AlertTriangle,
               title: "Constraints Flagged",
-              desc: "Heritage, ravine protection, MTSA, holding provisions — graded by severity.",
+              desc: "Automated alerts for Heritage designations, TRCA hazards, and secondary plan site-specific policies.",
             },
           ].map((tip) => (
             <div
               key={tip.title}
-              className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 shadow-sm"
+              className="bg-white border border-stone-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-stone-100">
-                <tip.Icon className="h-4 w-4 text-[var(--text-secondary)]" />
+              <div className="w-12 h-12 bg-stone-100 rounded-lg flex items-center justify-center mb-6">
+                <tip.Icon className="h-5 w-5 text-stone-900" />
               </div>
-              <div>
-                <p className="text-[12px] font-semibold text-[var(--text-primary)]">{tip.title}</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-[var(--text-muted)]">{tip.desc}</p>
-              </div>
+              <h3 className="font-heading text-xl font-bold mb-2">{tip.title}</h3>
+              <p className="text-stone-500 text-sm leading-relaxed">{tip.desc}</p>
             </div>
           ))}
-        </div>
+        </section>
 
+        {/* Recent lookups */}
         <RecentReports />
+
+        {/* CTA / feedback section */}
+        <section className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center pt-8">
+          <div className="lg:col-span-3 space-y-6">
+            <h2 className="font-heading text-3xl font-bold text-stone-900">
+              We&rsquo;re still Building, and Would Love Your Input
+            </h2>
+            <p className="text-stone-500 text-lg leading-relaxed">
+              Toronto Zoning is actively under development. We&rsquo;re working hard to make
+              zoning information more accessible, useful, and easy to navigate for homeowners,
+              developers, planners, and anyone trying to make sense of the city&rsquo;s land use
+              rules. If you have thoughts on what we should build, what&rsquo;s missing, or what
+              would make your work easier, we&rsquo;d genuinely love to hear from you.
+            </p>
+            <div className="pt-4 flex flex-wrap gap-3">
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-stone-900 text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:bg-stone-800 transition-all inline-flex items-center gap-2"
+              >
+                Connect with me on LinkedIn
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <a
+                href="mailto:hello@torontozoning.com"
+                className="border border-stone-300 text-stone-600 px-6 py-3 rounded-xl font-semibold shadow-sm hover:bg-stone-50 transition-all inline-flex items-center gap-2"
+              >
+                Email me
+                <Mail className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 aspect-square bg-stone-200 rounded-3xl overflow-hidden relative shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 to-transparent" />
+            <div className="absolute bottom-6 left-6 right-6 p-4 bg-white/20 backdrop-blur-xl rounded-xl border border-white/30 text-white">
+              <div className="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">
+                Live Zone Status
+              </div>
+              <div className="text-lg font-bold">Downtown Core Expansion</div>
+            </div>
+          </div>
+        </section>
       </main>
+
+      {/* ── Footer ── */}
+      <footer className="w-full py-12 px-8 bg-stone-100 border-t border-stone-200 mt-20">
+        <div className="flex flex-col md:flex-row justify-between items-center max-w-screen-2xl mx-auto gap-4">
+          <div className="text-xs tracking-widest uppercase text-stone-500">
+            © 2025 Toronto Zoning. All rights reserved.
+          </div>
+          <div className="flex gap-8 text-xs tracking-widest uppercase">
+            <a href="#" className="text-stone-500 hover:text-stone-900 transition-colors">
+              Privacy Policy
+            </a>
+            <a href="#" className="text-stone-500 hover:text-stone-900 transition-colors">
+              Terms of Service
+            </a>
+            <a href="#" className="text-stone-500 hover:text-stone-900 transition-colors">
+              Contact Support
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FileText, ChevronRight } from "lucide-react";
 
 interface ReportPreview {
   id: string;
@@ -18,7 +17,7 @@ export default function RecentReports() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/reports?page=1&page_size=3")
+    fetch("/api/reports?page=1&page_size=5")
       .then((r) => (r.ok ? r.json() : null))
       .then((json) => {
         if (!cancelled && json?.items) {
@@ -26,61 +25,58 @@ export default function RecentReports() {
         }
       })
       .catch(() => {})
-      .finally(() => { if (!cancelled) setLoaded(true); });
-    return () => { cancelled = true; };
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Don't render anything until loaded, and hide if no reports
   if (!loaded || reports.length === 0) return null;
 
   return (
-    <div className="mt-10">
+    <section className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold tracking-tight text-stone-900">
-          Recent Reports
-        </h2>
+        <span className="text-xs tracking-widest uppercase text-stone-500 font-bold">
+          Recent Lookups
+        </span>
         <Link
           href="/reports"
-          className="text-[12px] font-medium text-stone-500 hover:text-stone-700 transition-colors"
+          className="text-xs font-semibold text-emerald-700 hover:underline"
         >
-          View all →
+          View All History
         </Link>
       </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+      <div className="space-y-3">
         {reports.map((r) => (
           <Link
             key={r.id}
             href={`/reports/${r.id}`}
-            className="group flex items-start justify-between rounded-xl border border-stone-200 bg-white px-4 py-3 shadow-sm hover:border-stone-300 hover:shadow transition-all"
+            className="flex items-center bg-white border border-stone-200 rounded-xl px-4 py-4 hover:bg-stone-50 transition-colors cursor-pointer shadow-sm"
           >
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <FileText className="h-3.5 w-3.5 shrink-0 text-stone-400" />
-                <p className="truncate text-[12px] font-semibold text-stone-700">
-                  {r.title || r.address}
-                </p>
-              </div>
-              {r.title && r.title !== r.address && (
-                <p className="mt-0.5 truncate pl-[22px] text-[11px] text-stone-400">
-                  {r.address}
-                </p>
-              )}
-              <div className="mt-1.5 flex items-center gap-2 pl-[22px]">
-                {r.zone_code && (
-                  <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700">
-                    {r.zone_code}
-                  </span>
-                )}
-                <span className="text-[10px] text-stone-400">
-                  {new Date(r.updated_at).toLocaleDateString("en-CA")}
+            <div className="flex-1 font-heading font-semibold text-stone-900 truncate">
+              {r.title || r.address}
+            </div>
+
+            {r.zone_code && (
+              <div className="w-24 text-center shrink-0">
+                <span className="bg-stone-900 text-white text-[10px] px-2 py-0.5 rounded font-bold">
+                  {r.zone_code}
                 </span>
               </div>
+            )}
+
+            <div className="w-24 text-right shrink-0 text-stone-400 text-xs font-medium">
+              {new Date(r.updated_at).toLocaleDateString("en-CA", {
+                month: "short",
+                day: "numeric",
+              })}
             </div>
-            <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-stone-300 group-hover:text-stone-500 transition-colors" />
           </Link>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
