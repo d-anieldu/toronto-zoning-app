@@ -323,7 +323,7 @@ export default function MapPanel({
     (key: string) => {
       if (loadedDataRef.current[key]) return; // already loaded
       setLoading((l) => new Set(l).add(key));
-      fetch(`/api/map/layers/${key}?lon=${longitude}&lat=${latitude}`)
+      fetch(`/api/map/layers/${key}/full`)
         .then((r) => r.json())
         .then((fc) => {
           setLoadedData((prev) => ({ ...prev, [key]: fc }));
@@ -341,7 +341,7 @@ export default function MapPanel({
           });
         });
     },
-    [latitude, longitude]
+    []
   );
 
   /* ── Fetch layer metadata on mount ───────────────────────────────── */
