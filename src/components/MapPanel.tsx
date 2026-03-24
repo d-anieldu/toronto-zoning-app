@@ -147,12 +147,14 @@ function ViewportParcelLoader({
 
   useEffect(() => {
     const handler = () => {
+      // Only fetch detailed parcels when zoomed in enough for popups
+      if (map.getZoom() < 15) return;
       const b = map.getBounds();
       const cLat = (b.getNorth() + b.getSouth()) / 2;
       const cLon = (b.getEast() + b.getWest()) / 2;
       const rLat = (b.getNorth() - b.getSouth()) / 2;
       const rLon = (b.getEast() - b.getWest()) / 2;
-      const radius = Math.min(Math.max(rLat, rLon), 0.03).toFixed(4);
+      const radius = Math.min(Math.max(rLat, rLon), 0.05).toFixed(4);
       const key = `${cLon.toFixed(4)},${cLat.toFixed(4)},${radius}`;
       if (key === lastBbox.current) return;
       lastBbox.current = key;
@@ -190,6 +192,8 @@ function ViewportParcelLoader({
     };
 
     map.on("moveend", handler);
+    // Fire immediately to load parcels for the initial viewport
+    handler();
     return () => { map.off("moveend", handler); };
   }, [map, onLoad, subjectLon, subjectLat]);
 
@@ -364,6 +368,7 @@ export default function MapPanel({
   const [layerFilter, setLayerFilter] = useState("");
   const [autoLoaded, setAutoLoaded] = useState(false);
   const geoJsonRefs = useRef<Record<string, any>>({});
+  const parcelGenRef = useRef(0);
   const loadedDataRef = useRef(loadedData);
   useEffect(() => {
     loadedDataRef.current = loadedData;
@@ -438,27 +443,31 @@ export default function MapPanel({
     return () => cancelAnimationFrame(id);
   }, [pendingAutoLoad, fetchLayer]);
 
-  /* ── Fetch nearby parcels on mount (with retry for cold-start) ──── */
+  /* ── Fetch full city-wide simplified parcels on mount ─────────── */
+  const [parcelsLoading, setParcelsLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
-    const fetchParcels = async (attempt = 1) => {
+    const load = async (attempt = 1) => {
       try {
-        const r = await fetch(`/api/map/parcels?lon=${longitude}&lat=${latitude}&radius=0.008`);
-        if (!r.ok) throw new Error(`Parcels fetch ${r.status}`);
-        const d = await r.json();
-        if (!cancelled) setParcelData(d);
+        const r = await fetch("/api/map/parcels/full");
+        if (!r.ok) throw new Error(`Parcels full fetch ${r.status}`);
+        const fc = await r.json();
+        if (!cancelled && fc?.features?.length) {
+          setParcelData(fc);
+          parcelGenRef.current += 1;
+        }
       } catch (e) {
         if (attempt < 3 && !cancelled) {
-          // Retry with exponential backoff (backend may be loading the ~50 MB GeoDataFrame)
-          setTimeout(() => fetchParcels(attempt + 1), 3000 * attempt);
-        } else {
-          console.error("Failed to load parcels:", e);
+          setTimeout(() => load(attempt + 1), 3000 * attempt);
+          return;
         }
+        console.error("Failed to load full parcels:", e);
       }
+      if (!cancelled) setParcelsLoading(false);
     };
-    fetchParcels();
+    load();
     return () => { cancelled = true; };
-  }, [latitude, longitude]);
+  }, []);
 
   /* ── Derived: subject parcel edges for dimension labels ──────────── */
   const subjectEdges = useMemo(() => {
@@ -469,9 +478,37 @@ export default function MapPanel({
     return subject?.properties?.edges || [];
   }, [parcelData]);
 
-  /* ── Callback for viewport-based parcel loading ──────────────────── */
+  /* ── Callback for viewport-based parcel loading (merge detailed) ── */
   const handleParcelLoad = useCallback((fc: any) => {
-    setParcelData(fc);
+    setParcelData((prev: any) => {
+      if (!prev || !prev.features?.length) return fc;
+      if (!fc || !fc.features?.length) return prev;
+      // Build a map of incoming detailed features keyed by OBJECTID
+      const incomingById = new Map<number, any>();
+      for (const f of fc.features) {
+        const oid = f.id ?? f.properties?.OBJECTID ?? f.properties?._id;
+        if (oid != null) incomingById.set(oid, f);
+      }
+      // Replace matching simplified features with detailed ones
+      const updated = prev.features.map((f: any) => {
+        const oid = f.id ?? f.properties?.OBJECTID ?? f.properties?._id;
+        return (oid != null && incomingById.has(oid))
+          ? incomingById.get(oid)
+          : f;
+      });
+      // Add any new features not already present
+      const existingIds = new Set(
+        prev.features.map((f: any) => f.id ?? f.properties?.OBJECTID ?? f.properties?._id),
+      );
+      for (const f of fc.features) {
+        const oid = f.id ?? f.properties?.OBJECTID ?? f.properties?._id;
+        if (oid != null && !existingIds.has(oid)) {
+          updated.push(f);
+        }
+      }
+      return { type: "FeatureCollection", features: updated };
+    });
+    parcelGenRef.current += 1;
   }, []);
 
   /* ── Toggle a layer on/off ───────────────────────────────────────── */
@@ -557,7 +594,7 @@ export default function MapPanel({
               parcelData &&
               parcelData.features?.length > 0 && (
                 <GeoJSON
-                  key={"parcels-" + basemap + "-" + parcelData.features.length}
+                  key={"parcels-" + basemap + "-" + parcelGenRef.current}
                   data={parcelData}
                   style={(feature: any) => {
                     const isSub = feature?.properties?.is_subject;
@@ -574,6 +611,10 @@ export default function MapPanel({
                     const p = feature.properties || {};
                     const lines = [];
                     if (p.is_subject) lines.push("<strong>Subject Property</strong>");
+                    if (p.address)
+                      lines.push(
+                        `<strong>${p.address}</strong>`
+                      );
                     if (p.area_sqm)
                       lines.push(
                         `Area: ${Number(p.area_sqm).toFixed(1)} m²`

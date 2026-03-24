@@ -198,21 +198,6 @@ function DecisionBadge({ eventType }: { eventType: string }) {
 
 /* ── Mini-Map ──────────────────────────────────────────────────────── */
 
-function spreadPosition(
-  index: number,
-  total: number,
-  centerLat: number,
-  centerLon: number,
-  radiusKm = 0.04,
-): [number, number] {
-  const angle = (2 * Math.PI * index) / Math.max(total, 1);
-  const dLat = (radiusKm / 111.32) * Math.cos(angle);
-  const dLon =
-    (radiusKm / (111.32 * Math.cos((centerLat * Math.PI) / 180))) *
-    Math.sin(angle);
-  return [centerLat + dLat, centerLon + dLon];
-}
-
 function MiniMap({
   center,
   events,
@@ -236,18 +221,9 @@ function MiniMap({
   }, []);
 
   const positioned = useMemo(() => {
-    const needSpread = events.filter((e) => !e.lat || !e.lng);
-    return events.map((e) => {
-      if (e.lat && e.lng) return { ...e, _lat: e.lat, _lng: e.lng };
-      const si = needSpread.indexOf(e);
-      const [sLat, sLon] = spreadPosition(
-        si,
-        needSpread.length,
-        center.lat,
-        center.lon,
-      );
-      return { ...e, _lat: sLat, _lng: sLon };
-    });
+    return events
+      .filter((e) => e.lat && e.lng)
+      .map((e) => ({ ...e, _lat: e.lat, _lng: e.lng }));
   }, [events, center]);
 
   const iconsByColor = useMemo(() => {
