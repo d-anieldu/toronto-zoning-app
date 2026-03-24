@@ -16,7 +16,7 @@
  *   H. Development Applications (collapsible accordion)
  */
 
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { ChevronDown, CheckCircle2, XCircle, MinusCircle, Gavel, Clock, HardHat } from "lucide-react";
 import { Tag } from "./primitives";
 import SectionNoteEditor from "./SectionNoteEditor";
@@ -215,6 +215,11 @@ function MiniMap({
       import("leaflet"),
       // @ts-expect-error CSS module
       import("leaflet/dist/leaflet.css"),
+      // @ts-expect-error CSS module
+      import("leaflet.markercluster/dist/MarkerCluster.css"),
+      // @ts-expect-error CSS module
+      import("leaflet.markercluster/dist/MarkerCluster.Default.css"),
+      import("leaflet.markercluster"),
     ]).then(([rl, L]) => {
       setMapComponents({ rl, L: L.default || L });
     });
@@ -260,6 +265,54 @@ function MiniMap({
   const { MapContainer, TileLayer, CircleMarker, Circle, Marker, Popup, ZoomControl } =
     mapComponents.rl;
   const L = mapComponents.L;
+  const { useMap } = mapComponents.rl;
+
+  /* ── Imperative cluster layer using leaflet.markercluster ─────── */
+  function ClusteredMarkers({ items, colors, iconFn }: { items: any[]; colors: Record<string, string>; iconFn: (c: string) => any }) {
+    const map = useMap();
+    const clusterRef = useRef<any>(null);
+
+    useEffect(() => {
+      if (!map || items.length === 0) return;
+
+      const cluster = L.markerClusterGroup({
+        maxClusterRadius: 40,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        iconCreateFunction: (c: any) => {
+          const count = c.getChildCount();
+          return L.divIcon({
+            html: `<div style="width:28px;height:28px;border-radius:50%;background:#6366f1;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);">${count}</div>`,
+            className: "",
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+          });
+        },
+      });
+
+      for (const e of items) {
+        const color = colors[e.event_type] || "#94a3b8";
+        const marker = L.marker([e._lat, e._lng], { icon: iconFn(color) });
+        const label = EVENT_TYPE_LABELS[e.event_type] || e.event_type;
+        const parts = [
+          `<p style="font-weight:600;font-size:11px;color:#1c1917;">${label}</p>`,
+          `<p style="font-size:11px;font-weight:500;">${e.address || "Unknown"}</p>`,
+        ];
+        if (e.event_date) parts.push(`<p style="font-size:11px;color:#a8a29e;">${formatDate(e.event_date)}</p>`);
+        if (e._description) parts.push(`<p style="font-size:11px;color:#78716c;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e._description}</p>`);
+        if (e.distance_m != null) parts.push(`<p style="font-size:11px;color:#a8a29e;">${e.distance_m}m away</p>`);
+        if (e.url) parts.push(`<a href="${e.url}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#6366f1;">View details ↗</a>`);
+        marker.bindPopup(`<div style="line-height:1.5;">${parts.join("")}</div>`, { maxWidth: 220 });
+        cluster.addLayer(marker);
+      }
+
+      map.addLayer(cluster);
+      clusterRef.current = cluster;
+      return () => { map.removeLayer(cluster); };
+    }, [map, items, colors, iconFn]);
+
+    return null;
+  }
 
   const pinColors: Record<string, string> = {
     coa_approved: "#22c55e",
@@ -324,46 +377,7 @@ function MiniMap({
             weight: 2,
           }}
         />
-        {positioned.map((e: any, i: number) => {
-          const color = pinColors[e.event_type] || "#94a3b8";
-          return (
-            <Marker
-              key={e._key || e.id || i}
-              position={[e._lat, e._lng]}
-              icon={markerIcon(color)}
-            >
-              <Popup>
-                <div className="text-[11px] leading-relaxed max-w-[200px]">
-                  <p className="font-semibold text-stone-800">
-                    {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
-                  </p>
-                  <p className="font-medium mt-0.5">{e.address || "Unknown"}</p>
-                  {e.event_date && (
-                    <p className="text-stone-400">{formatDate(e.event_date)}</p>
-                  )}
-                  {e._description && (
-                    <p className="text-stone-500 line-clamp-2 mt-0.5">
-                      {e._description}
-                    </p>
-                  )}
-                  {e.distance_m != null && (
-                    <p className="text-stone-400">{e.distance_m}m away</p>
-                  )}
-                  {e.url && (
-                    <a
-                      href={e.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-indigo-500 mt-1 inline-block"
-                    >
-                      View details ↗
-                    </a>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+        <ClusteredMarkers items={positioned} colors={pinColors} iconFn={markerIcon} />
       </MapContainer>
       {/* Glass legend overlay */}
       <div className="absolute bottom-4 left-4 right-4 z-[400] flex items-center justify-center gap-4 px-4 py-2 rounded-lg bg-white/70 backdrop-blur-sm text-[11px] font-semibold text-stone-500 uppercase tracking-tight">
