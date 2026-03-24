@@ -171,7 +171,7 @@ export default function ReportEditor({ initialReport }: ReportEditorProps) {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className="w-full px-6 py-6">
         {/* Saving indicator */}
         {saving && (
           <div className="fixed right-4 top-4 z-50 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-medium text-stone-500 shadow-sm">
