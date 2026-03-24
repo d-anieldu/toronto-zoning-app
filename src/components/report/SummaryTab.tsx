@@ -12,7 +12,7 @@
 
 import {
   Ruler, BarChart3, Building2, Maximize2, MapPin, Square, Car,
-  Info, AlertTriangle, Train, Landmark, CheckCircle2, XCircle,
+  Info, AlertTriangle, Train, Landmark, CheckCircle2, XCircle, Home,
   type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -88,9 +88,29 @@ function computeOpportunity(dev: any, eff: any) {
   if (fsiAllowed != null && fsiAllowed >= 3) score += 15;
   else if (fsiAllowed != null && fsiAllowed >= 1.5) score += 5;
   score = Math.max(0, Math.min(100, score));
-  if (score >= 70) return { grade: "Strong",   color: "emerald", summary: "Good as-of-right development potential with few constraints." };
-  if (score >= 40) return { grade: "Moderate", color: "amber",   summary: "Some constraints to navigate — minor variances or studies may be required." };
-  return              { grade: "Limited",  color: "red",     summary: "Significant constraints are present. Pre-consultation with the City is strongly recommended." };
+  if (score >= 70) return { grade: "Strong",   color: "emerald", summary: "Good as-of-right development potential with few constraints.", score };
+  if (score >= 40) return { grade: "Moderate", color: "amber",   summary: "Some constraints to navigate — minor variances or studies may be required.", score };
+  return              { grade: "Limited",  color: "red",     summary: "Significant constraints are present. Pre-consultation with the City is strongly recommended.", score };
+}
+
+/* ── Typology lookup: zone code → permitted building types ──────── */
+function getPermittedTypologies(zoneCode: string): Array<{ label: string; Icon: typeof Home }> {
+  const prefix = zoneCode.match(/^[A-Z]+/)?.[0] || "";
+  const map: Record<string, Array<{ label: string; Icon: typeof Home }>> = {
+    RD: [{ label: "Single Detached", Icon: Home }, { label: "Semi-Detached", Icon: Building2 }],
+    RS: [{ label: "Semi-Detached", Icon: Building2 }, { label: "Single Detached", Icon: Home }],
+    RT: [{ label: "Townhouse", Icon: Building2 }, { label: "Semi-Detached", Icon: Building2 }],
+    RB: [{ label: "Small Lot Residential", Icon: Home }],
+    RM: [{ label: "Multiple Dwellings", Icon: Building2 }, { label: "Townhouse", Icon: Building2 }, { label: "Stacked Townhouse", Icon: Building2 }],
+    RA: [{ label: "Apartment", Icon: Building2 }, { label: "Multiple Dwelling", Icon: Building2 }],
+    CR: [{ label: "Mixed-Use", Icon: Building2 }, { label: "Retail", Icon: Building2 }],
+    CS: [{ label: "Commercial Shopfront", Icon: Building2 }],
+    CL: [{ label: "Neighbourhood Commercial", Icon: Building2 }],
+    E:  [{ label: "Employment", Icon: Building2 }, { label: "Light Industrial", Icon: Building2 }],
+    EL: [{ label: "Light Industrial", Icon: Building2 }],
+    I:  [{ label: "Institutional", Icon: Building2 }],
+  };
+  return map[zoneCode] || map[prefix] || [];
 }
 
 /* ── PropertySnapshotCard ─────────────────────────────────────────── */
@@ -380,40 +400,68 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
   const isFormerBylaw = !!dev.former_bylaw_notice?.applies;
   const confGrade = confidence?.grade;
 
+  /* ── opportunity grade + typologies (for bento grid) ── */
+  const opportunity = computeOpportunity(dev, eff);
+  const summaryZoneCode = eff.zone_code || zoneLabel.zone_code || "";
+  const permittedTypologies = getPermittedTypologies(summaryZoneCode);
+
   return (
     <div className="space-y-5">
       {/* ============================================================ */}
-      {/*  MAP                                                          */}
+      {/*  BENTO GRID — Opportunity Grade + Permitted Typologies        */}
       {/* ============================================================ */}
-      {data.coordinates?.latitude && data.coordinates?.longitude && (
-        <div className="overflow-hidden rounded-xl border border-[var(--border)] shadow-sm" style={{ height: "55vh" }}>
-          <MapPanel
-            latitude={data.coordinates.latitude}
-            longitude={data.coordinates.longitude}
-            activeSiteLayers={layers}
-            zoneCode={eff.zone_code || eff.zone_label?.zone_code || ""}
-            zoneString={eff.zone_string || ""}
-            lotArea={dev.lot?.area_sqm}
-            frontage={dev.lot?.frontage_m}
-          />
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+        {/* Opportunity Grade */}
+        <div className="md:col-span-5 bg-white border border-stone-200 rounded-xl p-6 shadow-sm flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-1 min-w-0">
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Opportunity Grade</span>
+            <h3 className={`text-2xl font-extrabold font-heading ${
+              opportunity.color === "emerald" ? "text-emerald-600"
+              : opportunity.color === "amber" ? "text-amber-600"
+              : "text-red-600"
+            }`}>{opportunity.grade}</h3>
+            <p className="text-sm text-stone-500 leading-relaxed">{opportunity.summary}</p>
+          </div>
+          <div className="relative flex items-center justify-center shrink-0">
+            <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="34" fill="transparent" stroke="currentColor" strokeWidth="6" className="text-stone-100" />
+              <circle
+                cx="40" cy="40" r="34"
+                fill="transparent"
+                stroke="currentColor"
+                strokeWidth="6"
+                className={opportunity.color === "emerald" ? "text-emerald-500" : opportunity.color === "amber" ? "text-amber-500" : "text-red-500"}
+                strokeDasharray={`${(2 * Math.PI * 34).toFixed(1)}`}
+                strokeDashoffset={`${(2 * Math.PI * 34 * (1 - opportunity.score / 100)).toFixed(1)}`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="absolute text-lg font-bold text-stone-900">{opportunity.score}</span>
+          </div>
         </div>
-      )}
 
-      {/* ============================================================ */}
-      {/*  PROPERTY SNAPSHOT — current state + opportunity              */}
-      {/* ============================================================ */}
-      <PropertySnapshotCard
-        data={data}
-        editMode={editMode}
-        userEdits={userEdits}
-        onEditField={onEditField}
-        onRevertField={onRevertField}
-      />
+        {/* Permitted Typologies */}
+        <div className="md:col-span-7 bg-white border border-stone-200 rounded-xl p-6 shadow-sm flex flex-col justify-center">
+          <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-4">Permitted Typologies</span>
+          {permittedTypologies.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {permittedTypologies.map((t) => (
+                <div key={t.label} className="flex items-center gap-2 px-4 py-3 bg-stone-50 rounded-xl border border-stone-100 hover:border-emerald-200 hover:bg-emerald-50 transition-all">
+                  <t.Icon className="h-5 w-5 text-emerald-600" />
+                  <span className="text-sm font-semibold text-stone-800">{t.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-stone-400">See Uses &amp; Parking tab for full list.</p>
+          )}
+        </div>
+      </div>
 
       {/* ============================================================ */}
       {/*  KEY METRICS — 6-card grid                                    */}
       {/* ============================================================ */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {/* Height */}
         <MetricCard
           Icon={Ruler}
@@ -517,23 +565,85 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           reportId={reportId}
         />
 
-        {/* Parking Zone */}
-        <MetricCard
-          Icon={Car}
-          label="Parking Zone"
-          value={(parkingZoneField.value as string) || eff.parking_zone || "—"}
-          sub={
-            parkingSpacesField.value != null
-              ? `${parkingSpacesField.value} residential spaces est.`
-              : undefined
-          }
-          editFieldProps={ep("effective_standards.parking.parking_zone", parkingZoneField)}
-          editSubProps={parkingSpacesField.value != null ? ep("development_potential.parking_estimate.residential_spaces", parkingSpacesField) : undefined}
-          address={data.address}
-          fieldPath="effective_standards.parking.parking_zone"
-          reportId={reportId}
-        />
       </div>
+
+      {/* ============================================================ */}
+      {/*  SITE CONSTRAINTS — left-border accent cards (top 3)         */}
+      {/* ============================================================ */}
+      {constraints.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+            <h3 className="text-lg font-bold text-stone-900">Site Constraints</h3>
+            <span className="text-xs text-stone-400 font-medium">
+              {constraints.length} Alert{constraints.length !== 1 ? "s" : ""} Detected
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {constraints
+              .slice()
+              .sort((a: any, b: any) => {
+                const order: Record<string, number> = { high: 0, medium: 1, low: 2, info: 3 };
+                return (order[a.severity] ?? 4) - (order[b.severity] ?? 4);
+              })
+              .slice(0, 3)
+              .map((c: any, i: number) => (
+                <div
+                  key={i}
+                  className={`bg-white p-5 rounded-xl shadow-sm flex items-start gap-3 hover:bg-stone-50 transition-colors border-l-4 ${
+                    c.severity === "high"
+                      ? "border-l-red-500"
+                      : c.severity === "medium"
+                        ? "border-l-amber-500"
+                        : c.severity === "info"
+                          ? "border-l-sky-500"
+                          : "border-l-stone-300"
+                  }`}
+                >
+                  <AlertTriangle className={`mt-0.5 h-5 w-5 shrink-0 ${
+                    c.severity === "high" ? "text-red-500"
+                    : c.severity === "medium" ? "text-amber-500"
+                    : c.severity === "info" ? "text-sky-500"
+                    : "text-stone-400"
+                  }`} />
+                  <div>
+                    <span className="font-bold text-stone-900 text-sm">{c.label || c.layer || c.tag || "Constraint"}</span>
+                    {(c.detail || c.impact) && (
+                      <p className="text-xs text-stone-500 mt-1 leading-snug">{c.detail || c.impact}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/*  MAP                                                          */}
+      {/* ============================================================ */}
+      {data.coordinates?.latitude && data.coordinates?.longitude && (
+        <div className="overflow-hidden rounded-xl border border-[var(--border)] shadow-sm" style={{ height: "280px" }}>
+          <MapPanel
+            latitude={data.coordinates.latitude}
+            longitude={data.coordinates.longitude}
+            activeSiteLayers={layers}
+            zoneCode={eff.zone_code || eff.zone_label?.zone_code || ""}
+            zoneString={eff.zone_string || ""}
+            lotArea={dev.lot?.area_sqm}
+            frontage={dev.lot?.frontage_m}
+          />
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/*  PROPERTY SNAPSHOT — current state + opportunity              */}
+      {/* ============================================================ */}
+      <PropertySnapshotCard
+        data={data}
+        editMode={editMode}
+        userEdits={userEdits}
+        onEditField={onEditField}
+        onRevertField={onRevertField}
+      />
 
       {/* ============================================================ */}
       {/*  SETBACKS — compact bar                                       */}
@@ -887,10 +997,10 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
       {/*  DEVELOPMENT CONSTRAINTS — severity-sorted                    */}
       {/* ============================================================ */}
       {constraints.length > 0 && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <p className="font-heading text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-              Development Constraints
+        <div className="space-y-3">
+          <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+            <p className="text-sm font-bold text-stone-900">
+              All Constraints
             </p>
             <div className="flex items-center gap-2">
               {highConstraints.length > 0 && (
@@ -907,6 +1017,7 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           </div>
           <div className="space-y-2">
             {constraints
+              .slice()
               .sort((a: any, b: any) => {
                 const order: Record<string, number> = { high: 0, medium: 1, low: 2, info: 3 };
                 return (order[a.severity] ?? 4) - (order[b.severity] ?? 4);
@@ -914,25 +1025,22 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
               .map((c: any, i: number) => (
                 <div
                   key={i}
-                  className={`flex items-start gap-3 rounded-lg border p-3 ${
+                  className={`flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm hover:bg-stone-50 transition-colors border-l-4 ${
                     c.severity === "high"
-                      ? "border-red-200 bg-red-50/50"
+                      ? "border-l-red-500"
                       : c.severity === "medium"
-                        ? "border-amber-200 bg-amber-50/50"
+                        ? "border-l-amber-500"
                         : c.severity === "info"
-                          ? "border-sky-200 bg-sky-50/50"
-                          : "border-[var(--border)] bg-stone-50/50"
+                          ? "border-l-sky-500"
+                          : "border-l-stone-300"
                   }`}
                 >
-                  <span className={`mt-0.5 shrink-0 text-[14px] ${severityDotColor[c.severity] || "text-sky-500"}`} aria-hidden="true">
-                    {severityIcon[c.severity] || "●"}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-[var(--text-primary)]">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-stone-900">
                       {c.label || c.layer || c.tag || "Constraint"}
                     </p>
                     {(c.detail || c.impact) && (
-                      <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">
+                      <p className="mt-0.5 text-[12px] text-stone-500">
                         {c.detail || c.impact}
                       </p>
                     )}
