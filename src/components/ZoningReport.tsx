@@ -125,6 +125,30 @@ export default function ZoningReport({
   const hasEffError = eff.error;
   const hasDevError = dev.error;
 
+  /* -------- preload nearby activity data on mount -------- */
+  const [nearbyPreload, setNearbyPreload] = useState<Record<string, any> | null>(
+    data.nearby_activity || null,
+  );
+
+  useEffect(() => {
+    if (data.nearby_activity || !coords.latitude || !coords.longitude) return;
+    let cancelled = false;
+    const params = new URLSearchParams({
+      lon: String(coords.longitude),
+      lat: String(coords.latitude),
+      radius: "500",
+    });
+    const zc = eff.zone_code || "";
+    if (zc) params.set("zone_code", zc);
+    if (data.address) params.set("address", data.address);
+
+    fetch(`/api/nearby-activity/stats?${params}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => { if (!cancelled && json) setNearbyPreload(json); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [data.nearby_activity, coords.latitude, coords.longitude, eff.zone_code, data.address]);
+
   /* -------- policy conformity score for tab badge -------- */
   const conformityScore = useMemo(() => {
     const pc = data.policy_conformity;
@@ -456,7 +480,7 @@ export default function ZoningReport({
               <ConstraintsContextTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditField={onEditField} onRevertField={onRevertField} onEditNote={onEditNote} reportId={reportId} />
             )}
             {activeTab === "nearby" && (
-              <NearbyActivityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
+              <NearbyActivityTab data={nearbyPreload ? { ...data, nearby_activity: nearbyPreload } : data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
             )}
             {activeTab === "conformity" && (
               <PolicyConformityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
