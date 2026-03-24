@@ -189,8 +189,8 @@ export default function SearchForm() {
 
   return (
     <div>
-      {/* Search bar */}
-      <form onSubmit={handleSubmit} className="relative">
+      {/* Search bar — centered */}
+      <form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
@@ -339,7 +339,7 @@ export default function SearchForm() {
 
       {/* Loading state — educational, shows what's happening */}
       {loading && (
-        <div className="mt-10 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
+        <div className="mt-10 max-w-4xl mx-auto rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 shadow-sm">
           <div className="flex flex-col items-center justify-center">
             <div className="relative">
               <div className="h-14 w-14 rounded-full border-2 border-[var(--border)]" />
@@ -377,7 +377,7 @@ export default function SearchForm() {
 
       {/* Error */}
       {error && (
-        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+        <div className="mt-6 max-w-4xl mx-auto rounded-xl border border-red-200 bg-red-50 p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 h-4 w-4 text-red-500" />
             <div>

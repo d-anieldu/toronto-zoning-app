@@ -46,8 +46,8 @@ export default function DashboardPage() {
       {/* ── Main content ── */}
       <main className="max-w-screen-2xl mx-auto px-8 py-12 space-y-20">
         {/* Search hero */}
-        <section className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="space-y-2">
+        <section className="space-y-8">
+          <div className="max-w-4xl mx-auto text-center space-y-2">
             <span className="text-xs tracking-widest uppercase text-stone-500 font-bold">
               Zoning Lookup
             </span>
