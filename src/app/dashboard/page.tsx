@@ -20,9 +20,7 @@ export default function DashboardPage() {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium font-heading tracking-wide">
             {[
               { label: "Dashboard", href: "/dashboard", active: true },
-              { label: "Compare", href: "/compare", active: false },
               { label: "Reports", href: "/reports", active: false },
-              { label: "Projects", href: "/projects", active: false },
             ].map((item) => (
               <Link
                 key={item.label}
