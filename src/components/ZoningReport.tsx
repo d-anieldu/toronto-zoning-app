@@ -9,7 +9,7 @@
  * at the top, then delegates to tab components for the rest.
  */
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Zap, Building2, Home, ClipboardList, MapPin, ScrollText,
   Copy, Check, Printer, ChevronUp, Share2, Loader2,
