@@ -609,30 +609,67 @@ export default function MapPanel({
                   }}
                   onEachFeature={(feature, layer) => {
                     const p = feature.properties || {};
-                    const lines = [];
-                    if (p.is_subject) lines.push("<strong>Subject Property</strong>");
-                    if (p.address)
-                      lines.push(
-                        `<strong>${p.address}</strong>`
-                      );
-                    if (p.area_sqm)
-                      lines.push(
-                        `Area: ${Number(p.area_sqm).toFixed(1)} m²`
-                      );
-                    if (p.frontage_m)
-                      lines.push(
-                        `Frontage: ${Number(p.frontage_m).toFixed(1)} m`
-                      );
-                    if (p.depth_m)
-                      lines.push(
-                        `Depth: ${Number(p.depth_m).toFixed(1)} m`
-                      );
-                    if (lines.length) {
-                      layer.bindPopup(
-                        `<div style="font-size:12px">${lines.join("<br/>")}</div>`
-                      );
-                    }
-                  }}
+                    // Compute centroid from geometry for reverse geocoding
+                    const coords = feature.geometry?.coordinates;
+                    let centroidLat = 0;
+                    let centroidLon = 0;
+                    try {
+                      if (feature.geometry?.type === "Polygon" && coords?.[0]) {
+                        const ring = coords[0];
+                        let sumLon = 0, sumLat = 0;
+                        for (const c of ring) { sumLon += c[0]; sumLat += c[1]; }
+                        centroidLon = sumLon / ring.length;
+                        centroidLat = sumLat / ring.length;
+                      }
+                    } catch { /* skip */ }
+
+                    layer.on("click", () => {
+                      // Build popup with known data first
+                      const lines: string[] = [];
+                      if (p.is_subject) lines.push("<strong>Subject Property</strong>");
+                      if (p.address) lines.push(`<strong>${p.address}</strong>`);
+                      if (p.area_sqm) lines.push(`Area: ${Number(p.area_sqm).toFixed(1)} m²`);
+                      if (p.frontage_m) lines.push(`Frontage: ${Number(p.frontage_m).toFixed(1)} m`);
+                      if (p.depth_m) lines.push(`Depth: ${Number(p.depth_m).toFixed(1)} m`);
+
+                      // If no address yet, reverse geocode from centroid
+                      if (!p.address && centroidLon && centroidLat) {
+                        lines.unshift("<em>Loading address...</em>");
+                        layer.bindPopup(`<div style="font-size:12px">${lines.join("<br/>")}</div>`).openPopup();
+
+                        fetch(
+                          `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?location=${centroidLon},${centroidLat}&f=json&outSR=4326&locationType=street&featureTypes=StreetAddress`
+                        )
+                          .then((r) => r.json())
+                          .then((data) => {
+                            const addr = data?.address;
+                            const short = addr?.ShortLabel || addr?.Address || addr?.Match_addr;
+                            const addrStr = short ? short.split(",")[0].trim() : null;
+                            // Cache it on the feature for next click
+                            if (addrStr) p.address = addrStr;
+                            // Rebuild popup with address
+                            const updatedLines: string[] = [];
+                            if (p.is_subject) updatedLines.push("<strong>Subject Property</strong>");
+                            if (addrStr) updatedLines.push(`<strong>${addrStr}</strong>`);
+                            if (p.area_sqm) updatedLines.push(`Area: ${Number(p.area_sqm).toFixed(1)} m²`);
+                            if (p.frontage_m) updatedLines.push(`Frontage: ${Number(p.frontage_m).toFixed(1)} m`);
+                            if (p.depth_m) updatedLines.push(`Depth: ${Number(p.depth_m).toFixed(1)} m`);
+                            if (updatedLines.length) {
+                              layer.setPopupContent(`<div style="font-size:12px">${updatedLines.join("<br/>")}</div>`);
+                            }
+                          })
+                          .catch(() => {
+                            // Remove "Loading address..." on failure
+                            const fallback = lines.filter((l) => !l.includes("Loading"));
+                            if (fallback.length) {
+                              layer.setPopupContent(`<div style="font-size:12px">${fallback.join("<br/>")}</div>`);
+                            }
+                          });
+                      } else if (lines.length) {
+                        layer.bindPopup(`<div style="font-size:12px">${lines.join("<br/>")}</div>`).openPopup();
+                      }
+                    });
+                  }}}
                 />
               )}
 
