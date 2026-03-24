@@ -444,7 +444,7 @@ export default function MapPanel({
             center={[latitude, longitude]}
             zoom={17}
             maxZoom={22}
-            scrollWheelZoom={true}
+            scrollWheelZoom={false}
             className="h-full w-full"
             style={{ height: "100%" }}
           >
