@@ -208,6 +208,8 @@ function MiniMap({
   radiusM: number;
 }) {
   const [mapComponents, setMapComponents] = useState<any>(null);
+  const [showParcels, setShowParcels] = useState(true);
+  const [showZoning, setShowZoning] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -220,8 +222,9 @@ function MiniMap({
       // @ts-expect-error CSS module
       import("leaflet.markercluster/dist/MarkerCluster.Default.css"),
       import("leaflet.markercluster"),
-    ]).then(([rl, L]) => {
-      setMapComponents({ rl, L: L.default || L });
+      import("protomaps-leaflet"),
+    ]).then(([rl, L, , , , , pm]) => {
+      setMapComponents({ rl, L: L.default || L, pm });
     });
   }, []);
 
@@ -265,7 +268,59 @@ function MiniMap({
   const { MapContainer, TileLayer, CircleMarker, Circle, Marker, Popup, ZoomControl } =
     mapComponents.rl;
   const L = mapComponents.L;
+  const pm = mapComponents.pm;
   const { useMap } = mapComponents.rl;
+
+  const TILES_BASE =
+    process.env.NEXT_PUBLIC_TILES_URL ||
+    "https://pub-dae336832d5c40efb5ed8acd0fb8d3c1.r2.dev/tiles";
+
+  /* ── PMTiles context layers (property boundaries + zoning) ────── */
+  function ContextLayers({ parcels, zoning }: { parcels: boolean; zoning: boolean }) {
+    const map = useMap();
+    const parcelRef = useRef<any>(null);
+    const zoningRef = useRef<any>(null);
+
+    useEffect(() => {
+      if (!parcels) {
+        if (parcelRef.current) { map.removeLayer(parcelRef.current); parcelRef.current = null; }
+        return;
+      }
+      const layer = pm.leafletLayer({
+        url: `${TILES_BASE}/property_boundaries.pmtiles`,
+        paintRules: [
+          { dataLayer: "property_boundaries", symbolizer: new pm.PolygonSymbolizer({ fill: "#a8a29e", opacity: 0.03 }) },
+          { dataLayer: "property_boundaries", symbolizer: new pm.LineSymbolizer({ color: "#a8a29e", width: 0.8 }) },
+        ],
+        maxDataZoom: 14,
+        backgroundColor: "transparent",
+      });
+      parcelRef.current = layer;
+      map.addLayer(layer as unknown as L.Layer);
+      return () => { if (parcelRef.current) { map.removeLayer(parcelRef.current as unknown as L.Layer); parcelRef.current = null; } };
+    }, [map, parcels]);
+
+    useEffect(() => {
+      if (!zoning) {
+        if (zoningRef.current) { map.removeLayer(zoningRef.current); zoningRef.current = null; }
+        return;
+      }
+      const layer = pm.leafletLayer({
+        url: `${TILES_BASE}/zoning_area.pmtiles`,
+        paintRules: [
+          { dataLayer: "zoning_area", symbolizer: new pm.PolygonSymbolizer({ fill: "#6366f1", opacity: 0.06 }) },
+          { dataLayer: "zoning_area", symbolizer: new pm.LineSymbolizer({ color: "#6366f1", width: 1 }) },
+        ],
+        maxDataZoom: 14,
+        backgroundColor: "transparent",
+      });
+      zoningRef.current = layer;
+      map.addLayer(layer as unknown as L.Layer);
+      return () => { if (zoningRef.current) { map.removeLayer(zoningRef.current as unknown as L.Layer); zoningRef.current = null; } };
+    }, [map, zoning]);
+
+    return null;
+  }
 
   /* ── Imperative cluster layer using leaflet.markercluster ─────── */
   function ClusteredMarkers({ items, colors, iconFn }: { items: any[]; colors: Record<string, string>; iconFn: (c: string) => any }) {
@@ -378,7 +433,31 @@ function MiniMap({
           }}
         />
         <ClusteredMarkers items={positioned} colors={pinColors} iconFn={markerIcon} />
+        <ContextLayers parcels={showParcels} zoning={showZoning} />
       </MapContainer>
+      {/* Layer toggles — top left */}
+      <div className="absolute top-3 left-3 z-[400] flex gap-1.5">
+        <button
+          onClick={() => setShowParcels((v) => !v)}
+          className={`px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors border ${
+            showParcels
+              ? "bg-white/90 border-stone-300 text-stone-700 shadow-sm"
+              : "bg-white/50 border-stone-200 text-stone-400"
+          }`}
+        >
+          Parcels
+        </button>
+        <button
+          onClick={() => setShowZoning((v) => !v)}
+          className={`px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-colors border ${
+            showZoning
+              ? "bg-indigo-50/90 border-indigo-300 text-indigo-700 shadow-sm"
+              : "bg-white/50 border-stone-200 text-stone-400"
+          }`}
+        >
+          Zoning
+        </button>
+      </div>
       {/* Glass legend overlay */}
       <div className="absolute bottom-4 left-4 right-4 z-[400] flex items-center justify-center gap-4 px-4 py-2 rounded-lg bg-white/70 backdrop-blur-sm text-[11px] font-semibold text-stone-500 uppercase tracking-tight">
         <div className="flex items-center gap-1.5">
