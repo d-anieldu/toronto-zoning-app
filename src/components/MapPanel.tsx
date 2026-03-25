@@ -568,29 +568,7 @@ export default function MapPanel({
     return () => cancelAnimationFrame(id);
   }, [pendingAutoLoad]);
 
-  /* ── Fetch full city-wide simplified parcels on mount ─────────── */
-  useEffect(() => {
-    let cancelled = false;
-    const load = async (attempt = 1) => {
-      try {
-        const r = await fetch("/api/map/parcels/full");
-        if (!r.ok) throw new Error(`Parcels full fetch ${r.status}`);
-        const fc = await r.json();
-        if (!cancelled && fc?.features?.length) {
-          setParcelData(fc);
-          parcelGenRef.current += 1;
-        }
-      } catch (e) {
-        if (attempt < 3 && !cancelled) {
-          setTimeout(() => load(attempt + 1), 3000 * attempt);
-          return;
-        }
-        console.error("Failed to load full parcels:", e);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, []);
+  /* ── City-wide parcels now rendered via property_boundaries PMTiles ── */
 
   /* ── Fetch layer metadata on mount ───────────────────────────────── */
   useEffect(() => {
@@ -611,34 +589,8 @@ export default function MapPanel({
 
   /* ── Callback for viewport-based parcel loading (merge detailed) ── */
   const handleParcelLoad = useCallback((fc: any) => {
-    setParcelData((prev: any) => {
-      if (!prev || !prev.features?.length) return fc;
-      if (!fc || !fc.features?.length) return prev;
-      // Build a map of incoming detailed features keyed by OBJECTID
-      const incomingById = new Map<number, any>();
-      for (const f of fc.features) {
-        const oid = f.id ?? f.properties?.OBJECTID ?? f.properties?._id;
-        if (oid != null) incomingById.set(oid, f);
-      }
-      // Replace matching simplified features with detailed ones
-      const updated = prev.features.map((f: any) => {
-        const oid = f.id ?? f.properties?.OBJECTID ?? f.properties?._id;
-        return (oid != null && incomingById.has(oid))
-          ? incomingById.get(oid)
-          : f;
-      });
-      // Add any new features not already present
-      const existingIds = new Set(
-        prev.features.map((f: any) => f.id ?? f.properties?.OBJECTID ?? f.properties?._id),
-      );
-      for (const f of fc.features) {
-        const oid = f.id ?? f.properties?.OBJECTID ?? f.properties?._id;
-        if (oid != null && !existingIds.has(oid)) {
-          updated.push(f);
-        }
-      }
-      return { type: "FeatureCollection", features: updated };
-    });
+    if (!fc || !fc.features?.length) return;
+    setParcelData(fc);
     parcelGenRef.current += 1;
   }, []);
 
@@ -821,6 +773,18 @@ export default function MapPanel({
                   interactive={false}
                 />
               ))}
+
+            {/* Property boundaries (PMTiles from R2 CDN) */}
+            {parcelVisible && (
+              <PMTilesOverlay
+                key="property_boundaries"
+                layerKey="property_boundaries"
+                color={basemap === "satellite" ? "#94a3b8" : "#a8a29e"}
+                weight={1}
+                fillOpacity={0.02}
+                isPoint={false}
+              />
+            )}
 
             {/* Active GIS layers (PMTiles from R2 CDN) */}
             {Array.from(activeLayers).map((key) => {
