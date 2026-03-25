@@ -13,6 +13,17 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import {
+  leafletLayer,
+  PolygonSymbolizer,
+  LineSymbolizer,
+  CircleSymbolizer,
+} from "protomaps-leaflet";
+
+/* ── PMTiles base URL (Cloudflare R2 public bucket) ────────────────── */
+const TILES_BASE_URL =
+  process.env.NEXT_PUBLIC_TILES_URL ||
+  "https://pub-dae336832d5c40efb5ed8acd0fb8d3c1.r2.dev/tiles";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
@@ -140,6 +151,138 @@ function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
     map.on("zoomend", handler);
     return () => { map.off("zoomend", handler); };
   }, [map, onZoom]);
+  return null;
+}
+
+/* ── PMTiles overlay layer ─────────────────────────────────────────── */
+
+/**
+ * Renders a single PMTiles layer on the Leaflet map using protomaps-leaflet
+ * canvas tiles. The layer is added when mounted and removed on unmount.
+ */
+function PMTilesOverlay({
+  layerKey,
+  color,
+  weight,
+  fillOpacity,
+  isPoint,
+}: {
+  layerKey: string;
+  color: string;
+  weight: number;
+  fillOpacity: number;
+  isPoint: boolean;
+}) {
+  const map = useMap();
+  const layerRef = useRef<any>(null);
+
+  useEffect(() => {
+    const url = `${TILES_BASE_URL}/${layerKey}.pmtiles`;
+
+    const paintRules = isPoint
+      ? [
+          {
+            dataLayer: layerKey,
+            symbolizer: new CircleSymbolizer({
+              radius: 6,
+              fill: color,
+              stroke: "#ffffff",
+              width: 1.5,
+              opacity: 0.85,
+            }),
+          },
+        ]
+      : [
+          {
+            dataLayer: layerKey,
+            symbolizer: new PolygonSymbolizer({
+              fill: color,
+              opacity: fillOpacity,
+            }),
+          },
+          {
+            dataLayer: layerKey,
+            symbolizer: new LineSymbolizer({
+              color: color,
+              width: weight,
+            }),
+          },
+        ];
+
+    const layer = leafletLayer({
+      url,
+      paintRules,
+      maxDataZoom: 14,
+      backgroundColor: "transparent",
+    });
+
+    layerRef.current = layer;
+    map.addLayer(layer as unknown as L.Layer);
+
+    return () => {
+      if (layerRef.current) {
+        map.removeLayer(layerRef.current as unknown as L.Layer);
+        layerRef.current = null;
+      }
+    };
+  }, [map, layerKey, color, weight, fillOpacity, isPoint]);
+
+  return null;
+}
+
+/* ── PMTiles click handler for popups ────────────────────────────── */
+
+function PMTilesClickHandler({
+  activeLayers,
+  metadata,
+}: {
+  activeLayers: Set<string>;
+  metadata: LayerMeta[];
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    const handler = (e: L.LeafletMouseEvent) => {
+      const layers: any[] = [];
+      map.eachLayer((l: any) => {
+        if (typeof l.queryTileFeaturesDebug === "function") layers.push(l);
+      });
+
+      const allPicked: { layerName: string; props: Record<string, any> }[] = [];
+
+      for (const layer of layers) {
+        const picked = (layer as any).queryTileFeaturesDebug(
+          e.latlng.lng,
+          e.latlng.lat,
+          12
+        );
+        if (picked && picked.size > 0) {
+          for (const [, features] of picked) {
+            for (const pf of features) {
+              if (!activeLayers.has(pf.layerName)) continue;
+              allPicked.push({ layerName: pf.layerName, props: pf.feature.props });
+            }
+          }
+        }
+      }
+
+      if (allPicked.length === 0) return;
+
+      // Build popup from the first picked feature
+      const { layerName, props } = allPicked[0];
+      const html = featurePopupHtml(props, layerName);
+      L.popup({ maxWidth: 360, maxHeight: 300 })
+        .setLatLng(e.latlng)
+        .setContent(html)
+        .openOn(map);
+    };
+
+    map.on("click", handler);
+    return () => {
+      map.off("click", handler);
+    };
+  }, [map, activeLayers, metadata]);
+
   return null;
 }
 
@@ -382,20 +525,13 @@ export default function MapPanel({
   /* ── State ────────────────────────────────────────────────────────── */
   const [metadata, setMetadata] = useState<LayerMeta[]>([]);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
-  const [loadedData, setLoadedData] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState<Set<string>>(new Set());
   const [parcelData, setParcelData] = useState<any>(null);
   const [parcelVisible, setParcelVisible] = useState(true);
   const [basemap, setBasemap] = useState<BasemapKey>("street");
   const [layerFilter, setLayerFilter] = useState("");
   const [autoLoaded, setAutoLoaded] = useState(false);
-  const geoJsonRefs = useRef<Record<string, any>>({});
   const parcelGenRef = useRef(0);
-  const loadedDataRef = useRef(loadedData);
   const [mapZoom, setMapZoom] = useState(17);
-  useEffect(() => {
-    loadedDataRef.current = loadedData;
-  }, [loadedData]);
 
   /* ── Determine which layers are relevant for this property ────────── */
   const relevantLayerKeys = useMemo(() => {
@@ -411,33 +547,9 @@ export default function MapPanel({
     return keys;
   }, [activeSiteLayers]);
 
-  /* ── Fetch a layer's GeoJSON ─────────────────────────────────────── */
-  const fetchLayer = useCallback(
-    (key: string) => {
-      if (loadedDataRef.current[key]) return; // already loaded
-      setLoading((l) => new Set(l).add(key));
-      fetch(`/api/map/layers/${key}/full`)
-        .then((r) => r.json())
-        .then((fc) => {
-          setLoadedData((prev) => ({ ...prev, [key]: fc }));
-          setLoading((l) => {
-            const n = new Set(l);
-            n.delete(key);
-            return n;
-          });
-        })
-        .catch(() => {
-          setLoading((l) => {
-            const n = new Set(l);
-            n.delete(key);
-            return n;
-          });
-        });
-    },
-    []
-  );
+  /* ── Fetch a layer's GeoJSON — no longer needed (PMTiles load on demand) ── */
 
-  /* ── Auto-load relevant layers once metadata arrives ─────────────── */
+  /* ── Auto-activate relevant layers once metadata arrives ─────────── */
   const pendingAutoLoad = useMemo(() => {
     if (autoLoaded || metadata.length === 0 || relevantLayerKeys.size === 0)
       return null;
@@ -449,17 +561,14 @@ export default function MapPanel({
 
   useEffect(() => {
     if (!pendingAutoLoad) return;
-    // Use a microtask to avoid synchronous setState warnings
     const id = requestAnimationFrame(() => {
       setActiveLayers(pendingAutoLoad);
-      pendingAutoLoad.forEach((key) => fetchLayer(key));
       setAutoLoaded(true);
     });
     return () => cancelAnimationFrame(id);
-  }, [pendingAutoLoad, fetchLayer]);
+  }, [pendingAutoLoad]);
 
   /* ── Fetch full city-wide simplified parcels on mount ─────────── */
-  const [parcelsLoading, setParcelsLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
     const load = async (attempt = 1) => {
@@ -478,20 +587,18 @@ export default function MapPanel({
         }
         console.error("Failed to load full parcels:", e);
       }
-      if (!cancelled) setParcelsLoading(false);
     };
     load();
     return () => { cancelled = true; };
   }, []);
 
-  /* ── Fetch layer metadata after parcels load (prioritized) ─────── */
+  /* ── Fetch layer metadata on mount ───────────────────────────────── */
   useEffect(() => {
-    if (parcelsLoading) return; // wait for parcels to finish first
     fetch(`/api/map/metadata`)
       .then((r) => r.json())
       .then((d) => setMetadata(d.layers || []))
       .catch((e) => console.error("Failed to load map metadata:", e));
-  }, [parcelsLoading]);
+  }, []);
 
   /* ── Derived: subject parcel edges for dimension labels ──────────── */
   const subjectEdges = useMemo(() => {
@@ -544,20 +651,18 @@ export default function MapPanel({
           next.delete(key);
         } else {
           next.add(key);
-          fetchLayer(key);
         }
         return next;
       });
     },
-    [fetchLayer]
+    []
   );
 
   /* ── Show / hide all layers ─────────────────────────────────────── */
   const showAllLayers = useCallback(() => {
     const allKeys = new Set(metadata.map((m) => m.key));
     setActiveLayers(allKeys);
-    metadata.forEach((m) => fetchLayer(m.key));
-  }, [metadata, fetchLayer]);
+  }, [metadata]);
 
   const hideAllLayers = useCallback(() => {
     setActiveLayers(new Set());
@@ -717,54 +822,27 @@ export default function MapPanel({
                 />
               ))}
 
-            {/* Active GIS layers */}
+            {/* Active GIS layers (PMTiles from R2 CDN) */}
             {Array.from(activeLayers).map((key) => {
-              const fc = loadedData[key];
-              if (!fc || !fc.features?.length) return null;
               const meta = metadata.find((m) => m.key === key);
-              const style = {
-                color: meta?.color || "#64748b",
-                weight: meta?.weight || 2,
-                fillOpacity: meta?.fillOpacity || 0.15,
-              };
               return (
-                <GeoJSON
-                  key={key + "-" + fc.features.length + "-" + basemap}
-                  ref={(ref) => {
-                    if (ref) geoJsonRefs.current[key] = ref;
-                  }}
-                  data={fc}
-                  style={style}
-                  pointToLayer={(feature, latlng) =>
-                    L.circleMarker(latlng, {
-                      radius: 6,
-                      fillColor: style.color,
-                      color: "#fff",
-                      weight: 1.5,
-                      fillOpacity: 0.85,
-                    })
-                  }
-                  onEachFeature={(feature, layer) => {
-                    const p = feature.properties || {};
-                    if (Object.keys(p).length) {
-                      layer.bindPopup(featurePopupHtml(p, key), {
-                        maxWidth: 360,
-                        maxHeight: 300,
-                      });
-                    }
-                  }}
+                <PMTilesOverlay
+                  key={key}
+                  layerKey={key}
+                  color={meta?.color || "#64748b"}
+                  weight={meta?.weight || 2}
+                  fillOpacity={meta?.fillOpacity || 0.15}
+                  isPoint={meta?.isPoint || false}
                 />
               );
             })}
-          </MapContainer>
 
-          {/* Loading spinner overlay */}
-          {loading.size > 0 && (
-            <div className="pointer-events-none absolute right-3 top-3 z-[1000] rounded-lg bg-white/90 px-3 py-1.5 text-[11px] font-medium text-stone-500 shadow-sm backdrop-blur">
-              <span className="mr-1.5 inline-block h-3 w-3 animate-spin rounded-full border-2 border-stone-300 border-t-stone-600" />
-              Loading layer…
-            </div>
-          )}
+            {/* Click handler for PMTiles layer popups */}
+            <PMTilesClickHandler
+              activeLayers={activeLayers}
+              metadata={metadata}
+            />
+          </MapContainer>
 
           {/* Basemap toggle button — bottom-left of map */}
           <div className="absolute bottom-3 left-3 z-[1000]">
@@ -917,10 +995,7 @@ export default function MapPanel({
                 <div className="space-y-1">
                   {groupLayers.map((lm) => {
                     const isActive = activeLayers.has(lm.key);
-                    const isLoading = loading.has(lm.key);
                     const isRelevant = relevantLayerKeys.has(lm.key);
-                    const featureCount =
-                      loadedData[lm.key]?.properties?.feature_count;
                     return (
                       <label
                         key={lm.key}
@@ -946,14 +1021,6 @@ export default function MapPanel({
                         {isRelevant && isActive && (
                           <span className="shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">
                             Active
-                          </span>
-                        )}
-                        {isLoading && (
-                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-stone-300 border-t-stone-600" />
-                        )}
-                        {isActive && !isLoading && !isRelevant && featureCount != null && (
-                          <span className="rounded-full bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-500">
-                            {featureCount}
                           </span>
                         )}
                       </label>

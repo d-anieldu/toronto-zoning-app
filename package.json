@@ -20,6 +20,8 @@
     "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.577.0",
     "next": "16.1.6",
+    "pmtiles": "^4.4.0",
+    "protomaps-leaflet": "^5.1.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-leaflet": "^5.0.0",
