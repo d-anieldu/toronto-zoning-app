@@ -96,9 +96,9 @@ function computeOpportunity(dev: any, eff: any) {
 function getPermittedTypologies(zoneCode: string): Array<{ label: string; Icon: typeof Home }> {
   const prefix = zoneCode.match(/^[A-Z]+/)?.[0] || "";
   const map: Record<string, Array<{ label: string; Icon: typeof Home }>> = {
-    RD: [{ label: "Single Detached", Icon: Home }, { label: "Semi-Detached", Icon: Building2 }],
-    RS: [{ label: "Semi-Detached", Icon: Building2 }, { label: "Single Detached", Icon: Home }],
-    RT: [{ label: "Townhouse", Icon: Building2 }, { label: "Semi-Detached", Icon: Building2 }],
+    RD: [{ label: "Single Detached", Icon: Home }, { label: "Semi-Detached", Icon: Building2 }, { label: "Triplex", Icon: Building2 }, { label: "Fourplex", Icon: Building2 }],
+    RS: [{ label: "Semi-Detached", Icon: Building2 }, { label: "Single Detached", Icon: Home }, { label: "Triplex", Icon: Building2 }, { label: "Fourplex", Icon: Building2 }],
+    RT: [{ label: "Townhouse", Icon: Building2 }, { label: "Semi-Detached", Icon: Building2 }, { label: "Multiplex", Icon: Building2 }],
     RB: [{ label: "Small Lot Residential", Icon: Home }],
     RM: [{ label: "Multiple Dwellings", Icon: Building2 }, { label: "Townhouse", Icon: Building2 }, { label: "Stacked Townhouse", Icon: Building2 }],
     RA: [{ label: "Apartment", Icon: Building2 }, { label: "Multiple Dwelling", Icon: Building2 }],
@@ -404,11 +404,34 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
   const summaryZoneCode = eff.zone_code || zoneLabel.zone_code || "";
   const permittedTypologies = getPermittedTypologies(summaryZoneCode);
 
+  /* ── Best as-of-right use (most intense permitted typology) ── */
+  const bestUse = permittedTypologies.length > 0
+    ? permittedTypologies[permittedTypologies.length - 1]
+    : null;
+
   return (
     <div className="space-y-5">
       {/* ============================================================ */}
-      {/*  BENTO GRID — Opportunity Grade + Permitted Typologies        */}
+      {/*  BEST AS-OF-RIGHT USE HERO                                   */}
       {/* ============================================================ */}
+      {bestUse && (
+        <div className="rounded-xl border-2 border-emerald-400 bg-emerald-50 p-5 flex items-center justify-between gap-4 shadow-sm">
+          <div className="flex flex-col gap-1 min-w-0">
+            <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Best As-of-Right Use</span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <bestUse.Icon className="h-6 w-6 text-emerald-700 shrink-0" />
+              <h2 className="text-2xl font-extrabold font-heading text-emerald-900">{bestUse.label}</h2>
+            </div>
+            <p className="text-sm text-emerald-700 mt-0.5">Permitted as-of-right · no variance required</p>
+          </div>
+          {dev.max_gfa?.sqm != null && (
+            <div className="shrink-0 text-right">
+              <p className="text-3xl font-extrabold text-emerald-900">{Number(dev.max_gfa.sqm).toLocaleString()} m²</p>
+              <p className="text-xs text-emerald-600 font-medium mt-0.5">Max GFA</p>
+            </div>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
         {/* Opportunity Grade */}
         <div className="md:col-span-5 bg-white border border-stone-200 rounded-xl p-6 shadow-sm flex items-center justify-between gap-4">
@@ -673,11 +696,11 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                   </p>
                 </EditableField>
                 <div className="flex items-center gap-1">
-                  <p className="text-[11px] text-emerald-600">Buildable Area</p>
+                  <p className="text-[11px] text-emerald-600">Building Footprint</p>
                   <FlagButton
                     address={data.address}
                     fieldPath="development_potential.setbacks.buildable_area_sqm"
-                    fieldLabel="Buildable Area"
+                    fieldLabel="Building Footprint"
                     currentValue={buildableAreaField.value != null ? `${fmt(buildableAreaField.value as number)} m²` : "—"}
                     tabName="summary"
                     reportId={reportId}

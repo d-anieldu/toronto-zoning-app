@@ -163,7 +163,7 @@ export default function SearchForm() {
       const res = await fetch("/api/lookup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: lookupAddr.trim(), include_nearby: false, include_policy: false }),
+        body: JSON.stringify({ address: lookupAddr.trim(), include_parcel: true, include_nearby: false, include_policy: false }),
       });
 
       if (!res.ok) {

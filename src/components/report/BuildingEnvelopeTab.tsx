@@ -136,14 +136,14 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                   <EditableField {...ep("development_potential.floor_plate.max_sqm", floorPlateMax)}>
                     <p className="text-[20px] font-bold text-[var(--text-primary)]">{fmt(floorPlateMax.value as number)} m²</p>
                   </EditableField>
-                  <p className="text-[12px] text-[var(--text-secondary)]">Floor Plate</p>
-                  <p className="text-[11px] text-[var(--text-muted)]">by {dev.floor_plate.limiting_factor || "—"}</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Max Floor Area</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">per storey · by {dev.floor_plate.limiting_factor || "—"}</p>
                 </div>
               )}
               {dev.setbacks?.buildable_area_sqm != null && (
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
                   <p className="text-[20px] font-bold text-[var(--text-primary)]">{fmt(dev.setbacks.buildable_area_sqm)} m²</p>
-                  <p className="text-[12px] text-[var(--text-secondary)]">Buildable Area</p>
+                  <p className="text-[12px] text-[var(--text-secondary)]">Building Footprint</p>
                   <p className="text-[11px] text-[var(--text-muted)]">
                     {dev.setbacks.buildable_width_m != null && dev.setbacks.buildable_depth_m != null ? `${dev.setbacks.buildable_width_m}m × ${dev.setbacks.buildable_depth_m}m` : "—"}
                   </p>
