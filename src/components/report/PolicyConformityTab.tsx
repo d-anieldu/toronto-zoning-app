@@ -280,6 +280,12 @@ function ChecklistItem({
           <div className="flex items-center gap-2 mb-2">
             <StatusBadge status={item.status} />
             <span className="text-[11px] text-[var(--text-muted)]" aria-label={`Data source: ${item.data_source}`}>{item.data_source}</span>
+            {item.source_url && (
+              <a href={item.source_url} target="_blank" rel="noopener noreferrer"
+                 className="text-[11px] text-violet-500 underline decoration-dotted underline-offset-2 hover:text-violet-700">
+                View source ↗
+              </a>
+            )}
           </div>
           <p className="text-[12px] italic text-[var(--text-secondary)] mb-2">{item.requirement}</p>
           <p className="text-[13px] leading-relaxed text-[var(--text-primary)]">{item.evidence}</p>

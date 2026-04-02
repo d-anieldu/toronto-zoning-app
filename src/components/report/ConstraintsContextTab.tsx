@@ -121,6 +121,45 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
     <FlagProvider address={addr} tabName="constraints_context" reportId={reportId}>
     <div className="space-y-5">
       {/* ============================================================ */}
+      {/*  SASP — PROMOTED TO TOP                                       */}
+      {/* ============================================================ */}
+      {saspPolicies.length > 0 && (
+        <>
+          <SectionHeading id="sasp" title="Site & Area Specific Policies" icon={Icons.zoning} count={saspPolicies.length} />
+          <div className="rounded-xl border-2 border-amber-300 bg-amber-50/50 p-5 shadow-sm">
+            <div className="space-y-3">
+              {saspPolicies.map((sasp: any, i: number) => (
+                <div key={i} className="rounded-lg border border-amber-200 bg-white p-4">
+                  <div className="flex items-center gap-1">
+                    <p className="text-[13px] font-semibold text-[var(--text-primary)]">
+                      <RefLink type="sasp" id={String(sasp.sasp_number)} label={`SASP #${sasp.sasp_number}`}>
+                        SASP #{sasp.sasp_number}
+                      </RefLink>
+                    </p>
+                    <FlagButton
+                      address={addr}
+                      fieldPath={`sasp.${sasp.sasp_number}`}
+                      fieldLabel={`SASP #${sasp.sasp_number}`}
+                      currentValue={sasp.title || `SASP #${sasp.sasp_number}`}
+                      tabName="constraints_context"
+                      reportId={reportId}
+                    />
+                  </div>
+                  {sasp.title && <p className="mt-0.5 text-[12px] font-medium text-[var(--text-secondary)]">{sasp.title}</p>}
+                  {sasp.content && <p className="mt-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">{sasp.content}</p>}
+                </div>
+              ))}
+            </div>
+            <a href="https://www.toronto.ca/city-government/planning-development/official-plan-guidelines/official-plan/chapter-6-7/"
+               target="_blank" rel="noopener noreferrer"
+               className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-violet-500 underline decoration-dotted underline-offset-2 hover:text-violet-700">
+              Official Plan Chapter 7 — Site &amp; Area Specific Policies ↗
+            </a>
+          </div>
+        </>
+      )}
+
+      {/* ============================================================ */}
       {/*  OVERLAYS & LAYERS                                            */}
       {/* ============================================================ */}
       <SectionHeading id="overlays" title="Overlays & Layers" icon={Icons.layers} count={activeOverlays.length} />
@@ -695,38 +734,6 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
               )}
             </div>
           )}
-
-          {saspPolicies.length > 0 && (
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-              <p className="mb-3 text-[13px] font-heading font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-                Site & Area Specific Policies
-                <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]">{saspPolicies.length}</span>
-              </p>
-              <div className="space-y-3">
-                {saspPolicies.map((sasp: any, i: number) => (
-                  <div key={i} className="rounded-lg border border-amber-100 bg-amber-50/50 p-4">
-                    <div className="flex items-center gap-1">
-                      <p className="text-[13px] font-semibold text-[var(--text-primary)]">
-                        <RefLink type="sasp" id={String(sasp.sasp_number)} label={`SASP #${sasp.sasp_number}`}>
-                          SASP #{sasp.sasp_number}
-                        </RefLink>
-                      </p>
-                      <FlagButton
-                        address={addr}
-                        fieldPath={`sasp.${sasp.sasp_number}`}
-                        fieldLabel={`SASP #${sasp.sasp_number}`}
-                        currentValue={sasp.title || `SASP #${sasp.sasp_number}`}
-                        tabName="constraints_context"
-                        reportId={reportId}
-                      />
-                    </div>
-                    {sasp.title && <p className="mt-0.5 text-[12px] font-medium text-[var(--text-secondary)]">{sasp.title}</p>}
-                    {sasp.content && <p className="mt-2 text-[12px] leading-relaxed text-[var(--text-secondary)]">{sasp.content}</p>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </>
       )}
 
@@ -812,6 +819,35 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
           {dev.noise_vibration.guideline_ref && (
             <p className="text-[11px] italic text-[var(--text-muted)]">{dev.noise_vibration.guideline_ref}</p>
           )}
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/*  RAIL SAFETY SETBACK (FCM/RAC)                               */}
+      {/* ============================================================ */}
+      {dev.rail_safety?.applies && (
+        <>
+          <SectionHeading id="rail-safety" title="Rail Safety Setbacks" icon={Icons.doc} />
+          <div className="rounded-xl border border-red-200 bg-red-50/80 p-5 shadow-sm">
+            <p className="text-[13px] font-medium leading-relaxed text-red-700 mb-3">{dev.rail_safety.note}</p>
+            <div className="space-y-2">
+              {(dev.rail_safety.requirements as string[]).map((r: string, i: number) => (
+                <div key={i} className="flex items-start gap-2 text-[12px] text-red-700">
+                  <span className="mt-0.5 shrink-0 text-red-400">●</span>
+                  <span>{r}</span>
+                </div>
+              ))}
+            </div>
+            {dev.rail_safety.studies?.length > 0 && (
+              <div className="mt-4 rounded-lg border border-red-100 bg-white/60 p-3">
+                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-red-500">Required Studies</p>
+                {(dev.rail_safety.studies as string[]).map((s: string, i: number) => (
+                  <p key={i} className="text-[12px] text-red-700">• {s}</p>
+                ))}
+              </div>
+            )}
+            <p className="mt-3 text-[11px] italic text-red-400">{dev.rail_safety.guideline_ref}</p>
+          </div>
         </>
       )}
 

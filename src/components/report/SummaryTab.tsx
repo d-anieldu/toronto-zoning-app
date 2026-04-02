@@ -12,7 +12,7 @@
 
 import {
   Ruler, BarChart3, Building2, Maximize2, MapPin, Square, Car,
-  Info, AlertTriangle, Train, Landmark, CheckCircle2, XCircle, Home,
+  Info, AlertTriangle, AlertCircle, Train, Landmark, CheckCircle2, XCircle, Home,
   type LucideIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -412,6 +412,39 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
   return (
     <div className="space-y-5">
       {/* ============================================================ */}
+      {/*  FORMER BY-LAW EXPLAINER                                     */}
+      {/* ============================================================ */}
+      {isFormerBylaw && (
+        <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <h3 className="text-lg font-bold text-amber-800">Former By-law Property</h3>
+          </div>
+          <p className="text-[13px] text-amber-700 leading-relaxed mb-3">
+            This property is governed by <strong>{dev.former_bylaw_notice?.bylaw || "a former municipal by-law"}</strong>
+            {dev.former_bylaw_notice?.municipality && <> ({dev.former_bylaw_notice.municipality})</>},
+            not By-law 569-2013. Zone-specific standards (FSI, setbacks, permitted uses) are{" "}
+            <strong>not available</strong> in this report.
+          </p>
+          <div className="rounded-lg bg-white/60 p-3 text-[12px] text-amber-800">
+            <p className="font-semibold mb-1.5">What IS included:</p>
+            <ul className="list-disc ml-4 space-y-1 text-[11px]">
+              <li>Height and lot coverage from 569-2013 overlays (if applicable)</li>
+              <li>Heritage, natural hazard, and environmental constraints</li>
+              <li>Transit proximity, MTSA, and holding provisions</li>
+              <li>OLT decisions and Committee of Adjustment precedents</li>
+            </ul>
+          </div>
+          {dev.former_bylaw_notice?.lookup_url && (
+            <a href={dev.former_bylaw_notice.lookup_url} target="_blank" rel="noopener noreferrer"
+               className="mt-3 inline-flex items-center gap-1 text-[12px] font-medium text-amber-700 underline hover:text-amber-900">
+              Look up former by-law standards ↗
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================ */}
       {/*  BEST AS-OF-RIGHT USE HERO                                   */}
       {/* ============================================================ */}
       {bestUse && (
@@ -432,6 +465,52 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
           )}
         </div>
       )}
+
+      {/* Floor plate realism warning */}
+      {dev.floor_plate_realism?.has_warnings && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-2.5 shadow-sm">
+          <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+          <div className="text-[12px] text-amber-700 leading-relaxed">
+            {(dev.floor_plate_realism.warnings as string[]).map((w: string, i: number) => (
+              <p key={i} className={i > 0 ? "mt-1" : ""}>{w}</p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* SASP prominence banner — show when SASPs apply */}
+      {eff.op_context?.sasp_policies?.length > 0 && (
+        <div className={`rounded-xl border-2 p-4 shadow-sm ${
+          zoneMeta?.category === "Employment"
+            ? "border-amber-400 bg-amber-50"
+            : "border-sky-300 bg-sky-50"
+        }`}>
+          <div className="flex items-center gap-2 mb-2">
+            <Landmark className={`h-5 w-5 ${
+              zoneMeta?.category === "Employment" ? "text-amber-600" : "text-sky-600"
+            }`} />
+            <h3 className={`text-sm font-bold ${
+              zoneMeta?.category === "Employment" ? "text-amber-800" : "text-sky-800"
+            }`}>
+              {eff.op_context.sasp_policies.length} Site &amp; Area Specific
+              {eff.op_context.sasp_policies.length > 1 ? " Policies" : " Policy"} Apply
+              {zoneMeta?.category === "Employment" && " — May Override Base Zoning"}
+            </h3>
+          </div>
+          <div className="space-y-1">
+            {(eff.op_context.sasp_policies as any[]).slice(0, 3).map((sasp: any, i: number) => (
+              <p key={i} className="text-[12px] text-stone-700">
+                <span className="font-semibold">SASP #{sasp.sasp_number || sasp.number}</span>
+                {sasp.title && <> — {sasp.title}</>}
+              </p>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-stone-500">
+            See Constraints &amp; Context tab for full SASP policy text
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
         {/* Opportunity Grade */}
         <div className="md:col-span-5 bg-white border border-stone-200 rounded-xl p-6 shadow-sm flex items-center justify-between gap-4">
@@ -866,6 +945,17 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
               label={`${dev.noise_vibration.source_count} Noise/Vibration source${dev.noise_vibration.source_count !== 1 ? "s" : ""} nearby`}
               address={data.address}
               fieldPath="quick_flags.noise_vibration"
+              reportId={reportId}
+            />
+          )}
+
+          {/* Rail Safety Setback */}
+          {dev.rail_safety?.applies && (
+            <FlagItem
+              status="bad"
+              label={`Rail safety setback: ${dev.rail_safety.setback_m}m from ROW required`}
+              address={data.address}
+              fieldPath="quick_flags.rail_safety"
               reportId={reportId}
             />
           )}
