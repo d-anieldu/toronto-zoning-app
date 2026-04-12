@@ -9,8 +9,8 @@
  * market signals, and financial indicators from enrich_site.py pipeline.
  */
 
-import { AlertTriangle, TrendingUp, Award, Zap, Percent, DollarSign, Home, Users } from "lucide-react";
-import { Card, Row, Badge, SectionHeading } from "./primitives";
+import { AlertTriangle, TrendingUp, Award, Zap } from "lucide-react";
+import { Card, Row, SectionHeading } from "./primitives";
 
 interface Props {
   data: Record<string, any>;
@@ -76,10 +76,10 @@ export default function AnalyzeTab({
       {/* ════════════════════════════════════════════════════════ */}
       {/* PIPELINE TIER CLASSIFICATION                             */}
       {/* ════════════════════════════════════════════════════════ */}
-      <Card>
+      <Card label="Development Classification">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <SectionHeading>Development Classification</SectionHeading>
+            <SectionHeading title="Development Classification" />
             <p className="mt-2 text-[13px] text-stone-600">
               {tier === "Rejected"
                 ? "This property does not meet minimum feasibility criteria."
@@ -131,8 +131,8 @@ export default function AnalyzeTab({
       {/* UNIT MIX RECOMMENDATION                                  */}
       {/* ════════════════════════════════════════════════════════ */}
       {totalUnits > 0 && (
-        <Card>
-          <SectionHeading>Unit Mix Recommendation</SectionHeading>
+        <Card label="Unit Mix Recommendation">
+          <SectionHeading title="Unit Mix Recommendation" />
           <div className="mt-4 grid grid-cols-4 gap-3">
             {Object.entries(unitMix).map(([bedType, count]) => {
               const labels: Record<string, string> = {
@@ -144,7 +144,7 @@ export default function AnalyzeTab({
               return (
                 <div key={bedType} className="rounded-lg border border-stone-200 bg-stone-50 p-3 text-center">
                   <p className="text-[11px] font-medium text-stone-500 uppercase">{labels[bedType]}</p>
-                  <p className="mt-2 text-[20px] font-bold text-emerald-700">{count}</p>
+                  <p className="mt-2 text-[20px] font-bold text-emerald-700">{count as number}</p>
                 </div>
               );
             })}
@@ -161,10 +161,10 @@ export default function AnalyzeTab({
       <div className="grid lg:grid-cols-2 gap-5">
         {/* Review Flags */}
         {reviewFlags.length > 0 && (
-          <Card>
+          <Card label="Review Flags">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <SectionHeading>Review Flags</SectionHeading>
+              <SectionHeading title="Review Flags" />
             </div>
             <ul className="mt-3 space-y-2">
               {reviewFlags.map((flag: string, i: number) => (
@@ -179,10 +179,10 @@ export default function AnalyzeTab({
 
         {/* Upside Flags */}
         {upsideFlags.length > 0 && (
-          <Card>
+          <Card label="Upside Flags">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-emerald-600" />
-              <SectionHeading>Upside Flags</SectionHeading>
+              <SectionHeading title="Upside Flags" />
             </div>
             <ul className="mt-3 space-y-2">
               {upsideFlags.map((flag: string, i: number) => (
@@ -199,13 +199,12 @@ export default function AnalyzeTab({
       {/* ════════════════════════════════════════════════════════ */}
       {/* UNIT ECONOMICS                                           */}
       {/* ════════════════════════════════════════════════════════ */}
-      <Card>
-        <SectionHeading>Unit Economics</SectionHeading>
+      <Card label="Unit Economics">
+        <SectionHeading title="Unit Economics" />
         <div className="mt-4 space-y-3">
           <Row
             label="Achievable Rent — 1 Bed"
             value={`$${avgRent1bed.toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo`}
-            variant={avgRent1bed > incomeRentCeiling * 1.1 ? "warning" : "default"}
           />
           <Row
             label="Achievable Rent — 2 Bed"
@@ -218,8 +217,7 @@ export default function AnalyzeTab({
           {dcExempt && (
             <Row
               label="Development Charges Exemption"
-              badge={<Badge variant="success">Exempt</Badge>}
-              value={`Saves $${dcSavings.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              value={`Exempt — saves $${dcSavings.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             />
           )}
         </div>
@@ -228,26 +226,23 @@ export default function AnalyzeTab({
       {/* ════════════════════════════════════════════════════════ */}
       {/* MARKET SIGNALS                                           */}
       {/* ════════════════════════════════════════════════════════ */}
-      <Card>
-        <SectionHeading>Market Signals</SectionHeading>
+      <Card label="Market Signals">
+        <SectionHeading title="Market Signals" />
         <div className="mt-4 space-y-3">
           <Row
             label="Rental Vacancy Rate"
             value={`${(vacancyRate * 100).toFixed(1)}%`}
-            detail={vacancyRate < 0.015 ? "Tight market" : vacancyRate <= 0.035 ? "Balanced" : "Soft market"}
-            variant={vacancyRate > 0.035 ? "warning" : vacancyRate < 0.015 ? "success" : "default"}
+            sub={vacancyRate < 0.015 ? "Tight market" : vacancyRate <= 0.035 ? "Balanced" : "Soft market"}
           />
           <Row
             label="Permit Activity (24mo)"
             value={permitActivity}
-            detail={data.permit_count_multiplex_24mo ? `${data.permit_count_multiplex_24mo} permits` : ""}
-            variant={permitActivity === "High" ? "warning" : "default"}
+            sub={data.permit_count_multiplex_24mo ? `${data.permit_count_multiplex_24mo} permits` : undefined}
           />
           <Row
             label="Nearest School"
             value={`${schoolDistance}m`}
-            detail={schoolDemand ? "Strong family demand signal" : ""}
-            variant={schoolDistance < 400 ? "success" : "default"}
+            sub={schoolDemand ? "Strong family demand signal" : undefined}
           />
         </div>
       </Card>
@@ -255,43 +250,27 @@ export default function AnalyzeTab({
       {/* ════════════════════════════════════════════════════════ */}
       {/* RISK ASSESSMENT                                          */}
       {/* ════════════════════════════════════════════════════════ */}
-      <Card>
-        <SectionHeading>Risk Assessment</SectionHeading>
+      <Card label="Risk Assessment">
+        <SectionHeading title="Risk Assessment" />
         <div className="mt-4 space-y-3">
           <Row
             label="Renter Tenure Risk"
-            badge={
-              renterTenureRisk ? (
-                <Badge variant="danger">High</Badge>
-              ) : (
-                <Badge variant="success">Low</Badge>
-              )
-            }
-            detail={renterTenureRisk ? "High renter % + low mover rate" : ""}
+            value={renterTenureRisk ? "High" : "Low"}
+            sub={renterTenureRisk ? "High renter % + low mover rate" : undefined}
           />
           <Row
             label="Affordability"
-            badge={
-              affordabilityFlag === "Fail" ? (
-                <Badge variant="danger">Fail</Badge>
-              ) : affordabilityFlag === "Caution" ? (
-                <Badge variant="warning">Caution</Badge>
-              ) : (
-                <Badge variant="success">Pass</Badge>
-              )
-            }
-            detail={affordabilityFlag === "Fail" ? "Rent exceeds 30% rule ceiling" : ""}
+            value={affordabilityFlag}
+            sub={affordabilityFlag === "Fail" ? "Rent exceeds 30% rule ceiling" : undefined}
           />
           <Row
             label="Construction Cost"
             value={`$${constructionCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}/sqm`}
-            variant={constructionCostCeiling ? "warning" : "default"}
-            detail={constructionCostCeiling ? "Above $3,000/sqm" : ""}
+            sub={constructionCostCeiling ? "Above $3,000/sqm" : undefined}
           />
           <Row
             label="Political Risk"
             value={politicalRisk}
-            variant={politicalRisk === "High" ? "warning" : "default"}
           />
         </div>
       </Card>
