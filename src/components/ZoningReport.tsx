@@ -13,7 +13,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Zap, Building2, Home, ClipboardList, MapPin, ScrollText,
   Copy, Check, Printer, ChevronUp, Share2, Loader2,
-  Train,
+  Train, Microscope,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ReferenceProvider, RefLink } from "./ReferencePanel";
@@ -29,6 +29,7 @@ import UsesParkingTab from "./report/UsesParkingTab";
 import ConstraintsContextTab from "./report/ConstraintsContextTab";
 import NearbyActivityTab from "./report/NearbyActivityTab";
 import PolicyConformityTab from "./report/PolicyConformityTab";
+import AnalyzeTab from "./report/AnalyzeTab";
 
 /* ── Primitives (shared across shell + tabs) ─────────────────────── */
 import { Badge } from "./report/primitives";
@@ -56,6 +57,7 @@ const TABS = [
   { id: "context",    label: "Constraints & Context",  Icon: ClipboardList },
   { id: "nearby",     label: "Nearby Activity",        Icon: MapPin },
   { id: "conformity", label: "Policy Conformity",      Icon: ScrollText },
+  { id: "analyze",    label: "Analysis",               Icon: Microscope },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -484,6 +486,9 @@ export default function ZoningReport({
             )}
             {activeTab === "conformity" && (
               <PolicyConformityTab data={data} editMode={editMode} sectionNotes={sectionNotes} onEditNote={onEditNote} />
+            )}
+            {activeTab === "analyze" && (
+              <AnalyzeTab data={data} editMode={editMode} userEdits={userEdits} sectionNotes={sectionNotes} onEditNote={onEditNote} reportId={reportId} />
             )}
           </div>
         </div>
