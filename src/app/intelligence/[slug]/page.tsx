@@ -197,7 +197,8 @@ export default function ArticleDetailPage({
 function sanitizeUrl(url: string): string {
   const decoded = decodeURIComponent(url).replace(/\s/g, "").toLowerCase();
   if (/^(javascript|data|vbscript):/i.test(decoded)) return "#";
-  return url;
+  // Escape double-quotes to prevent href attribute injection
+  return url.replace(/"/g, "%22");
 }
 
 function renderMarkdown(md: string): string {

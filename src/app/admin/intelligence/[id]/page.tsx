@@ -353,7 +353,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 function sanitizeUrl(url: string): string {
   const decoded = decodeURIComponent(url).replace(/\s/g, "").toLowerCase();
   if (/^(javascript|data|vbscript):/i.test(decoded)) return "#";
-  return url;
+  return url.replace(/"/g, "%22");
 }
 
 function simpleMarkdown(md: string): string {

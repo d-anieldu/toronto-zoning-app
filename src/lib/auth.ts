@@ -36,9 +36,10 @@ export async function isAdmin(): Promise<boolean> {
   return data?.role === "admin";
 }
 
-export async function requireAdmin(): Promise<{ userId: string }> {
-  const admin = await isAdmin();
-  if (!admin) throw new Error("Unauthorized");
+export async function requireAdmin(): Promise<{ userId: string } | NextResponse> {
   const user = await getUser();
-  return { userId: user!.id };
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await isAdmin();
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  return { userId: user.id };
 }

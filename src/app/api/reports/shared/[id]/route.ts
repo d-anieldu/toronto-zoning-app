@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-// TODO: Re-enable auth when sign-in is restored
+import { requireAuth } from "@/lib/auth";
 
 const API_URL = process.env.API_URL;
 
-/** GET /api/reports/shared/[id] — Public access to shared report */
+/** GET /api/reports/shared/[id] — Public access to shared report (no auth required) */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -34,6 +34,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth();
+  if (auth instanceof NextResponse) return auth;
+
   const { id } = await params;
   if (!API_URL) {
     return NextResponse.json({ error: "API URL not configured" }, { status: 500 });
@@ -42,7 +45,7 @@ export async function DELETE(
   try {
     const res = await fetch(`${API_URL}/reports/shared/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer anonymous` },
+      headers: { Authorization: `Bearer ${auth.id}` },
     });
 
     if (!res.ok) {

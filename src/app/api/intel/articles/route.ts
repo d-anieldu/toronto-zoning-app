@@ -13,15 +13,12 @@ export async function GET(request: NextRequest) {
 
   const sp = request.nextUrl.searchParams;
   const params = new URLSearchParams();
-  // Forward allowed query params
-  for (const key of ["article_type", "status", "limit", "offset"]) {
+  // Forward allowed query params — status is NOT forwarded; always force published
+  for (const key of ["article_type", "limit", "offset"]) {
     const val = sp.get(key);
     if (val) params.set(key, val);
   }
-  // Force published for public endpoint
-  if (!params.has("status")) {
-    params.set("status", "published");
-  }
+  params.set("status", "published");
 
   try {
     const res = await fetch(`${API_URL}/intel/articles?${params}`, { next: { revalidate: 60 } });
