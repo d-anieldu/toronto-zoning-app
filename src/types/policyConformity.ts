@@ -20,6 +20,7 @@ export interface PolicyChecklistItem {
   status: ConformityStatus;
   evidence: string;
   data_source: string;
+  source_url?: string;
   user_notes: string | null;
 }
 

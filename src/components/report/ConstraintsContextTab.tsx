@@ -125,7 +125,7 @@ export default function ConstraintsContextTab({ data, editMode, userEdits, secti
       {/* ============================================================ */}
       {saspPolicies.length > 0 && (
         <>
-          <SectionHeading id="sasp" title="Site & Area Specific Policies" icon={Icons.zoning} count={saspPolicies.length} />
+          <SectionHeading id="sasp" title="Site & Area Specific Policies" icon={Icons.layers} count={saspPolicies.length} />
           <div className="rounded-xl border-2 border-amber-300 bg-amber-50/50 p-5 shadow-sm">
             <div className="space-y-3">
               {saspPolicies.map((sasp: any, i: number) => (

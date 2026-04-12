@@ -300,9 +300,23 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
                   </div>
                 </div>
               )}
+              {/* Setbacks by building type */}
+              {dev.setbacks_by_type && Object.keys(dev.setbacks_by_type).length > 0 && (
+                <div className="mt-3 border-t border-[var(--border)] pt-3">
+                  <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                    Side Setback by Building Type
+                  </p>
+                  <div className="space-y-1">
+                    {Object.entries(dev.setbacks_by_type).map(([type, vals]: [string, any]) => (
+                      <div key={type} className="flex items-baseline justify-between text-[12px]">
+                        <span className="text-[var(--text-muted)]">{type}</span>
+                        <span className="font-mono font-medium text-[var(--text-primary)]">{vals.side_m} m</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
-
-            {/* Lot Dimensions */}
             <Card label="Lot Dimensions">
               <Row label="Min frontage" value={ev("effective_standards.lot_dimensions.min_frontage_m", minFrontage, minFrontage.value != null ? `${fmt(minFrontage.value as number, 1)} m` : null)} sub={eff.lot_dimensions?.frontage_source} />
               <Row label="Min lot area" value={ev("effective_standards.lot_dimensions.min_area_sqm", minArea, minArea.value != null ? `${fmt(minArea.value as number)} m²` : null)} sub={eff.lot_dimensions?.area_source} />
@@ -328,6 +342,35 @@ export default function BuildingEnvelopeTab({ data, onAnalyzeUse, editMode, user
 
             {/* Landscaping */}
             <LandscapingCard landscaping={eff.landscaping} />
+
+            {/* Existing GFA & headroom */}
+            {dev.existing_gfa && (
+              <Card label="Existing GFA & Headroom">
+                <Row label="Existing GFA" value={dev.existing_gfa.existing_sqm != null ? `${fmt(dev.existing_gfa.existing_sqm)} m²` : null} />
+                <Row label="Max permitted" value={dev.existing_gfa.max_permitted_sqm != null ? `${fmt(dev.existing_gfa.max_permitted_sqm)} m²` : null} />
+                <Row
+                  label="Headroom"
+                  value={
+                    dev.existing_gfa.headroom_sqm != null
+                      ? `${dev.existing_gfa.headroom_sqm > 0 ? "+" : ""}${fmt(dev.existing_gfa.headroom_sqm)} m²`
+                      : null
+                  }
+                />
+                {dev.existing_gfa.development_strategy && (
+                  <div className="mt-2 pt-2 border-t border-[var(--border)]">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)] mr-2">Strategy</span>
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                      dev.existing_gfa.development_strategy === "demolish_rebuild" ? "bg-red-100 text-red-700"
+                      : dev.existing_gfa.development_strategy === "addition" ? "bg-amber-100 text-amber-700"
+                      : dev.existing_gfa.development_strategy === "at_capacity" ? "bg-stone-200 text-stone-600"
+                      : "bg-emerald-100 text-emerald-700"
+                    }`}>
+                      {dev.existing_gfa.development_strategy.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                )}
+              </Card>
+            )}
           </div>
         </>
       )}

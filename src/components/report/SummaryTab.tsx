@@ -402,6 +402,30 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
   /* ── opportunity grade + typologies (for bento grid) ── */
   const opportunity = computeOpportunity(dev, eff);
   const summaryZoneCode = eff.zone_code || zoneLabel.zone_code || "";
+  const zoneMeta = resolveZoneMeta(summaryZoneCode);
+
+  /* ── backend variance status ── */
+  const varianceStatus = dev.variance_status || {};
+  const requiresVariance = varianceStatus.requires_variance === true;
+  const varianceParams: string[] = varianceStatus.variance_parameters || [];
+
+  /* ── backend feasibility score (overrides client-side opportunityGrade when present) ── */
+  const backendFs = dev.feasibility;
+  const displayGrade = backendFs
+    ? {
+        grade: backendFs.tier === "strong" ? "Strong"
+             : backendFs.tier === "marginal" ? "Moderate"
+             : backendFs.tier === "review" ? "Review"
+             : "Limited",
+        color: backendFs.tier === "strong" ? "emerald"
+             : backendFs.tier === "reject" ? "red"
+             : "amber",
+        score: backendFs.score as number,
+        summary: backendFs.blocker
+          ? `Blocked: ${backendFs.blocker}.`
+          : opportunity.summary,
+      }
+    : opportunity;
   const permittedTypologies = getPermittedTypologies(summaryZoneCode);
 
   /* ── Best as-of-right use (most intense permitted typology) ── */
@@ -455,7 +479,9 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
               <bestUse.Icon className="h-6 w-6 text-emerald-700 shrink-0" />
               <h2 className="text-2xl font-extrabold font-heading text-emerald-900">{bestUse.label}</h2>
             </div>
-            <p className="text-sm text-emerald-700 mt-0.5">Permitted as-of-right · no variance required</p>
+            <p className={`text-sm mt-0.5 ${requiresVariance ? "text-amber-700 font-medium" : "text-emerald-700"}`}>
+              {requiresVariance ? "Minor variance may be required" : "Permitted as-of-right · no variance required"}
+            </p>
           </div>
           {dev.max_gfa?.sqm != null && (
             <div className="shrink-0 text-right">
@@ -466,7 +492,22 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
         </div>
       )}
 
-      {/* Floor plate realism warning */}
+      {/* Variance status banner */}
+      {requiresVariance && varianceParams.length > 0 && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-2.5 shadow-sm">
+          <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-[13px] font-semibold text-amber-800">Minor Variance Likely Required</p>
+            <p className="text-[12px] text-amber-700 mt-0.5">
+              Non-conforming parameter{varianceParams.length > 1 ? "s" : ""}:{" "}
+              {varianceParams.map((p) => p.replace(/_/g, " ")).join(", ")}.
+              {varianceStatus.coa_context?.approval_rate != null && (
+                <> Nearby CoA approval rate: <strong>{varianceStatus.coa_context.approval_rate}%</strong>.</>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
       {dev.floor_plate_realism?.has_warnings && (
         <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-2.5 shadow-sm">
           <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
@@ -511,17 +552,24 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
         </div>
       )}
 
+      {/* Summary text from backend */}
+      {dev.summary_text && (
+        <div className="rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-[13px] text-stone-600 leading-relaxed shadow-sm">
+          {dev.summary_text}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
         {/* Opportunity Grade */}
         <div className="md:col-span-5 bg-white border border-stone-200 rounded-xl p-6 shadow-sm flex items-center justify-between gap-4">
           <div className="flex flex-col gap-1 min-w-0">
             <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Opportunity Grade</span>
             <h3 className={`text-2xl font-extrabold font-heading ${
-              opportunity.color === "emerald" ? "text-emerald-600"
-              : opportunity.color === "amber" ? "text-amber-600"
+              displayGrade.color === "emerald" ? "text-emerald-600"
+              : displayGrade.color === "amber" ? "text-amber-600"
               : "text-red-600"
-            }`}>{opportunity.grade}</h3>
-            <p className="text-sm text-stone-500 leading-relaxed">{opportunity.summary}</p>
+            }`}>{displayGrade.grade}</h3>
+            <p className="text-sm text-stone-500 leading-relaxed">{displayGrade.summary}</p>
           </div>
           <div className="relative flex items-center justify-center shrink-0">
             <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
@@ -531,13 +579,13 @@ export default function SummaryTab({ data, editMode, userEdits, sectionNotes, on
                 fill="transparent"
                 stroke="currentColor"
                 strokeWidth="6"
-                className={opportunity.color === "emerald" ? "text-emerald-500" : opportunity.color === "amber" ? "text-amber-500" : "text-red-500"}
+                className={displayGrade.color === "emerald" ? "text-emerald-500" : displayGrade.color === "amber" ? "text-amber-500" : "text-red-500"}
                 strokeDasharray={`${(2 * Math.PI * 34).toFixed(1)}`}
-                strokeDashoffset={`${(2 * Math.PI * 34 * (1 - opportunity.score / 100)).toFixed(1)}`}
+                strokeDashoffset={`${(2 * Math.PI * 34 * (1 - displayGrade.score / 100)).toFixed(1)}`}
                 strokeLinecap="round"
               />
             </svg>
-            <span className="absolute text-lg font-bold text-stone-900">{opportunity.score}</span>
+            <span className="absolute text-lg font-bold text-stone-900">{displayGrade.score}</span>
           </div>
         </div>
 
