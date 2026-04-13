@@ -195,6 +195,8 @@ export default function AnalyzePage() {
           fallback_used: boolean;
           latency_ms: number;
           values_preview: Record<string, string>;
+          fetch_method: string;
+          source_url: string;
         };
 
         const card: SourceCard = {
@@ -205,6 +207,8 @@ export default function AnalyzePage() {
           fallback_used: data.fallback_used,
           latency_ms: data.latency_ms,
           values_preview: data.values_preview,
+          fetch_method: data.fetch_method || "",
+          source_url: data.source_url || "",
         };
 
         setPipeline((prev) => ({
@@ -253,6 +257,24 @@ export default function AnalyzePage() {
     [],
   );
 
+  // Handle user edits to data source values — update both card preview and result
+  const handleEditValue = useCallback(
+    (sourceName: string, fieldKey: string, newValue: string) => {
+      setPipeline((prev) => ({
+        ...prev,
+        // Update the card's values_preview
+        cards: prev.cards.map((c) =>
+          c.source_name === sourceName
+            ? { ...c, values_preview: { ...c.values_preview, [fieldKey]: newValue } }
+            : c,
+        ),
+        // Also update the result if it exists (for the Results tab)
+        result: prev.result ? { ...prev.result, [fieldKey]: newValue } : prev.result,
+      }));
+    },
+    [],
+  );
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
       <NavBar />
@@ -274,7 +296,7 @@ export default function AnalyzePage() {
 
         {activeTab === "pipeline" && (
           <div className="mx-auto max-w-6xl min-h-[600px]">
-            <PipelineTab state={pipeline} />
+            <PipelineTab state={pipeline} onEditValue={handleEditValue} />
           </div>
         )}
 
