@@ -26,39 +26,62 @@ export interface PipelineState {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STAGES = [
-  "Site ingest",
-  "Zoning screen",
-  "Demographic enrichment",
-  "Pro forma",
-  "Deck generation",
+  "Geocode & Ward",
+  "Zoning lookup",
+  "Data enrichment",
+  "Derived analytics",
+  "Assembly & tier",
 ];
 
 const SOURCE_BADGES: Record<string, { text: string; bg: string; color: string }> = {
+  // Stage 1
   "Geocode + Ward":              { text: "TZ", bg: "#E1F5EE", color: "#0F6E56" },
+  // Stage 2
   "torontozoning.com API":       { text: "TZ", bg: "#E1F5EE", color: "#0F6E56" },
+  "Hard Reject Gate":            { text: "HR", bg: "#FAECE7", color: "#712B13" },
+  // Stage 3
   "DA Spatial Join":             { text: "SC", bg: "#E6F1FB", color: "#0C447C" },
   "Ward Demographics (Census 2021)": { text: "SC", bg: "#E6F1FB", color: "#0C447C" },
   "CMHC Rental Market":          { text: "CM", bg: "#FAEEDA", color: "#633806" },
   "Walk Score API":              { text: "WS", bg: "#E1F5EE", color: "#085041" },
   "Toronto Open Data: Permits":  { text: "TO", bg: "#EEEDFE", color: "#3C3489" },
   "Toronto Open Data: Schools":  { text: "TO", bg: "#EEEDFE", color: "#3C3489" },
-  "Development Charges":         { text: "DC", bg: "#FAECE7", color: "#712B13" },
   "Quarterly Assets":            { text: "CB", bg: "#F1EFE8", color: "#444441" },
-  "Pro Forma Engine":            { text: "PF", bg: "#EAF3DE", color: "#3B6D11" },
+  "Development Charges":         { text: "DC", bg: "#FAECE7", color: "#712B13" },
+  // Stage 4
+  "Unit Mix Model":              { text: "UM", bg: "#EAF3DE", color: "#3B6D11" },
+  "Parking Assessment":          { text: "PA", bg: "#F1EFE8", color: "#444441" },
+  "Rent Underwriting":           { text: "RU", bg: "#FAEEDA", color: "#633806" },
+  "Review Flags":                { text: "RF", bg: "#FAECE7", color: "#712B13" },
+  "Upside Signals":              { text: "US", bg: "#EAF3DE", color: "#3B6D11" },
+  "Risk Assessment":             { text: "RA", bg: "#FAECE7", color: "#712B13" },
+  "Financial Metrics":           { text: "FM", bg: "#E6F1FB", color: "#0C447C" },
+  // Stage 5
+  "Pipeline Tier Classification": { text: "TC", bg: "#EEEDFE", color: "#3C3489" },
+  "Result Assembly":             { text: "OK", bg: "#EAF3DE", color: "#3B6D11" },
 };
 
 const RUNNING_LABELS: Record<string, string> = {
   "Geocode + Ward":              "Geocoding address and resolving ward boundary...",
   "torontozoning.com API":       "Fetching torontozoning.com — zoning, envelope, feasibility...",
+  "Hard Reject Gate":            "Checking hard reject criteria...",
   "DA Spatial Join":             "Fetching Statistics Canada — dissemination area spatial join...",
-  "Ward Demographics (Census 2021)": "Fetching Statistics Canada — income, tenure, household data...",
+  "Ward Demographics (Census 2021)": "Fetching ward demographics — income, tenure, household data...",
   "CMHC Rental Market":          "Fetching CMHC — rental market data and vacancy rates...",
   "Walk Score API":              "Fetching Walk Score — walkability, transit, bike scores...",
   "Toronto Open Data: Permits":  "Fetching Toronto Open Data — building permits + multiplex activity...",
   "Toronto Open Data: Schools":  "Fetching Toronto Open Data — school proximity + family demand...",
+  "Quarterly Assets":            "Loading construction cost and cap rate data...",
   "Development Charges":         "Computing development charges and exemption eligibility...",
-  "Quarterly Assets":            "Parsing RLB construction cost report and CBRE cap rates...",
-  "Pro Forma Engine":            "Running pro forma — unit mix, rents, feasibility score...",
+  "Unit Mix Model":              "Deriving optimal unit mix from demographic signals...",
+  "Parking Assessment":          "Assessing parking requirements and costs...",
+  "Rent Underwriting":           "Underwriting achievable rents and transit premium...",
+  "Review Flags":                "Computing review flags — entitlement and market risks...",
+  "Upside Signals":              "Identifying upside signals — cost savings and demand...",
+  "Risk Assessment":             "Evaluating risk factors — tenure, affordability, political...",
+  "Financial Metrics":           "Computing financial metrics — land value, buildable cost...",
+  "Pipeline Tier Classification": "Classifying pipeline tier...",
+  "Result Assembly":             "Assembling final pipeline result...",
 };
 
 function getSourceBadge(name: string) {

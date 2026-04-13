@@ -15,10 +15,15 @@ const PipelineTab = dynamic(() => import("@/components/analyze/PipelineTab"), {
 // ─── Running labels: show what comes NEXT after each source resolves ──────────
 
 const NEXT_SOURCE_LABELS: Record<string, string> = {
+  // Stage 1
   "Geocode + Ward":
     "Fetching torontozoning.com — zoning, envelope, feasibility...",
+  // Stage 2
   "torontozoning.com API":
+    "Checking hard reject criteria — lot size, zone, feasibility...",
+  "Hard Reject Gate":
     "Fetching Statistics Canada — dissemination area spatial join...",
+  // Stage 3
   "DA Spatial Join":
     "Fetching Ward Demographics — income, tenure, household data...",
   "Ward Demographics (Census 2021)":
@@ -26,14 +31,34 @@ const NEXT_SOURCE_LABELS: Record<string, string> = {
   "CMHC Rental Market":
     "Fetching Walk Score — walkability, transit, bike scores...",
   "Walk Score API":
-    "Fetching Toronto Open Data — building permits + school proximity...",
+    "Fetching Toronto Open Data — building permits...",
   "Toronto Open Data: Permits":
     "Fetching Toronto Open Data — school proximity + family demand...",
   "Toronto Open Data: Schools":
+    "Loading construction cost and cap rate data...",
+  "Quarterly Assets":
     "Computing development charges and exemption eligibility...",
   "Development Charges":
-    "Loading construction cost and cap rate data...",
-  "Quarterly Assets": "Assembling pipeline result...",
+    "Deriving optimal unit mix from demographic signals...",
+  // Stage 4
+  "Unit Mix Model":
+    "Assessing parking requirements and costs...",
+  "Parking Assessment":
+    "Underwriting achievable rents and transit premium...",
+  "Rent Underwriting":
+    "Computing review flags — entitlement and market risks...",
+  "Review Flags":
+    "Identifying upside signals — cost savings and demand...",
+  "Upside Signals":
+    "Evaluating risk factors — tenure, affordability, political...",
+  "Risk Assessment":
+    "Computing financial metrics — land value, buildable cost...",
+  "Financial Metrics":
+    "Classifying pipeline tier and assembling result...",
+  // Stage 5
+  "Pipeline Tier Classification":
+    "Assembling final pipeline result...",
+  "Result Assembly": "Pipeline complete.",
 };
 
 type TabId = "input" | "pipeline" | "results";
