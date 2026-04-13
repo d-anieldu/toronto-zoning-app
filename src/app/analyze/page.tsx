@@ -1,34 +1,77 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import InputTab from "@/components/analyze/InputTab";
 import ResultsTab from "@/components/analyze/ResultsTab";
 import type { PipelineState, SourceCard } from "@/components/analyze/PipelineTab";
+import UserNav from "@/components/UserNav";
 
-const PipelineTab = dynamic(() => import("@/components/analyze/PipelineTab"), { ssr: false });
+const PipelineTab = dynamic(() => import("@/components/analyze/PipelineTab"), {
+  ssr: false,
+});
 
-// ─── Stage mapping ────────────────────────────────────────────────────────────
+// ─── Running labels: show what comes NEXT after each source resolves ──────────
 
-const RUNNING_LABELS: Record<string, string> = {
-  "Geocode + Ward":                   "Geocoding address and resolving ward boundary...",
-  "torontozoning.com API":            "Fetching torontozoning.com — zoning, envelope, feasibility...",
-  "DA Spatial Join":                  "Fetching Statistics Canada — dissemination area spatial join...",
-  "Ward Demographics (Census 2021)":  "Fetching Ward Demographics — income, tenure, household data...",
-  "CMHC Rental Market":               "Fetching CMHC — rental market data and vacancy rates...",
-  "Walk Score API":                   "Fetching Walk Score — walkability, transit, bike scores...",
-  "Toronto Open Data: Permits":       "Fetching Toronto Open Data — building permits + multiplex activity...",
-  "Toronto Open Data: Schools":       "Fetching Toronto Open Data — school proximity + family demand...",
-  "Development Charges":              "Computing development charges and exemption eligibility...",
-  "Quarterly Assets":                 "Loading construction cost and cap rate data...",
-  "Pro Forma Engine":                 "Running pro forma — unit mix, rents, feasibility score...",
+const NEXT_SOURCE_LABELS: Record<string, string> = {
+  "Geocode + Ward":
+    "Fetching torontozoning.com — zoning, envelope, feasibility...",
+  "torontozoning.com API":
+    "Fetching Statistics Canada — dissemination area spatial join...",
+  "DA Spatial Join":
+    "Fetching Ward Demographics — income, tenure, household data...",
+  "Ward Demographics (Census 2021)":
+    "Fetching CMHC — rental market data and vacancy rates...",
+  "CMHC Rental Market":
+    "Fetching Walk Score — walkability, transit, bike scores...",
+  "Walk Score API":
+    "Fetching Toronto Open Data — building permits + school proximity...",
+  "Toronto Open Data: Permits":
+    "Fetching Toronto Open Data — school proximity + family demand...",
+  "Toronto Open Data: Schools":
+    "Computing development charges and exemption eligibility...",
+  "Development Charges":
+    "Loading construction cost and cap rate data...",
+  "Quarterly Assets": "Assembling pipeline result...",
 };
 
 type TabId = "input" | "pipeline" | "results";
 
-// ─── Tab bar ──────────────────────────────────────────────────────────────────
+// ─── Dark navy nav bar ────────────────────────────────────────────────────────
 
-function TabBar({
+function NavBar() {
+  return (
+    <header className="bg-[#0F172A] px-6 py-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-between">
+        <Link
+          href="/"
+          className="flex items-baseline gap-0 text-[15px] font-bold tracking-tight"
+        >
+          <span className="text-white">toronto</span>
+          <span className="text-[#0D9488]">zoning</span>
+          <span className="text-white/60">.com</span>
+        </Link>
+        <div className="flex items-center gap-6">
+          <nav className="hidden sm:flex items-center gap-5 text-[13px]">
+            <Link
+              href="/dashboard"
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              Zoning lookup
+            </Link>
+            <span className="text-[#0D9488] font-semibold">Analyze</span>
+          </nav>
+          <UserNav />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ─── Sub-tab bar (Input / Pipeline / Results) ─────────────────────────────────
+
+function SubTabBar({
   active,
   pipelineEnabled,
   resultsEnabled,
@@ -40,14 +83,14 @@ function TabBar({
   onChange: (t: TabId) => void;
 }) {
   const tabs: { id: TabId; label: string; enabled: boolean }[] = [
-    { id: "input",    label: "Input",    enabled: true },
+    { id: "input", label: "Input", enabled: true },
     { id: "pipeline", label: "Pipeline", enabled: pipelineEnabled },
-    { id: "results",  label: "Results",  enabled: resultsEnabled },
+    { id: "results", label: "Results", enabled: resultsEnabled },
   ];
 
   return (
     <div className="border-b border-[#E2E8F0] bg-white">
-      <div className="flex">
+      <div className="mx-auto flex max-w-6xl">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -58,8 +101,8 @@ function TabBar({
               active === t.id
                 ? "text-[#0D9488]"
                 : t.enabled
-                ? "text-[#94A3B8] hover:text-[#64748B]"
-                : "text-[#CBD5E1] cursor-not-allowed"
+                  ? "text-[#94A3B8] hover:text-[#64748B]"
+                  : "text-[#CBD5E1] cursor-not-allowed"
             }`}
           >
             {t.label}
@@ -88,137 +131,136 @@ export default function AnalyzePage() {
 
   const esRef = useRef<EventSource | null>(null);
 
-  const startPipeline = useCallback((address: string, askingPrice: number) => {
-    // Close any existing stream
-    esRef.current?.close();
-
-    setLoading(true);
-    setPipeline({ status: "running", cards: [], currentStage: 1, runningText: "Starting pipeline...", result: null });
-    setActiveTab("pipeline");
-
-    const url = new URL("/api/analyze/stream", window.location.origin);
-    url.searchParams.set("address", address);
-    if (askingPrice > 0) url.searchParams.set("asking_price", String(askingPrice));
-
-    const es = new EventSource(url.toString());
-    esRef.current = es;
-
-    es.addEventListener("source_resolved", (e: MessageEvent) => {
-      const data = JSON.parse(e.data) as {
-        source_name: string;
-        stage: number;
-        fields_returned: string[];
-        status: string;
-        fallback_used: boolean;
-        latency_ms: number;
-        values_preview: Record<string, string>;
-      };
-
-      const card: SourceCard = {
-        source_name: data.source_name,
-        stage: data.stage,
-        fields_returned: data.fields_returned,
-        status: data.status as SourceCard["status"],
-        fallback_used: data.fallback_used,
-        latency_ms: data.latency_ms,
-        values_preview: data.values_preview,
-      };
-
-      setPipeline((prev) => {
-        // Figure out next stage (one ahead of what just resolved)
-        const nextStage = Math.min(data.stage + 1, 5);
-        const nextText = RUNNING_LABELS[data.source_name] || `Resolving ${data.source_name}...`;
-
-        return {
-          ...prev,
-          cards: [...prev.cards, card],
-          currentStage: nextStage,
-          runningText: nextText,
-        };
-      });
-    });
-
-    es.addEventListener("pipeline_complete", (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      es.close();
-      esRef.current = null;
-      setLoading(false);
-
-      setPipeline((prev) => ({
-        ...prev,
-        status: "complete",
-        currentStage: 5,
-        runningText: "",
-        result: data,
-      }));
-
-      // Auto-advance to Results after 800ms
-      setTimeout(() => setActiveTab("results"), 800);
-    });
-
-    es.addEventListener("pipeline_error", (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      console.error("Pipeline error:", data.error);
-      es.close();
-      esRef.current = null;
-      setLoading(false);
-      setPipeline((prev) => ({ ...prev, status: "error" }));
-    });
-
-    es.onerror = () => {
-      es.close();
-      esRef.current = null;
-      setLoading(false);
-      setPipeline((prev) => ({ ...prev, status: "error" }));
+  // Clean up SSE on unmount
+  useEffect(() => {
+    return () => {
+      esRef.current?.close();
     };
   }, []);
 
+  const startPipeline = useCallback(
+    (address: string, askingPrice: number) => {
+      // Close any existing stream
+      esRef.current?.close();
+
+      setLoading(true);
+      setPipeline({
+        status: "running",
+        cards: [],
+        currentStage: 1,
+        runningText: "Geocoding address and resolving ward boundary...",
+        result: null,
+      });
+      setActiveTab("pipeline");
+
+      const url = new URL("/api/analyze/stream", window.location.origin);
+      url.searchParams.set("address", address);
+      if (askingPrice > 0)
+        url.searchParams.set("asking_price", String(askingPrice));
+
+      const es = new EventSource(url.toString());
+      esRef.current = es;
+
+      es.addEventListener("source_resolved", (e: MessageEvent) => {
+        const data = JSON.parse(e.data) as {
+          source_name: string;
+          stage: number;
+          fields_returned: string[];
+          status: string;
+          fallback_used: boolean;
+          latency_ms: number;
+          values_preview: Record<string, string>;
+        };
+
+        const card: SourceCard = {
+          source_name: data.source_name,
+          stage: data.stage,
+          fields_returned: data.fields_returned,
+          status: data.status as SourceCard["status"],
+          fallback_used: data.fallback_used,
+          latency_ms: data.latency_ms,
+          values_preview: data.values_preview,
+        };
+
+        setPipeline((prev) => ({
+          ...prev,
+          cards: [...prev.cards, card],
+          currentStage: data.stage,
+          runningText:
+            NEXT_SOURCE_LABELS[data.source_name] || "Resolving next source...",
+        }));
+      });
+
+      es.addEventListener("pipeline_complete", (e: MessageEvent) => {
+        const data = JSON.parse(e.data);
+        es.close();
+        esRef.current = null;
+        setLoading(false);
+
+        setPipeline((prev) => ({
+          ...prev,
+          status: "complete",
+          currentStage: 6, // all 5 done
+          runningText: "",
+          result: data,
+        }));
+
+        // Auto-advance to Results after 800ms
+        setTimeout(() => setActiveTab("results"), 800);
+      });
+
+      es.addEventListener("pipeline_error", (e: MessageEvent) => {
+        const data = JSON.parse(e.data);
+        console.error("Pipeline error:", data.error);
+        es.close();
+        esRef.current = null;
+        setLoading(false);
+        setPipeline((prev) => ({ ...prev, status: "error" }));
+      });
+
+      es.onerror = () => {
+        es.close();
+        esRef.current = null;
+        setLoading(false);
+        setPipeline((prev) => ({ ...prev, status: "error" }));
+      };
+    },
+    [],
+  );
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header bar */}
-      <header className="border-b border-[#E2E8F0] bg-white px-6 py-3">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <a href="/" className="text-[13px] font-semibold text-stone-900">
-            torontozoning.com
-          </a>
-          <nav className="flex items-center gap-5 text-[13px] text-stone-500">
-            <a href="/" className="hover:text-stone-900">Zoning lookup</a>
-            <span className="font-semibold text-[#0D9488]">Analyze</span>
-            <a href="/docs" className="hover:text-stone-900">Docs</a>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+      <NavBar />
 
-      {/* Tab bar */}
-      <div className="mx-auto max-w-5xl">
-        <TabBar
-          active={activeTab}
-          pipelineEnabled={pipeline.status !== "idle"}
-          resultsEnabled={pipeline.status === "complete"}
-          onChange={setActiveTab}
-        />
-      </div>
+      <SubTabBar
+        active={activeTab}
+        pipelineEnabled={pipeline.status !== "idle"}
+        resultsEnabled={pipeline.status === "complete"}
+        onChange={setActiveTab}
+      />
 
-      {/* Content */}
-      <main className="mx-auto max-w-5xl">
+      {/* Content area */}
+      <div className="flex-1">
         {activeTab === "input" && (
-          <InputTab onSubmit={startPipeline} loading={loading} />
+          <div className="mx-auto max-w-6xl">
+            <InputTab onSubmit={startPipeline} loading={loading} />
+          </div>
         )}
 
         {activeTab === "pipeline" && (
-          <div className="relative overflow-hidden rounded-none sm:rounded-xl border-0 sm:border border-[#E2E8F0] bg-white min-h-[500px]">
+          <div className="mx-auto max-w-6xl min-h-[600px]">
             <PipelineTab state={pipeline} />
           </div>
         )}
 
         {activeTab === "results" && pipeline.result && (
-          <div className="p-4 sm:p-6">
+          <div className="mx-auto max-w-6xl p-4 sm:p-6">
             <div className="mb-5">
-              <h1 className="text-[18px] font-bold text-stone-900">
+              <h1 className="text-[18px] font-bold text-[#0F172A]">
                 {String(pipeline.result.address_full ?? "")}
               </h1>
-              <p className="text-[13px] text-stone-500 mt-0.5">
-                Pipeline complete · {(pipeline.cards.length)} sources resolved
+              <p className="text-[13px] text-[#64748B] mt-0.5">
+                Pipeline complete · {pipeline.cards.length} sources resolved
               </p>
             </div>
             <ResultsTab result={pipeline.result} />
@@ -226,11 +268,11 @@ export default function AnalyzePage() {
         )}
 
         {activeTab === "results" && !pipeline.result && (
-          <div className="flex items-center justify-center py-20 text-stone-400 text-[14px]">
+          <div className="flex items-center justify-center py-20 text-[#94A3B8] text-[14px]">
             No results yet. Run a pipeline first.
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

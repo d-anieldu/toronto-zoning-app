@@ -264,7 +264,7 @@ export default function PipelineTab({ state }: { state: PipelineState }) {
   return (
     <div className="flex h-full min-h-[500px]">
       {/* ── Stage sidebar (desktop) ── */}
-      <aside className="hidden sm:flex flex-col w-[240px] shrink-0 border-r border-[#E2E8F0] bg-white pt-4">
+      <aside className="hidden sm:flex flex-col w-[220px] shrink-0 border-r border-[#E2E8F0] bg-white pt-4">
         {STAGES.map((label, i) => (
           <StageRow key={label} label={label} status={getStageStatus(i)} />
         ))}
