@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { MapPin, DollarSign, ArrowRight, ChevronDown, ChevronRight, Settings2 } from "lucide-react";
+import DataFrameworkSection from "@/components/analyze/DataFrameworkSection";
 
 export interface PipelineInputs {
   address: string;
@@ -50,7 +51,9 @@ export default function InputTab({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
+    <div className="flex flex-col">
+      {/* Centered form area */}
+      <div className="flex flex-col items-center py-16 px-4">
       <div className="w-full max-w-lg">
         <h2 className="text-[22px] font-bold tracking-tight text-[#0F172A] mb-2">
           Multiplex Development Analysis
@@ -247,6 +250,14 @@ export default function InputTab({
             )}
           </button>
         </form>
+      </div>
+      </div>{/* end centered form area */}
+
+      {/* Full-width data framework section */}
+      <div className="w-full px-4 pb-16">
+        <div className="mx-auto max-w-6xl">
+          <DataFrameworkSection />
+        </div>
       </div>
     </div>
   );
