@@ -1,22 +1,52 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { MapPin, DollarSign, ArrowRight } from "lucide-react";
+import { MapPin, DollarSign, ArrowRight, ChevronDown, ChevronRight, Settings2 } from "lucide-react";
+
+export interface PipelineInputs {
+  address: string;
+  askingPrice: number;
+  propertyType: string;
+  bedroomsExisting: number;
+  bathroomsExisting: number;
+  constructionCostOverride: number;
+  exitCapRateOverride: number;
+  preferredUnits: number;
+  timelineMonths: number;
+}
 
 export default function InputTab({
   onSubmit,
   loading,
 }: {
-  onSubmit: (address: string, askingPrice: number) => void;
+  onSubmit: (address: string, askingPrice: number, extras?: Partial<PipelineInputs>) => void;
   loading: boolean;
 }) {
   const [address, setAddress] = useState("");
   const [askingPrice, setAskingPrice] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Advanced fields
+  const [propertyType, setPropertyType] = useState("");
+  const [bedroomsExisting, setBedroomsExisting] = useState("");
+  const [bathroomsExisting, setBathroomsExisting] = useState("");
+  const [constructionCostOverride, setConstructionCostOverride] = useState("");
+  const [exitCapRateOverride, setExitCapRateOverride] = useState("");
+  const [preferredUnits, setPreferredUnits] = useState("");
+  const [timelineMonths, setTimelineMonths] = useState("");
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const price = parseFloat(askingPrice.replace(/[^0-9.]/g, "")) || 0;
-    onSubmit(address.trim(), price);
+    const extras: Partial<PipelineInputs> = {};
+    if (propertyType) extras.propertyType = propertyType;
+    if (bedroomsExisting) extras.bedroomsExisting = parseInt(bedroomsExisting) || 0;
+    if (bathroomsExisting) extras.bathroomsExisting = parseInt(bathroomsExisting) || 0;
+    if (constructionCostOverride) extras.constructionCostOverride = parseFloat(constructionCostOverride.replace(/[^0-9.]/g, "")) || 0;
+    if (exitCapRateOverride) extras.exitCapRateOverride = parseFloat(exitCapRateOverride) || 0;
+    if (preferredUnits) extras.preferredUnits = parseInt(preferredUnits) || 0;
+    if (timelineMonths) extras.timelineMonths = parseInt(timelineMonths) || 0;
+    onSubmit(address.trim(), price, Object.keys(extras).length > 0 ? extras : undefined);
   }
 
   return (
@@ -66,6 +96,138 @@ export default function InputTab({
               />
             </div>
           </div>
+
+          {/* Advanced toggle */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-[#64748B] hover:text-[#0D9488] transition-colors"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+            Advanced options
+            {showAdvanced ? (
+              <ChevronDown className="h-3 w-3" />
+            ) : (
+              <ChevronRight className="h-3 w-3" />
+            )}
+          </button>
+
+          {showAdvanced && (
+            <div className="space-y-3 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+
+              {/* Property type */}
+              <div>
+                <label className="block text-[11px] font-medium text-[#94A3B8] mb-1 uppercase tracking-wide">
+                  Property type
+                </label>
+                <select
+                  value={propertyType}
+                  onChange={(e) => setPropertyType(e.target.value)}
+                  className="w-full rounded-md border border-[#E2E8F0] bg-white py-2 px-3 text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40"
+                >
+                  <option value="">Auto-detect</option>
+                  <option value="Detached">Detached</option>
+                  <option value="Semi-Detached">Semi-Detached</option>
+                  <option value="Townhouse">Townhouse</option>
+                  <option value="Duplex">Duplex</option>
+                  <option value="Triplex">Triplex</option>
+                  <option value="Vacant Land">Vacant Land</option>
+                </select>
+              </div>
+
+              {/* Bedrooms / Bathrooms row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-[#94A3B8] mb-1 uppercase tracking-wide">
+                    Existing bedrooms
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={bedroomsExisting}
+                    onChange={(e) => setBedroomsExisting(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-md border border-[#E2E8F0] bg-white py-2 px-3 text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-[#94A3B8] mb-1 uppercase tracking-wide">
+                    Existing bathrooms
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={bathroomsExisting}
+                    onChange={(e) => setBathroomsExisting(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded-md border border-[#E2E8F0] bg-white py-2 px-3 text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40"
+                  />
+                </div>
+              </div>
+
+              {/* Preferred units / Timeline row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-[#94A3B8] mb-1 uppercase tracking-wide">
+                    Preferred unit count
+                  </label>
+                  <input
+                    type="number"
+                    min="2"
+                    max="12"
+                    value={preferredUnits}
+                    onChange={(e) => setPreferredUnits(e.target.value)}
+                    placeholder="Auto"
+                    className="w-full rounded-md border border-[#E2E8F0] bg-white py-2 px-3 text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-[#94A3B8] mb-1 uppercase tracking-wide">
+                    Timeline (months)
+                  </label>
+                  <input
+                    type="number"
+                    min="6"
+                    max="60"
+                    value={timelineMonths}
+                    onChange={(e) => setTimelineMonths(e.target.value)}
+                    placeholder="24"
+                    className="w-full rounded-md border border-[#E2E8F0] bg-white py-2 px-3 text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40"
+                  />
+                </div>
+              </div>
+
+              {/* Construction cost / Cap rate row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-[#94A3B8] mb-1 uppercase tracking-wide">
+                    Construction $/sqft
+                  </label>
+                  <input
+                    type="text"
+                    value={constructionCostOverride}
+                    onChange={(e) => setConstructionCostOverride(e.target.value)}
+                    placeholder="240 (default)"
+                    className="w-full rounded-md border border-[#E2E8F0] bg-white py-2 px-3 text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-[#94A3B8] mb-1 uppercase tracking-wide">
+                    Exit cap rate (%)
+                  </label>
+                  <input
+                    type="text"
+                    value={exitCapRateOverride}
+                    onChange={(e) => setExitCapRateOverride(e.target.value)}
+                    placeholder="4.0 (default)"
+                    className="w-full rounded-md border border-[#E2E8F0] bg-white py-2 px-3 text-[13px] text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#0D9488]/40"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"

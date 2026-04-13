@@ -4,7 +4,9 @@ import { useCallback, useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import InputTab from "@/components/analyze/InputTab";
+import type { PipelineInputs } from "@/components/analyze/InputTab";
 import ResultsTab from "@/components/analyze/ResultsTab";
+import ProFormaTab from "@/components/analyze/ProFormaTab";
 import type { PipelineState, SourceCard } from "@/components/analyze/PipelineTab";
 import UserNav from "@/components/UserNav";
 
@@ -57,11 +59,27 @@ const NEXT_SOURCE_LABELS: Record<string, string> = {
     "Classifying pipeline tier and assembling result...",
   // Stage 5
   "Pipeline Tier Classification":
+    "Computing land transfer tax and cost split...",
+  "Land Transfer Tax":
+    "Splitting construction costs — above/below grade...",
+  "Construction Cost Split":
+    "Fetching Bank of Canada prime rate...",
+  "Bank of Canada Prime Rate":
+    "Fetching StatsCan Building Cost Price Index...",
+  "StatsCan Building Cost Index":
+    "Computing CMHC MLI Select insurance premium...",
+  "CMHC MLI Select Premium":
+    "Computing Tarion warranty fees...",
+  "Tarion Warranty Fees":
+    "Computing sale price benchmarks...",
+  "Sale Price Benchmarks":
+    "Loading pro-forma industry defaults...",
+  "Pro-Forma Defaults":
     "Assembling final pipeline result...",
   "Result Assembly": "Pipeline complete.",
 };
 
-type TabId = "input" | "pipeline" | "results";
+type TabId = "input" | "pipeline" | "results" | "proforma";
 
 // ─── Dark navy nav bar ────────────────────────────────────────────────────────
 
@@ -94,7 +112,7 @@ function NavBar() {
   );
 }
 
-// ─── Sub-tab bar (Input / Pipeline / Results) ─────────────────────────────────
+// ─── Sub-tab bar (Input / Pipeline / Results / Pro-Forma) ─────────────────────
 
 function SubTabBar({
   active,
@@ -111,6 +129,7 @@ function SubTabBar({
     { id: "input", label: "Input", enabled: true },
     { id: "pipeline", label: "Pipeline", enabled: pipelineEnabled },
     { id: "results", label: "Results", enabled: resultsEnabled },
+    { id: "proforma", label: "Pro-Forma", enabled: resultsEnabled },
   ];
 
   return (
@@ -164,7 +183,7 @@ export default function AnalyzePage() {
   }, []);
 
   const startPipeline = useCallback(
-    (address: string, askingPrice: number) => {
+    (address: string, askingPrice: number, extras?: Partial<PipelineInputs>) => {
       // Close any existing stream
       esRef.current?.close();
 
@@ -182,6 +201,20 @@ export default function AnalyzePage() {
       url.searchParams.set("address", address);
       if (askingPrice > 0)
         url.searchParams.set("asking_price", String(askingPrice));
+      if (extras?.propertyType)
+        url.searchParams.set("property_type", extras.propertyType);
+      if (extras?.bedroomsExisting)
+        url.searchParams.set("bedrooms", String(extras.bedroomsExisting));
+      if (extras?.bathroomsExisting)
+        url.searchParams.set("bathrooms", String(extras.bathroomsExisting));
+      if (extras?.constructionCostOverride)
+        url.searchParams.set("construction_cost", String(extras.constructionCostOverride));
+      if (extras?.exitCapRateOverride)
+        url.searchParams.set("exit_cap_rate", String(extras.exitCapRateOverride));
+      if (extras?.preferredUnits)
+        url.searchParams.set("preferred_units", String(extras.preferredUnits));
+      if (extras?.timelineMonths)
+        url.searchParams.set("timeline_months", String(extras.timelineMonths));
 
       const es = new EventSource(url.toString());
       esRef.current = es;
@@ -315,6 +348,26 @@ export default function AnalyzePage() {
         )}
 
         {activeTab === "results" && !pipeline.result && (
+          <div className="flex items-center justify-center py-20 text-[#94A3B8] text-[14px]">
+            No results yet. Run a pipeline first.
+          </div>
+        )}
+
+        {activeTab === "proforma" && pipeline.result && (
+          <div className="mx-auto max-w-6xl p-4 sm:p-6">
+            <div className="mb-5">
+              <h1 className="text-[18px] font-bold text-[#0F172A]">
+                Pro-Forma · {String(pipeline.result.address_full ?? "")}
+              </h1>
+              <p className="text-[13px] text-[#64748B] mt-0.5">
+                Auto-populated from pipeline data + Toronto industry benchmarks
+              </p>
+            </div>
+            <ProFormaTab result={pipeline.result} />
+          </div>
+        )}
+
+        {activeTab === "proforma" && !pipeline.result && (
           <div className="flex items-center justify-center py-20 text-[#94A3B8] text-[14px]">
             No results yet. Run a pipeline first.
           </div>

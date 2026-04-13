@@ -55,6 +55,14 @@ const SOURCE_BADGES: Record<string, { text: string; bg: string; color: string }>
   "Risk Assessment":             { text: "RA", bg: "#FAECE7", color: "#712B13" },
   "Financial Metrics":           { text: "FM", bg: "#E6F1FB", color: "#0C447C" },
   "Pipeline Tier Classification": { text: "TC", bg: "#EEEDFE", color: "#3C3489" },
+  "Land Transfer Tax":           { text: "LT", bg: "#FAEEDA", color: "#633806" },
+  "Construction Cost Split":     { text: "CC", bg: "#F1EFE8", color: "#444441" },
+  "Bank of Canada Prime Rate":   { text: "BC", bg: "#E6F1FB", color: "#0C447C" },
+  "StatsCan Building Cost Index": { text: "SC", bg: "#E6F1FB", color: "#0C447C" },
+  "CMHC MLI Select Premium":    { text: "CM", bg: "#FAEEDA", color: "#633806" },
+  "Tarion Warranty Fees":        { text: "TW", bg: "#FAECE7", color: "#712B13" },
+  "Sale Price Benchmarks":       { text: "SP", bg: "#EAF3DE", color: "#3B6D11" },
+  "Pro-Forma Defaults":          { text: "PF", bg: "#EEEDFE", color: "#3C3489" },
   "Result Assembly":             { text: "OK", bg: "#EAF3DE", color: "#3B6D11" },
 };
 
