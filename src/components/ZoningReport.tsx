@@ -20,7 +20,6 @@ import { ReferenceProvider, RefLink } from "./ReferencePanel";
 import UseAnalysisPanel from "./UseAnalysisPanel";
 import ShareReportButton from "./ShareReportButton";
 import CreateReportButton from "./CreateReportButton";
-import GenerateDeckButton from "./report/GenerateDeckButton";
 import ChatAssistant from "./ChatAssistant";
 
 /* ── Tab components ──────────────────────────────────────────────── */
@@ -281,7 +280,6 @@ export default function ZoningReport({
                 <Printer className="h-3.5 w-3.5" /> Print
               </button>
               <ShareReportButton address={data.address} lookupData={data} />
-              <GenerateDeckButton address={data.address} />
               {!editMode && <CreateReportButton address={data.address} lookupData={data} />}
             </div>
           </div>

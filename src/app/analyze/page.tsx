@@ -7,6 +7,7 @@ import InputTab from "@/components/analyze/InputTab";
 import type { PipelineInputs } from "@/components/analyze/InputTab";
 import ResultsTab from "@/components/analyze/ResultsTab";
 import ProFormaTab from "@/components/analyze/ProFormaTab";
+import DeckTab from "@/components/analyze/DeckTab";
 import type { PipelineState, SourceCard } from "@/components/analyze/PipelineTab";
 import UserNav from "@/components/UserNav";
 
@@ -79,7 +80,7 @@ const NEXT_SOURCE_LABELS: Record<string, string> = {
   "Result Assembly": "Pipeline complete.",
 };
 
-type TabId = "input" | "pipeline" | "results" | "proforma";
+type TabId = "input" | "pipeline" | "results" | "proforma" | "deck";
 
 // ─── Dark navy nav bar ────────────────────────────────────────────────────────
 
@@ -130,6 +131,7 @@ function SubTabBar({
     { id: "pipeline", label: "Pipeline", enabled: pipelineEnabled },
     { id: "results", label: "Results", enabled: resultsEnabled },
     { id: "proforma", label: "Pro-Forma", enabled: resultsEnabled },
+    { id: "deck", label: "Investor Deck", enabled: resultsEnabled },
   ];
 
   return (
@@ -368,6 +370,26 @@ export default function AnalyzePage() {
         )}
 
         {activeTab === "proforma" && !pipeline.result && (
+          <div className="flex items-center justify-center py-20 text-[#94A3B8] text-[14px]">
+            No results yet. Run a pipeline first.
+          </div>
+        )}
+
+        {activeTab === "deck" && pipeline.result && (
+          <div className="mx-auto max-w-6xl p-4 sm:p-6">
+            <div className="mb-5">
+              <h1 className="text-[18px] font-bold text-[#0F172A]">
+                Investor Deck · {String(pipeline.result.address_full ?? "")}
+              </h1>
+              <p className="text-[13px] text-[#64748B] mt-0.5">
+                22-slide PPTX · auto-populated from pipeline data
+              </p>
+            </div>
+            <DeckTab result={pipeline.result} />
+          </div>
+        )}
+
+        {activeTab === "deck" && !pipeline.result && (
           <div className="flex items-center justify-center py-20 text-[#94A3B8] text-[14px]">
             No results yet. Run a pipeline first.
           </div>
