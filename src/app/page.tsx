@@ -27,6 +27,12 @@ export default async function Home() {
           </span>
           <div className="flex items-center gap-6">
             <Link
+              href="/api-docs"
+              className="text-[13px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              API
+            </Link>
+            <Link
               href="/dashboard"
               className="rounded-full bg-[var(--text-primary)] px-4 py-1.5 text-[13px] font-medium text-white hover:opacity-90 transition-opacity"
             >
@@ -335,6 +341,9 @@ export default async function Home() {
             Data sourced from the City of Toronto Open Data Portal. Not legal advice.
           </p>
           <div className="flex items-center gap-4">
+            <Link href="/api-docs" className="text-[12px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+              API Docs
+            </Link>
             <span className="text-[12px] text-[var(--text-muted)]">By-law 569-2013</span>
           </div>
         </div>
